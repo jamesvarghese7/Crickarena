@@ -22,7 +22,7 @@ export const disposableEmailDomains = [
  * @returns {Object} - { isValid: boolean, error: string }
  */
 export function validateEmail(email) {
-  // RFC 5322 compliant email regex
+  // RFC 5322-like local@domain check
   const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
   const trimmedEmail = email.trim().toLowerCase();
   
@@ -39,6 +39,17 @@ export function validateEmail(email) {
   }
   
   const domain = trimmedEmail.split('@')[1];
+  
+  // Enforce at least one dot in domain and a letter-only TLD (e.g., .com, .net)
+  const parts = domain.split('.');
+  if (parts.length < 2) {
+    return { isValid: false, error: 'Please enter a valid email address' };
+  }
+  const tld = parts[parts.length - 1];
+  if (!/^[a-zA-Z]{2,}$/.test(tld)) {
+    return { isValid: false, error: 'Please enter a valid email address' };
+  }
+  
   if (disposableEmailDomains.includes(domain)) {
     return { isValid: false, error: 'Please use a permanent email address, not a disposable one' };
   }
@@ -69,11 +80,6 @@ export function validateName(name) {
   
   if (!nameRegex.test(trimmedName)) {
     return { isValid: false, error: 'Name can only contain letters, spaces, hyphens, and apostrophes' };
-  }
-  
-  const nameParts = trimmedName.split(' ').filter(part => part.length > 0);
-  if (nameParts.length < 2) {
-    return { isValid: false, error: 'Please enter your full name (first and last name)' };
   }
   
   return { isValid: true, error: '', cleanName: trimmedName };
@@ -126,9 +132,6 @@ export function validatePassword(password, name = '') {
     return { isValid: false, error: 'Please choose a more secure password', criteria };
   }
   
-  if (name && password.toLowerCase().includes(name.toLowerCase().split(' ')[0])) {
-    return { isValid: false, error: 'Password should not contain your name', criteria };
-  }
   
   return { isValid: true, error: '', criteria };
 }
