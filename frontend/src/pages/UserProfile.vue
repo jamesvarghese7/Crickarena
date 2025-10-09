@@ -55,6 +55,13 @@
         Forgot your password? <RouterLink to="/forgot-password" class="text-emerald-700 underline">Reset here</RouterLink>
       </p>
     </section>
+
+    <!-- Role & Access -->
+    <section class="bg-white rounded-lg border p-4 mb-6">
+      <h2 class="text-lg font-semibold mb-4">Role & Access</h2>
+      <p class="mb-3">Current role: <span class="font-medium">{{ currentRole }}</span></p>
+      <!-- Upgrade option removed for normal users -->
+    </section>
   </div>
 </template>
 
@@ -72,6 +79,7 @@ const saving = ref(false);
 const changing = ref(false);
 const form = reactive({ name: '', phone: '', district: '' });
 const email = computed(() => authStore.user?.email || '');
+const currentRole = computed(() => authStore.userProfile?.role || 'public');
 
 const districts = [
   'Thiruvananthapuram','Kollam','Pathanamthitta','Alappuzha','Kottayam','Idukki','Ernakulam','Thrissur','Palakkad','Malappuram','Kozhikode','Wayanad','Kannur','Kasaragod'

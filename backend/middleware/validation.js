@@ -127,8 +127,8 @@ export const validateUserRegistration = [
     .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
   
   body('role')
-    .isIn(['public', 'clubManager'])
-    .withMessage('Role must be either public or clubManager'),
+    .isIn(['public', 'clubManager', 'player', 'coach'])
+    .withMessage('Role must be one of public, clubManager, player, or coach'),
   
   handleValidationErrors
 ];
