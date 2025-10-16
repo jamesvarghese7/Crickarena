@@ -1,131 +1,190 @@
 <template>
-  <div class="relative min-h-screen py-12">
-
-
-    <!-- Auth Card -->
-    <div class="relative z-10 max-w-md mx-auto mt-12 bg-white/90 backdrop-blur p-8 rounded-2xl shadow-xl border border-gray-100">
-      <div class="flex items-center gap-3 mb-6">
-        <svg class="w-8 h-8 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10" />
-          <path d="M7 12l3 3 6-6" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-        <h1 class="text-2xl font-bold">Welcome back</h1>
+  <div class="min-h-screen relative overflow-hidden">
+    <!-- Background with cricket theme -->
+    <div class="absolute inset-0 bg-gradient-to-br from-emerald-50 via-white to-emerald-100">
+      <!-- Cricket field pattern -->
+      <div class="absolute inset-0 opacity-5">
+        <div class="absolute top-1/4 left-1/4 w-32 h-32 border-2 border-emerald-300 rounded-full"></div>
+        <div class="absolute top-1/3 left-1/3 w-16 h-16 border border-emerald-300 rounded-full"></div>
+        <div class="absolute top-1/2 right-1/4 w-24 h-24 border-2 border-emerald-300 rounded-full"></div>
+        <div class="absolute bottom-1/4 right-1/3 w-20 h-20 border border-emerald-300 rounded-full"></div>
+        <!-- Cricket stumps -->
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+          <div class="w-1 h-8 bg-emerald-400 mx-auto"></div>
+          <div class="w-6 h-1 bg-emerald-400 mt-1"></div>
+        </div>
       </div>
+    </div>
 
-      <form @submit.prevent="onEmailLogin" class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-          <div class="relative">
-            <input v-model.trim="email" @blur="validateEmailField" type="email" required placeholder="you@example.com"
-                   :class="[
-                     'w-full border rounded-lg px-3 py-2 pl-9 focus:outline-none focus:ring-2',
-                     emailError ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-green-500 focus:border-green-500'
-                   ]" />
-            <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z" opacity="0"/><path d="M4 8l8 5 8-5"/><path d="M4 18h16"/></svg>
+    <!-- Main content -->
+    <div class="relative z-10 min-h-screen flex items-center justify-center px-4 py-8">
+      <div class="w-full max-w-md">
+        <!-- Logo and branding -->
+        <div class="text-center mb-8">
+          <div class="inline-flex items-center justify-center w-16 h-16 bg-emerald-600 rounded-2xl mb-4 shadow-lg">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
           </div>
-          <p v-if="emailError" class="text-red-600 text-xs mt-1">{{ emailError }}</p>
+          <h1 class="text-3xl font-bold text-gray-900 mb-2">Welcome to CrickArena</h1>
+          <p class="text-gray-600">Your gateway to cricket excellence</p>
         </div>
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-          <div class="relative">
-            <input v-model="password" @blur="validatePasswordField" type="password" required minlength="8" placeholder="••••••••"
-                   :class="[
-                     'w-full border rounded-lg px-3 py-2 pl-9 focus:outline-none focus:ring-2',
-                     passwordError ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-green-500 focus:border-green-500'
-                   ]" />
-            <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V9a5 5 0 0 1 10 0v2"/></svg>
+        <!-- Login card -->
+        <div class="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 p-8">
+          <div class="text-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Welcome back</h2>
+            <p class="text-gray-600">Sign in to your account</p>
           </div>
-          <p v-if="passwordError" class="text-red-600 text-xs mt-1">{{ passwordError }}</p>
-          <p v-else class="text-xs text-gray-500 mt-1">Minimum 8 characters.</p>
+
+          <form class="space-y-6" @submit.prevent="onEmailLogin">
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                <div class="relative">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
+                    </svg>
+                  </div>
+                  <input 
+                    v-model="email" 
+                    type="email" 
+                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors" 
+                    placeholder="Enter your email"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                <div class="relative">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                    </svg>
+                  </div>
+                  <input 
+                    :type="showPassword ? 'text' : 'password'" 
+                    v-model="password" 
+                    class="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors" 
+                    placeholder="Enter your password"
+                  />
+                  <button 
+                    type="button" 
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors" 
+                    @click="showPassword = !showPassword"
+                  >
+                    <svg v-if="!showPassword" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                    <svg v-else class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.956 9.956 0 012.548-4.226M6.223 6.223A9.956 9.956 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.97 9.97 0 01-4.043 5.197M3 3l18 18"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <input id="remember-me" name="remember-me" type="checkbox" class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded">
+                <label for="remember-me" class="ml-2 block text-sm text-gray-700">Remember me</label>
+              </div>
+              <div class="text-sm">
+                <RouterLink to="/forgot-password" class="font-medium text-emerald-600 hover:text-emerald-500 transition-colors">
+                  Forgot password?
+                </RouterLink>
+              </div>
+            </div>
+
+            <button 
+              :disabled="isLoading" 
+              :class="[
+                'w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200 transform hover:scale-[1.02]',
+                (isLoading) ? 'opacity-60 cursor-not-allowed' : ''
+              ]"
+            >
+              <span v-if="isLoading" class="flex items-center">
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Signing in...
+              </span>
+              <span v-else class="flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                </svg>
+                Sign In
+              </span>
+            </button>
+          </form>
+
+          <div class="mt-6">
+            <div class="relative">
+              <div class="absolute inset-0 flex items-center">
+                <div class="w-full border-t border-gray-300"></div>
+              </div>
+              <div class="relative flex justify-center text-sm">
+                <span class="px-2 bg-white text-gray-500">Or continue with</span>
+              </div>
+            </div>
+
+            <div class="mt-6">
+              <button 
+                @click="onGoogle" 
+                :disabled="isLoading"
+                class="w-full flex justify-center items-center py-3 px-4 border border-gray-300 rounded-xl shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50"
+              >
+                <img alt="Google" class="w-5 h-5 mr-3" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"/>
+                Continue with Google
+              </button>
+            </div>
+          </div>
+
+          <div class="mt-8 text-center">
+            <p class="text-sm text-gray-600">
+              New to CrickArena?
+              <RouterLink to="/register" class="font-medium text-emerald-600 hover:text-emerald-500 transition-colors">
+                Create your account
+              </RouterLink>
+            </p>
+          </div>
         </div>
 
-        <p class="mt-2 text-right text-sm">
-          <RouterLink to="/forgot-password" class="text-green-700 hover:underline">Forgot password?</RouterLink>
-        </p>
-
-        <button :disabled="!isFormValid || isLoading" 
-                :class="[
-                  'w-full py-2.5 rounded-lg font-semibold shadow focus:outline-none focus:ring-4',
-                  isFormValid && !isLoading 
-                    ? 'bg-green-600 hover:bg-green-700 text-white focus:ring-green-200' 
-                    : 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                ]">
-          <span v-if="isLoading">Logging in...</span>
-          <span v-else>Login</span>
-        </button>
-      </form>
-
-      <div class="my-6 flex items-center gap-3">
-        <div class="h-px bg-gray-200 flex-1" />
-        <span class="text-xs text-gray-400">OR</span>
-        <div class="h-px bg-gray-200 flex-1" />
+        <!-- Footer -->
+        <div class="mt-8 text-center">
+          <p class="text-xs text-gray-500">
+            © 2024 CrickArena. All rights reserved.
+          </p>
+        </div>
       </div>
-
-      <button @click="onGoogle" class="w-full border border-gray-300 hover:bg-gray-50 py-2.5 rounded-lg font-medium flex items-center justify-center gap-2">
-        <img alt="" class="w-5 h-5" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"/>
-        Continue with Google
-      </button>
-
-      <p class="text-sm text-gray-600 mt-6 text-center">
-        New to CrickArena?
-        <RouterLink to="/register" class="text-green-700 font-medium hover:underline">Create an account</RouterLink>
-      </p>
     </div>
   </div>
 </template>
 <script setup>
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../store/auth';
-import { validateEmail, validatePassword } from '../utils/validation';
 import { notify } from '../utils/notifications';
 
 const email = ref('');
 const password = ref('');
-const emailError = ref('');
-const passwordError = ref('');
+const showPassword = ref(false);
 const isLoading = ref(false);
 const router = useRouter();
 const auth = useAuthStore();
 
-// Computed property to check if form is valid
-const isFormValid = computed(() => {
-  return email.value.trim() !== '' && 
-         password.value !== '' && 
-         !emailError.value && 
-         !passwordError.value &&
-         password.value.length >= 8;
-});
-
-// Email validation
-function validateEmailField() {
-  const result = validateEmail(email.value);
-  emailError.value = result.error;
-  if (result.cleanEmail) {
-    email.value = result.cleanEmail;
-  }
-}
-
-// Password validation
-function validatePasswordField() {
-  const result = validatePassword(password.value);
-  passwordError.value = result.error;
-}
-
 async function onEmailLogin() {
-  // Validate all fields before submission
-  validateEmailField();
-  validatePasswordField();
-  
-  if (!isFormValid.value) {
-    return;
-  }
+  if (!email.value || !password.value) return; // minimal check: non-empty
 
   isLoading.value = true;
   try {
     await auth.loginEmail(email.value.trim(), password.value);
-    router.replace({ name: 'dashboard' });
+    const isAdmin = auth.userProfile?.role === 'admin' || auth.user?.email === 'admin@crickarena.com';
+    router.replace({ name: isAdmin ? 'admin' : 'dashboard' });
   } catch (e) {
     console.error(e);
     const errorMessage = e?.message || 'Login failed. Please check your credentials.';
@@ -139,7 +198,8 @@ async function onGoogle() {
   isLoading.value = true;
   try {
     await auth.loginGoogle();
-    router.replace({ name: 'dashboard' });
+    const isAdmin = auth.userProfile?.role === 'admin' || auth.user?.email === 'admin@crickarena.com';
+    router.replace({ name: isAdmin ? 'admin' : 'dashboard' });
   } catch (e) {
     console.error('Google Sign-In error:', e);
     const msg = e?.code ? `${e.code}: ${e.message || ''}` : (e?.message || 'Unknown error');

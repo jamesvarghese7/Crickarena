@@ -197,6 +197,8 @@
                 </div>
               </div>
             </div>
+
+            <!-- Club Banner Upload removed -->
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">Club Website/Social Media</label>
               <input 
@@ -295,6 +297,7 @@ const form = ref({
   achievements: '',
   logoUrl: '', // final URL to send to backend
   logoPreview: '', // local preview of selected file
+
   agreeTerms: false
 });
 
@@ -393,10 +396,14 @@ function validateWebsite() {
   }
 }
 
-// Handle logo file selection and upload to a public host (Firebase Storage bucket URL expected)
+const selectedLogoFile = ref(null);
+const selectedBannerFile = ref(null);
+
+// Handle logo file selection
 async function onLogoSelected(event) {
   const file = event.target.files?.[0];
   if (!file) return;
+  selectedLogoFile.value = file;
 
   // Validate file type
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
@@ -438,22 +445,57 @@ async function onLogoSelected(event) {
   form.value.logoPreview = URL.createObjectURL(file);
 
   try {
-    // If you have an upload endpoint or use a storage provider, plug it here.
-    // Minimal approach: convert to base64 data URL and store directly (not ideal for production).
-    // Prefer uploading to Firebase Storage or S3 and set form.value.logoUrl to that public URL.
-
-    const reader = new FileReader();
-    const dataUrl = await new Promise((resolve, reject) => {
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-
-    // For now, set dataUrl to logoUrl so it displays on Home (works if backend allows data URLs). Replace with real URL when upload is implemented.
-    form.value.logoUrl = String(dataUrl);
+    // No data URL. Preview only; the actual file is sent as multipart/form-data.
+    // Keep logoUrl empty; backend will serve at /api/clubs/:id/logo after approval.
+    form.value.logoUrl = '';
   } catch (e) {
     console.error('Logo processing failed', e);
     notify.error('Failed to process logo. Please try a different image.');
+  }
+}
+
+// Handle banner file selection
+async function onBannerSelected(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  selectedBannerFile.value = file;
+
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+  if (!allowedTypes.includes(file.type)) {
+    notify.error('Please select a valid image file (JPEG, PNG, GIF, or WebP).');
+    return;
+  }
+
+  if (file.size > 2 * 1024 * 1024) {
+    notify.error('Banner too large. Please choose an image under 2MB.');
+    return;
+  }
+
+  const buffer = await file.slice(0, 4).arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+  const validHeaders = {
+    'ffd8ff': 'image/jpeg',
+    '89504e47': 'image/png',
+    '47494638': 'image/gif',
+    '52494646': 'image/webp'
+  };
+  const isValidImage = Object.keys(validHeaders).some(header => hex.startsWith(header));
+  if (!isValidImage) {
+    notify.error('Invalid image file. Please select a valid image.');
+    return;
+  }
+
+  if (form.value.bannerPreview) {
+    URL.revokeObjectURL(form.value.bannerPreview);
+  }
+  form.value.bannerPreview = URL.createObjectURL(file);
+
+  try {
+    // Banner support removed
+  } catch (e) {
+    console.error('Banner processing failed', e);
+    notify.error('Failed to process banner. Please try a different image.');
   }
 }
 
@@ -483,6 +525,7 @@ async function submitRegistration() {
     const payload = { ...form.value };
     // Remove UI-only fields rejected by backend validation
     delete payload.logoPreview;
+    delete payload.bannerPreview;
 
     // Coerce numeric fields and drop if empty
     ['foundedYear', 'memberCount'].forEach((k) => {
@@ -498,11 +541,18 @@ async function submitRegistration() {
       if (payload[k] === '' || payload[k] === null) delete payload[k];
     });
 
-    // API call to submit club registration
+    // API call to submit club registration as multipart/form-data
     const API = import.meta.env.VITE_API_BASE || 'http://localhost:4000/api';
-    await axios.post(`${API}/clubs/register`, {
-      ...payload,
-      status: 'pending' // Default status for new registrations
+    const formData = new FormData();
+    Object.entries(payload).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') formData.append(k, String(v));
+    });
+    // attach files if present
+    if (selectedLogoFile.value) formData.append('logo', selectedLogoFile.value);
+    if (selectedBannerFile.value) formData.append('banner', selectedBannerFile.value);
+
+    await axios.post(`${API}/clubs/register`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
     });
 
     notify.success('Club registration submitted successfully! You will receive an email once your registration is reviewed by our admin team.');
@@ -520,6 +570,9 @@ async function submitRegistration() {
 onUnmounted(() => {
   if (form.value.logoPreview) {
     URL.revokeObjectURL(form.value.logoPreview);
+  }
+  if (form.value.bannerPreview) {
+    URL.revokeObjectURL(form.value.bannerPreview);
   }
 });
 </script>

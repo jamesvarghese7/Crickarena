@@ -1,123 +1,243 @@
 <template>
-  <div class="relative min-h-screen py-12">
-
-
-    <!-- Auth Card -->
-    <div class="relative z-10 max-w-md mx-auto mt-12 bg-white/90 backdrop-blur p-8 rounded-2xl shadow-xl border border-gray-100">
-      <div class="flex items-center gap-3 mb-6">
-        <svg class="w-8 h-8 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10" />
-          <path d="M7 12l3 3 6-6" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-        <h1 class="text-2xl font-bold">Create your account</h1>
+  <div class="min-h-screen relative overflow-hidden">
+    <!-- Background with cricket theme -->
+    <div class="absolute inset-0 bg-gradient-to-br from-emerald-50 via-white to-emerald-100">
+      <!-- Cricket field pattern -->
+      <div class="absolute inset-0 opacity-5">
+        <div class="absolute top-1/4 left-1/4 w-32 h-32 border-2 border-emerald-300 rounded-full"></div>
+        <div class="absolute top-1/2 right-1/4 w-24 h-24 border-2 border-emerald-300 rounded-full"></div>
+        <!-- Cricket stumps -->
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+          <div class="w-1 h-8 bg-emerald-400 mx-auto"></div>
+          <div class="w-6 h-1 bg-emerald-400 mt-1"></div>
+        </div>
       </div>
+    </div>
 
-      <!-- Google create account -->
-      <div class="space-y-3 mb-6">
-        <button @click="onGoogleRegister" class="w-full border border-gray-300 hover:bg-gray-50 py-2.5 rounded-lg font-medium flex items-center justify-center gap-2">
-          <img alt="" class="w-5 h-5" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"/>
-          Create with Google
-        </button>
-        <p class="text-xs text-gray-500">Select a role first. We'll pre-fill your details from Google.</p>
+    <!-- Main content -->
+    <div class="relative z-10 min-h-screen flex items-center justify-center px-4 py-8">
+      <div class="w-full max-w-md">
+        <!-- Logo and branding -->
+        <div class="text-center mb-6">
+          <div class="inline-flex items-center justify-center w-12 h-12 bg-emerald-600 rounded-xl mb-3 shadow-lg">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+          </div>
+          <h1 class="text-2xl font-bold text-gray-900 mb-1">Join CrickArena</h1>
+          <p class="text-sm text-gray-600">Start your cricket journey</p>
+        </div>
+
+        <!-- Registration card -->
+        <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/30 p-6">
+          <div class="text-center mb-5">
+            <h2 class="text-xl font-bold text-gray-900 mb-1">Create account</h2>
+            <p class="text-sm text-gray-600">Quick and easy setup</p>
+          </div>
+
+          <!-- Google registration -->
+          <div class="mb-4">
+            <button 
+              @click="onGoogleRegister" 
+              :disabled="isLoading"
+              class="w-full flex justify-center items-center py-2.5 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200 disabled:opacity-50"
+            >
+              <img alt="Google" class="w-4 h-4 mr-2" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"/>
+              Continue with Google
+            </button>
+          </div>
+
+          <div class="relative mb-4">
+            <div class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-gray-300"></div>
+            </div>
+            <div class="relative flex justify-center text-sm">
+              <span class="px-2 bg-white text-gray-500">Or with email</span>
+            </div>
+          </div>
+
+          <form @submit.prevent="onSubmit" class="space-y-4">
+            <!-- Basic Info Row -->
+            <div class="grid grid-cols-1 gap-3">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <input 
+                  v-model.trim="name" 
+                  @blur="validateNameField" 
+                  type="text" 
+                  required 
+                  placeholder="Your full name"
+                  :class="[
+                    'w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-sm',
+                    nameErr ? 'ring-2 ring-red-500 border-red-500' : 'border-gray-300'
+                  ]" 
+                />
+                <p v-if="nameErr" class="text-red-600 text-xs mt-1">{{ nameErr }}</p>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input 
+                  v-model.trim="email" 
+                  @blur="validateEmailField" 
+                  type="email" 
+                  required 
+                  placeholder="your@email.com"
+                  :class="[
+                    'w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-sm',
+                    emailErr ? 'ring-2 ring-red-500 border-red-500' : 'border-gray-300'
+                  ]" 
+                />
+                <p v-if="emailErr" class="text-red-600 text-xs mt-1">{{ emailErr }}</p>
+              </div>
+            </div>
+
+            <!-- Password Row -->
+            <div class="grid grid-cols-1 gap-3">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <div class="relative">
+                  <input 
+                    v-model="password" 
+                    @input="validatePasswordField" 
+                    @blur="validatePasswordField" 
+                    :type="showPassword ? 'text' : 'password'" 
+                    required 
+                    minlength="8" 
+                    placeholder="Create password"
+                    :class="[
+                      'w-full px-3 py-2.5 pr-10 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-sm',
+                      passwordErr ? 'ring-2 ring-red-500 border-red-500' : 'border-gray-300'
+                    ]" 
+                  />
+                  <button 
+                    type="button" 
+                    @click="showPassword = !showPassword" 
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                  >
+                    <svg v-if="!showPassword" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                    <svg v-else class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.956 9.956 0 012.548-4.226M6.223 6.223A9.956 9.956 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.97 9.97 0 01-4.043 5.197M3 3l18 18"/>
+                    </svg>
+                  </button>
+                </div>
+                <p v-if="passwordErr" class="text-red-600 text-xs mt-1">{{ passwordErr }}</p>
+                <!-- Simplified password requirements -->
+                <div v-else-if="password" class="mt-1">
+                  <div class="flex flex-wrap gap-2 text-xs">
+                    <span :class="passwordValidation.length ? 'text-emerald-600' : 'text-gray-400'">8+ chars</span>
+                    <span :class="passwordValidation.hasUppercase ? 'text-emerald-600' : 'text-gray-400'">A-Z</span>
+                    <span :class="passwordValidation.hasLowercase ? 'text-emerald-600' : 'text-gray-400'">a-z</span>
+                    <span :class="passwordValidation.hasNumber ? 'text-emerald-600' : 'text-gray-400'">0-9</span>
+                    <span :class="passwordValidation.hasSpecial ? 'text-emerald-600' : 'text-gray-400'">!@#$</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                <div class="relative">
+                  <input 
+                    v-model="confirmPassword" 
+                    @input="validateConfirmField" 
+                    @blur="validateConfirmField" 
+                    :type="showConfirm ? 'text' : 'password'" 
+                    required 
+                    minlength="8" 
+                    placeholder="Confirm password"
+                    :class="[
+                      'w-full px-3 py-2.5 pr-10 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-sm',
+                      confirmErr ? 'ring-2 ring-red-500 border-red-500' : 'border-gray-300'
+                    ]" 
+                  />
+                  <button 
+                    type="button" 
+                    @click="showConfirm = !showConfirm" 
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                  >
+                    <svg v-if="!showConfirm" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                    <svg v-else class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.956 9.956 0 012.548-4.226M6.223 6.223A9.956 9.956 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.97 9.97 0 01-4.043 5.197M3 3l18 18"/>
+                    </svg>
+                  </button>
+                </div>
+                <p v-if="confirmErr" class="text-red-600 text-xs mt-1">{{ confirmErr }}</p>
+              </div>
+            </div>
+
+            <!-- Role Selection - Compact -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">I want to be a</label>
+              <div class="grid grid-cols-2 gap-2">
+                <div 
+                  v-for="roleOption in roleOptions" 
+                  :key="roleOption.value"
+                  @click="role = roleOption.value"
+                  :class="[
+                    'p-3 border-2 rounded-lg cursor-pointer transition-all duration-200 text-center',
+                    role === roleOption.value 
+                      ? 'border-emerald-500 bg-emerald-50' 
+                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  ]"
+                >
+                  <div class="flex flex-col items-center space-y-1">
+                    <div :class="[
+                      'w-4 h-4 rounded-full border-2 flex items-center justify-center',
+                      role === roleOption.value ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300'
+                    ]">
+                      <div v-if="role === roleOption.value" class="w-1.5 h-1.5 bg-white rounded-full"></div>
+                    </div>
+                    <span class="text-xs font-medium text-gray-900">{{ roleOption.title }}</span>
+                  </div>
+                </div>
+              </div>
+              <p v-if="roleErr" class="text-red-600 text-xs mt-1">{{ roleErr }}</p>
+            </div>
+
+            <!-- Submit Button -->
+            <button 
+              :disabled="!isFormValid || isLoading" 
+              :class="[
+                'w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white transition-all duration-200',
+                (!isFormValid || isLoading) 
+                  ? 'opacity-60 cursor-not-allowed bg-gray-400' 
+                  : 'bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500'
+              ]"
+            >
+              <span v-if="isLoading" class="flex items-center">
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Creating...
+              </span>
+              <span v-else>Create Account</span>
+            </button>
+
+            <div class="text-center">
+              <p class="text-sm text-gray-600">
+                Already have an account?
+                <RouterLink to="/login" class="font-medium text-emerald-600 hover:text-emerald-500 transition-colors">
+                  Sign in
+                </RouterLink>
+              </p>
+            </div>
+          </form>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-6 text-center">
+          <p class="text-xs text-gray-500">
+            © 2024 CrickArena. All rights reserved.
+          </p>
+        </div>
       </div>
-
-      <form @submit.prevent="onSubmit" class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-          <div class="relative">
-            <input v-model.trim="name" @blur="validateNameField" type="text" required placeholder="Enter your full name"
-                   :class="[
-                     'w-full border rounded-lg px-3 py-2 pl-9 focus:outline-none focus:ring-2',
-                     nameErr ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-green-500 focus:border-green-500'
-                   ]" />
-            <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          </div>
-          <p v-if="nameErr" class="text-red-600 text-xs mt-1">{{ nameErr }}</p>
-        </div>
-
-        <div v-if="displayName && displayName !== name">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Google Profile Name</label>
-          <input :value="displayName" disabled class="w-full border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-gray-700" />
-          <p class="text-xs text-gray-500 mt-1">You can use a different name above if preferred</p>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-          <div class="relative">
-            <input v-model.trim="email" @blur="validateEmailField" type="email" required placeholder="you@example.com"
-                   :class="[
-                     'w-full border rounded-lg px-3 py-2 pl-9 focus:outline-none focus:ring-2',
-                     emailErr ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-green-500 focus:border-green-500'
-                   ]" />
-            <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8l8 5 8-5"/><path d="M4 18h16"/></svg>
-          </div>
-          <p v-if="emailErr" class="text-red-600 text-xs mt-1">{{ emailErr }}</p>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-          <div class="relative">
-            <input v-model="password" @input="validatePasswordField" @blur="validatePasswordField" type="password" required minlength="8" placeholder="At least 8 characters"
-                   :class="[
-                     'w-full border rounded-lg px-3 py-2 pl-9 focus:outline-none focus:ring-2',
-                     passwordErr ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-green-500 focus:border-green-500'
-                   ]" />
-            <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V9a5 5 0 0 1 10 0v2"/></svg>
-          </div>
-          <p v-if="passwordErr" class="text-red-600 text-xs mt-1">{{ passwordErr }}</p>
-          <div v-else class="mt-1">
-            <p class="text-xs text-gray-500">Password must contain:</p>
-            <ul class="text-xs text-gray-500 ml-2 mt-1">
-              <li :class="passwordValidation.length ? 'text-green-600' : 'text-gray-500'">✓ At least 8 characters</li>
-              <li :class="passwordValidation.hasUppercase ? 'text-green-600' : 'text-gray-500'">✓ At least one uppercase letter</li>
-              <li :class="passwordValidation.hasLowercase ? 'text-green-600' : 'text-gray-500'">✓ At least one lowercase letter</li>
-              <li :class="passwordValidation.hasNumber ? 'text-green-600' : 'text-gray-500'">✓ At least one number</li>
-              <li :class="passwordValidation.hasSpecial ? 'text-green-600' : 'text-gray-500'">✓ At least one special character</li>
-            </ul>
-          </div>
-        </div>
-        
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-          <div class="relative">
-            <input v-model="confirmPassword" @input="validateConfirmField" @blur="validateConfirmField" type="password" required minlength="8" placeholder="Re-enter your password"
-                   :class="[
-                     'w-full border rounded-lg px-3 py-2 pl-9 focus:outline-none focus:ring-2',
-                     confirmErr ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-green-500 focus:border-green-500'
-                   ]" />
-            <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V9a5 5 0 0 1 10 0v2"/></svg>
-          </div>
-          <p v-if="confirmErr" class="text-red-600 text-xs mt-1">{{ confirmErr }}</p>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
-          <select v-model="role" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
-            <option value="">Select a role</option>
-            <option value="public">Public</option>
-            <option value="clubManager">Club Manager</option>
-          </select>
-          <p v-if="roleErr" class="text-red-600 text-xs mt-1">{{ roleErr }}</p>
-        </div>
-
-        <button :disabled="!isFormValid || isLoading"
-                :class="[
-                  'w-full py-2.5 rounded-lg font-semibold shadow focus:outline-none focus:ring-4',
-                  isFormValid && !isLoading 
-                    ? 'bg-green-600 hover:bg-green-700 text-white focus:ring-green-200' 
-                    : 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                ]">
-          <span v-if="isLoading">Creating account...</span>
-          <span v-else>Create account</span>
-        </button>
-      </form>
-
-      <!-- <p class="mt-4 text-xs text-gray-500">We'll email you a 6-digit OTP to verify.</p> -->
-
-      <p class="text-sm text-gray-600 mt-6 text-center">
-        Already have an account?
-        <RouterLink to="/login" class="text-green-700 font-medium hover:underline">Sign in</RouterLink>
-      </p>
     </div>
   </div>
 </template>
@@ -131,6 +251,8 @@ const name = ref('');
 const email = ref('');
 const password = ref('');
 const confirmPassword = ref('');
+const showPassword = ref(false);
+const showConfirm = ref(false);
 const role = ref('');
 const nameErr = ref('');
 const emailErr = ref('');
@@ -141,6 +263,38 @@ const displayName = ref('');
 const isLoading = ref(false);
 const router = useRouter();
 const auth = useAuthStore();
+
+// Role options for the new UI
+const roleOptions = [
+  {
+    value: 'public',
+    title: 'Public',
+    description: 'Browse clubs, view tournaments, and explore cricket content.',
+    icon: 'svg',
+    iconClass: 'text-blue-500'
+  },
+  {
+    value: 'clubManager',
+    title: 'Club Manager',
+    description: 'Register and manage your cricket club, handle player applications.',
+    icon: 'svg',
+    iconClass: 'text-green-500'
+  },
+  {
+    value: 'player',
+    title: 'Player',
+    description: 'Create your cricket profile, apply to clubs, and showcase your skills.',
+    icon: 'svg',
+    iconClass: 'text-orange-500'
+  },
+  {
+    value: 'coach',
+    title: 'Coach',
+    description: 'Share your expertise, coach clubs, and develop the next generation.',
+    icon: 'svg',
+    iconClass: 'text-purple-500'
+  }
+];
 
 // Password validation criteria - matches utils/validation.js
 const passwordValidation = computed(() => ({
@@ -221,7 +375,17 @@ async function onSubmit() {
   isLoading.value = true;
   try {
     await auth.registerEmail(name.value.trim(), email.value.trim(), password.value, role.value);
-    router.push({ name: 'dashboard' });
+    
+    // Redirect based on role
+    if (role.value === 'clubManager') {
+      router.push({ name: 'club-registration' });
+    } else if (role.value === 'player') {
+      router.push({ name: 'player-registration' });
+    } else if (role.value === 'coach') {
+      router.push({ name: 'coach-registration' });
+    } else {
+      router.push({ name: 'dashboard' });
+    }
   } catch (e) {
     console.error('Registration failed:', e);
     const msg = e?.message || 'Registration failed. Please try again.';
@@ -235,7 +399,7 @@ async function onGoogleRegister() {
   // Require role selection before Google sign-in
   validateRoleField();
   if (!role.value) {
-    alert('Please select a role (Public or Club Manager) before continuing with Google.');
+    alert('Please select a role (Public, Club Manager, Player, or Coach) before continuing with Google.');
     return;
   }
   isLoading.value = true;
@@ -247,7 +411,17 @@ async function onGoogleRegister() {
     email.value = auth.user?.email || '';
     displayName.value = auth.user?.displayName || '';
     name.value = auth.user?.displayName || '';
-    router.push({ name: 'dashboard' });
+    
+    // Redirect based on role
+    if (role.value === 'clubManager') {
+      router.push({ name: 'club-registration' });
+    } else if (role.value === 'player') {
+      router.push({ name: 'player-registration' });
+    } else if (role.value === 'coach') {
+      router.push({ name: 'coach-registration' });
+    } else {
+      router.push({ name: 'dashboard' });
+    }
   } catch (e) {
     console.error(e);
     alert(e?.message || 'Google registration failed. Please try again.');

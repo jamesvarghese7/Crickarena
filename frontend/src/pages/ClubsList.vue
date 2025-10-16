@@ -1,5 +1,34 @@
 <template>
   <div class="max-w-7xl mx-auto px-4 py-10">
+    <!-- Player Guide Banner -->
+    <div class="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-2xl p-6 mb-8">
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center flex-shrink-0">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-gray-900 mb-2">For Cricket Players</h3>
+          <p class="text-gray-600 text-sm mb-3">Find and connect with cricket clubs across Kerala. Click on any club to view details and apply directly if you're a registered player.</p>
+          <div class="flex items-center gap-4 text-xs text-gray-500">
+            <span class="flex items-center gap-1">
+              <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+              Browse clubs
+            </span>
+            <span class="flex items-center gap-1">
+              <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+              View details
+            </span>
+            <span class="flex items-center gap-1">
+              <span class="w-2 h-2 bg-orange-500 rounded-full"></span>
+              Apply to join
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="flex items-center justify-between mb-8">
       <div>
         <h1 class="text-3xl font-black text-gray-900">Explore Clubs</h1>
@@ -24,19 +53,87 @@
           v-for="c in filtered"
           :key="c.id || c._id"
           :to="{ name: 'club-details', params: { id: c.id || c._id }, state: { club: c } }"
-          class="group bg-white rounded-2xl shadow-md hover:shadow-xl transition p-6 border border-gray-100 cursor-pointer"
+          class="group bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 cursor-pointer transform hover:-translate-y-1"
         >
-          <div class="flex items-center gap-4 mb-3">
-            <img v-if="c.logoUrl" :src="c.logoUrl" alt="logo" class="w-12 h-12 rounded-full object-cover border" @error="e => (e.target.style.display='none')" />
-            <div>
-              <div class="text-lg font-bold text-green-700 group-hover:text-green-800">{{ c.name || c.clubName }}</div>
-              <div class="text-sm text-gray-500">{{ c.city || c.district }}</div>
+          <!-- Club Header -->
+          <div class="flex items-center gap-4 mb-4">
+            <div class="relative">
+              <img 
+                v-if="c.logoUrl" 
+                :src="c.logoUrl" 
+                alt="logo" 
+                class="w-16 h-16 rounded-full object-cover border-2 border-green-200 shadow-sm" 
+                @error="e => (e.target.style.display='none')" 
+              />
+              <div 
+                v-else 
+                class="w-16 h-16 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-xl font-bold shadow-sm"
+              >
+                {{ (c.name || c.clubName)?.charAt(0)?.toUpperCase() || 'C' }}
+              </div>
+              <!-- Status indicator -->
+              <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+              </div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-lg font-bold text-gray-900 group-hover:text-green-700 transition-colors truncate">
+                {{ c.name || c.clubName }}
+              </div>
+              <div class="flex items-center gap-2 text-sm text-gray-500">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span class="truncate">{{ c.city || c.district }}</span>
+              </div>
             </div>
           </div>
-          <p class="text-sm text-gray-600 line-clamp-3">{{ c.description || 'No description provided.' }}</p>
-          <div class="mt-4 flex items-center gap-3 text-xs text-gray-500">
-            <span v-if="c.memberCount" class="px-2 py-1 rounded bg-green-50 border border-green-200 text-green-700">{{ c.memberCount }} members</span>
-            <span v-if="c.groundName" class="px-2 py-1 rounded bg-gray-50 border">Ground: {{ c.groundName }}</span>
+
+          <!-- Club Description -->
+          <p class="text-sm text-gray-600 line-clamp-3 mb-4 leading-relaxed">
+            {{ c.description || 'A cricket club dedicated to promoting the sport and nurturing talent.' }}
+          </p>
+
+          <!-- Club Stats -->
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <div class="bg-green-50 rounded-lg p-3 text-center border border-green-100">
+              <div class="text-lg font-bold text-green-700">{{ c.memberCount || 0 }}</div>
+              <div class="text-xs text-green-600 font-medium">Active Players</div>
+            </div>
+            <div class="bg-blue-50 rounded-lg p-3 text-center border border-blue-100">
+              <div class="text-lg font-bold text-blue-700">{{ c.foundedYear || 'N/A' }}</div>
+              <div class="text-xs text-blue-600 font-medium">Founded</div>
+            </div>
+          </div>
+
+          <!-- Club Features -->
+          <div class="space-y-2">
+            <div v-if="c.groundName" class="flex items-center gap-2 text-xs text-gray-600">
+              <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+              </svg>
+              <span class="font-medium">Ground:</span>
+              <span class="truncate">{{ c.groundName }}</span>
+            </div>
+            <div v-if="c.website" class="flex items-center gap-2 text-xs text-gray-600">
+              <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"/>
+              </svg>
+              <span class="font-medium">Website Available</span>
+            </div>
+          </div>
+
+          <!-- View Details Button -->
+          <div class="mt-4 pt-4 border-t border-gray-100">
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-gray-500 font-medium">Click to view details</span>
+              <svg class="w-5 h-5 text-green-600 group-hover:text-green-700 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </div>
           </div>
         </RouterLink>
       </div>
@@ -46,20 +143,18 @@
 
 <script setup>
 import { onMounted, onUnmounted, ref, computed } from 'vue';
-import axios from 'axios';
+import api from '../utils/api.js';
 
 const loading = ref(true);
 const clubs = ref([]);
 const query = ref('');
 let cancelled = false;
-const API = import.meta.env.VITE_API_BASE || 'http://localhost:4000/api';
-
 onMounted(async () => {
   loading.value = true;
   cancelled = false;
   try {
-    // Mirror Home page fetching logic and avoid cookies entirely
-    const { data } = await axios.get(`${API}/clubs/public`).catch(() => ({ data: [] }));
+    // Use centralized API instance
+    const { data } = await api.get('/clubs/public').catch(() => ({ data: [] }));
     if (!cancelled) clubs.value = Array.isArray(data) ? data : [];
   } catch (e) {
     if (!cancelled) {

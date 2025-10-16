@@ -37,7 +37,7 @@ const registerSchema = Joi.object({
       'string.max': 'Name must be less than 50 characters'
     }),
   email: Joi.string()
-    .email({ minDomainSegments: 2, tlds: { allow: ['com', 'net', 'org', 'edu', 'gov', 'co', 'io', 'in', 'uk', 'au', 'ca'] } })
+    .email({ minDomainSegments: 2, tlds: { allow: false } })
     .max(254)
     .lowercase()
     .required()
@@ -45,7 +45,7 @@ const registerSchema = Joi.object({
       'string.email': 'Please enter a valid email address',
       'string.max': 'Email address is too long'
     }),
-  role: Joi.string().valid('public', 'clubManager').default('public')
+  role: Joi.string().valid('public', 'clubManager', 'player', 'coach').default('public')
 });
 
 // Disposable email domains to block
@@ -68,25 +68,15 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000); // Clean every 5 minutes
 
-// Comprehensive HTML sanitization using DOMPurify
-import createDOMPurify from 'isomorphic-dompurify';
-const DOMPurify = createDOMPurify();
-
-// Input sanitization function
+// Lightweight input sanitization (server-side)
+// Avoid DOM-based sanitizers in Node; rely on validation and simple trimming.
 function sanitizeInput(obj) {
   const sanitized = {};
-  for (const [key, value] of Object.entries(obj)) {
+  for (const [key, value] of Object.entries(obj || {})) {
     if (typeof value === 'string') {
-      // Use DOMPurify for comprehensive sanitization
-      const clean = DOMPurify.sanitize(value, {
-        ALLOWED_TAGS: [], // No HTML tags allowed
-        ALLOWED_ATTR: [],
-        KEEP_CONTENT: true, // Keep text content, remove tags
-        ALLOW_DATA_ATTR: false,
-        ALLOW_UNKNOWN_PROTOCOLS: false,
-        SANITIZE_DOM: true
-      });
-      sanitized[key] = clean.trim();
+      // Strip HTML tags and trim whitespace
+      const noTags = value.replace(/<[^>]*>/g, '');
+      sanitized[key] = noTags.trim();
     } else {
       sanitized[key] = value;
     }
@@ -121,15 +111,36 @@ function checkRateLimit(ip, maxAttempts = 5, windowMs = 15 * 60 * 1000) {
 }
 
 // Exchange Firebase ID token for a secure session cookie
+// IMPORTANT: Only allow session creation if the user is registered in MongoDB
 router.post('/session/login', async (req, res) => {
   try {
     const { idToken } = req.body || {};
     if (!idToken) return res.status(400).json({ message: 'idToken required' });
+
+    // Verify Firebase ID token first
+    let decoded;
+    try {
+      decoded = await firebaseAdmin.auth().verifyIdToken(idToken, true);
+    } catch (err) {
+      console.warn('Invalid ID token on session login:', err?.message || err);
+      return res.status(401).json({ message: 'Invalid ID token' });
+    }
+
+    // Enforce registered-user check
+    // Prefer lookup by firebaseUid; fall back to email when available
+    let user = await User.findOne({ firebaseUid: decoded.uid });
+    if (!user && decoded.email) {
+      user = await User.findOne({ email: String(decoded.email).toLowerCase().trim() });
+    }
+    if (!user) {
+      return res.status(403).json({ message: 'Account not registered. Please sign up first.' });
+    }
+
     await setSessionCookie(res, idToken);
     res.json({ message: 'Session established' });
   } catch (e) {
     console.error('Session login error:', e);
-    res.status(401).json({ message: 'Invalid ID token' });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -156,7 +167,7 @@ router.post('/register', async (req, res) => {
     
     // Check rate limiting
     const clientIP = req.ip || req.connection.remoteAddress;
-    if (!checkRateLimit(clientIP, 10, 60 * 60 * 1000)) { // 10 attempts per hour
+    if (!checkRateLimit(clientIP, 30, 60 * 60 * 1000)) { // 30 attempts per hour
       console.log(`Rate limit exceeded for IP: ${clientIP}`);
       return res.status(429).json({ message: 'Too many registration attempts. Please try again later.' });
     }
@@ -211,11 +222,7 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'Email address is already registered' });
     }
 
-    // Additional name validation
-    const nameParts = value.name.split(' ').filter(part => part.length > 0);
-    if (nameParts.length < 2) {
-      return res.status(400).json({ message: 'Please enter your full name (first and last name)' });
-    }
+
 
     let user = await User.findOne({ firebaseUid: value.firebaseUid });
     if (!user) {
@@ -262,6 +269,5 @@ router.get('/profile', async (req, res) => {
   }
 });
 
-// OTP verification route removed as OTP is no longer required during registration.
 
 export default router;

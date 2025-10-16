@@ -160,7 +160,7 @@ export function validatePasswordConfirmation(password, confirmPassword) {
  * @returns {Object} - { isValid: boolean, error: string }
  */
 export function validateRole(role) {
-  const allowedRoles = ['public', 'clubManager'];
+  const allowedRoles = ['public', 'clubManager', 'player', 'coach'];
   
   if (!role) {
     return { isValid: false, error: 'Please select a role' };
