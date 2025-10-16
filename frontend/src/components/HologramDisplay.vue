@@ -410,4 +410,3 @@ onUnmounted(() => {
   animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
 }
 </style>
-</file_content>
