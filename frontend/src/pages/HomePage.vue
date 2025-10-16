@@ -29,7 +29,7 @@
             <!-- Action Buttons -->
             <div class="flex flex-wrap gap-4">
               <template v-if="auth.user">
-                <RouterLink to="/dashboard" class="group relative bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300">
+                <RouterLink to="/crickhub" class="group relative bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300">
                   <span class="relative z-10">Go to Dashboard</span>
                   <div class="absolute inset-0 bg-gradient-to-r from-green-700 to-emerald-700 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </RouterLink>
@@ -73,67 +73,8 @@
 
           <!-- Right Content - Interactive Cricket Scene -->
           <div class="relative">
-            <div class="relative w-full h-96 lg:h-[500px] rounded-3xl overflow-hidden bg-gradient-to-br from-green-400 via-emerald-500 to-green-600 shadow-2xl">
-              <!-- Cricket Field Background -->
-              <div class="absolute inset-0 opacity-20">
-                <svg viewBox="0 0 400 300" class="w-full h-full">
-                  <!-- Cricket pitch -->
-                  <rect x="180" y="100" width="40" height="100" fill="white" opacity="0.8"/>
-                  <!-- Wickets -->
-                  <rect x="185" y="95" width="2" height="10" fill="white"/>
-                  <rect x="190" y="95" width="2" height="10" fill="white"/>
-                  <rect x="195" y="95" width="2" height="10" fill="white"/>
-                  <rect x="185" y="205" width="2" height="10" fill="white"/>
-                  <rect x="190" y="205" width="2" height="10" fill="white"/>
-                  <rect x="195" y="205" width="2" height="10" fill="white"/>
-                  <!-- Boundary circle -->
-                  <circle cx="200" cy="150" r="120" fill="none" stroke="white" stroke-width="2" opacity="0.6"/>
-                </svg>
-              </div>
-
-              <!-- Floating Cricket Elements -->
-              <div class="absolute top-8 left-8 w-16 h-16 bg-white rounded-full shadow-lg flex items-center justify-center animate-bounce" style="animation-duration: 2s">
-                <div class="w-10 h-10 bg-red-500 rounded-full relative">
-                  <div class="absolute top-1 left-1 right-1 bottom-1 border-2 border-white rounded-full"></div>
-                </div>
-              </div>
-
-              <div class="absolute top-16 right-12 w-12 h-20 bg-amber-100 rounded-lg shadow-lg flex items-center justify-center animate-pulse">
-                <div class="w-2 h-16 bg-amber-600 rounded-full"></div>
-              </div>
-
-              <div class="absolute bottom-12 left-16 w-14 h-14 bg-white rounded-full shadow-lg flex items-center justify-center animate-spin" style="animation-duration: 4s">
-                <svg class="w-6 h-6 text-green-600" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                </svg>
-              </div>
-
-              <!-- Featured Tournament Card -->
-              <div v-if="upcoming.length" class="absolute bottom-6 left-6 right-6 bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl transform hover:scale-105 transition-all duration-300 cursor-pointer" @click="showTournamentDetails = !showTournamentDetails">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <div class="flex items-center gap-2 mb-2">
-                      <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
-                      <span class="text-sm font-semibold text-green-600">Featured Tournament</span>
-                    </div>
-                    <h3 class="text-lg font-bold text-gray-900">{{ activeTournament.name || 'Cricket Championship' }}</h3>
-                    <p class="text-sm text-gray-600">{{ activeTournament.location || 'Multiple Venues' }}</p>
-                  </div>
-                  <div class="text-right">
-                    <div class="text-2xl">🏏</div>
-                    <div class="text-xs text-gray-500 mt-1">Click to explore</div>
-                  </div>
-                </div>
-              </div>
-              <div v-else class="absolute bottom-6 left-6 right-6 bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl">
-                <div class="text-center">
-                  <div class="text-2xl mb-2">🏏</div>
-                  <h3 class="text-lg font-bold text-gray-900 mb-2">Kerala Cricket Hub</h3>
-                  <p class="text-sm text-gray-600">Your gateway to local cricket tournaments and clubs</p>
-                </div>
-              </div>
-            </div>
-
+            <HologramDisplay :active-match="activeMatch" />
+            
             <!-- Floating Action Cards -->
             <div class="absolute -right-4 top-20 bg-white rounded-2xl p-4 shadow-xl transform hover:scale-105 transition-all duration-300 cursor-pointer">
               <div class="text-2xl mb-2">📊</div>
@@ -787,7 +728,7 @@
             </RouterLink>
           </template>
           <template v-else>
-            <RouterLink to="/dashboard" class="bg-white text-green-600 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-gray-100 transition-all duration-300 transform hover:scale-105">
+            <RouterLink to="/crickhub" class="bg-white text-green-600 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-gray-100 transition-all duration-300 transform hover:scale-105">
               Go to Dashboard
             </RouterLink>
             <RouterLink to="/club-registration" class="border-2 border-white text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white hover:text-green-600 transition-all duration-300">
@@ -885,6 +826,7 @@ import axios from 'axios';
 import { useAuthStore } from '../store/auth';
 import TournamentList from '../components/TournamentList.vue';
 import TournamentHistory from '../components/TournamentHistory.vue';
+import HologramDisplay from '../components/HologramDisplay.vue';
 import { useRouter } from 'vue-router';
 
 const auth = useAuthStore();
@@ -962,6 +904,24 @@ const keralaDistricts = ref([
 // Simple featured carousel logic
 const activeIndex = ref(0);
 const activeTournament = computed(() => upcoming.value[activeIndex.value] || {});
+
+// Add activeMatch data for the hologram
+const activeMatch = ref({
+  homeClub: { clubName: 'Kochi Tuskers', name: 'Kochi Tuskers' },
+  awayClub: { clubName: 'Thrissur Warriors', name: 'Thrissur Warriors' },
+  innings: [
+    {
+      runs: 125,
+      wickets: 3,
+      balls: 75,
+      battingCard: [
+        { playerName: 'Rahul Krishna', runs: 45, balls: 30 },
+        { playerName: 'Arjun Menon', runs: 32, balls: 25 }
+      ]
+    }
+  ]
+});
+
 let timer = null;
 function setActive(i){ activeIndex.value = i; restartTimer(); }
 function next(){ if (upcoming.value.length > 0) activeIndex.value = (activeIndex.value + 1) % upcoming.value.length; }
