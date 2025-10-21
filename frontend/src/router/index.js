@@ -35,9 +35,7 @@ import PlayerDashboard from '../pages/PlayerDashboard.vue';
 import PlayerPanel from '../pages/PlayerPanel.vue';
 // Import new player page components
 import PlayerPanelDashboard from '../pages/PlayerPanelDashboard.vue';
-import PlayerPerformance from '../pages/player/Performance.vue';
 import PlayerTraining from '../pages/player/Training.vue';
-import PlayerProgress from '../pages/player/Progress.vue';
 import PlayerApplications from '../pages/player/Applications.vue';
 import PlayerProfile from '../pages/player/Profile.vue';
 import PlayerGoals from '../pages/player/Goals.vue'; // Added import
@@ -143,9 +141,7 @@ const routes = [
     meta: { requiresAuth: true, requiresPlayer: true },
     children: [
       { path: '', name: 'player-panel', component: PlayerPanelDashboard },
-      { path: 'performance', name: 'player-panel-performance', component: PlayerPerformance },
       { path: 'training', name: 'player-panel-training', component: PlayerTraining },
-      { path: 'progress', name: 'player-panel-progress', component: PlayerProgress },
       { path: 'applications', name: 'player-panel-applications', component: PlayerApplications },
       { path: 'messages', name: 'player-panel-messages', component: PlayerMessages },
       { path: 'goals', name: 'player-panel-goals', component: PlayerGoals }, // Player goals page

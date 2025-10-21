@@ -31,17 +31,25 @@
             <h3 class="text-lg font-bold text-gray-900">{{ goal.title }}</h3>
             <p class="text-sm text-gray-600 mt-1">{{ goal.description }}</p>
           </div>
-          <span 
-            :class="[
-              'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-              goal.status === 'achieved' ? 'bg-green-100 text-green-800' :
-              goal.status === 'missed' ? 'bg-red-100 text-red-800' :
-              goal.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
-              'bg-yellow-100 text-yellow-800'
-            ]"
-          >
-            {{ formatGoalStatus(goal.status) }}
-          </span>
+          <div class="flex items-center gap-2">
+            <button 
+              @click="editGoal(goal)"
+              class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Edit
+            </button>
+            <span 
+              :class="[
+                'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+                goal.status === 'achieved' ? 'bg-green-100 text-green-800' :
+                goal.status === 'missed' ? 'bg-red-100 text-red-800' :
+                goal.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
+                'bg-yellow-100 text-yellow-800'
+              ]"
+            >
+              {{ formatGoalStatus(goal.status) }}
+            </span>
+          </div>
         </div>
 
         <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
@@ -76,6 +84,24 @@
               :style="{ width: calculateProgress(goal) + '%' }">
             </div>
           </div>
+          <div class="mt-2 flex items-center gap-2">
+            <input 
+              :value="goal.currentValue || 0"
+              @change="updateGoalProgress(goal, $event.target.value, $event)"
+              @blur="validateAndFormatInput(goal, $event)"
+              type="number" 
+              min="0" 
+              :max="goal.targetValue"
+              class="w-20 border border-gray-300 rounded-md shadow-sm py-1 px-2 text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Update progress"
+            >
+            <button 
+              @click="updateGoalProgress(goal, Math.min((goal.currentValue || 0) + 1, goal.targetValue))"
+              class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            >
+              +1
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -105,7 +131,7 @@
       <div class="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div class="p-6">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-bold text-gray-900">Set Player Goal</h3>
+            <h3 class="text-lg font-bold text-gray-900">{{ editingGoalId ? 'Edit Player Goal' : 'Set Player Goal' }}</h3>
             <button 
               @click="closeGoalModal"
               class="text-gray-400 hover:text-gray-500"
@@ -122,6 +148,7 @@
               <select 
                 v-model="goalForm.playerId"
                 required
+                :disabled="editingGoalId"
                 class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               >
                 <option value="">Select a player</option>
@@ -133,6 +160,7 @@
                   {{ player.name }} ({{ player.preferredPosition }})
                 </option>
               </select>
+              <p v-if="editingGoalId" class="mt-1 text-sm text-gray-500">Player cannot be changed for existing goals.</p>
             </div>
 
             <div>
@@ -183,6 +211,29 @@
             </div>
 
             <div>
+              <label class="block text-sm font-medium text-gray-700">Current Value</label>
+              <input 
+                v-model.number="goalForm.currentValue"
+                type="number" 
+                min="0"
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              >
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Status</label>
+              <select 
+                v-model="goalForm.status"
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              >
+                <option value="pending">Pending</option>
+                <option value="in-progress">In Progress</option>
+                <option value="achieved">Achieved</option>
+                <option value="missed">Missed</option>
+              </select>
+            </div>
+
+            <div>
               <label class="block text-sm font-medium text-gray-700">Deadline</label>
               <input 
                 v-model="goalForm.deadline"
@@ -206,7 +257,7 @@
                 :disabled="isSavingGoal"
                 class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
               >
-                {{ isSavingGoal ? 'Setting Goal...' : 'Set Goal' }}
+                {{ isSavingGoal ? (editingGoalId ? 'Updating Goal...' : 'Setting Goal...') : (editingGoalId ? 'Update Goal' : 'Set Goal') }}
               </button>
             </div>
           </form>
@@ -217,7 +268,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import axios from 'axios';
 
 const API = import.meta.env.VITE_API_BASE || 'http://localhost:4000/api';
@@ -236,6 +288,7 @@ const clubPlayers = ref([]);
 const showSetGoalModal = ref(false);
 const isSavingGoal = ref(false);
 const loading = ref(false);
+const editingGoalId = ref(null);
 
 const today = computed(() => {
   const now = new Date();
@@ -257,6 +310,14 @@ onMounted(async () => {
     fetchPlayerGoals(),
     fetchClubPlayers()
   ]);
+});
+
+// Watch for route changes to re-fetch data
+const route = useRoute();
+watch(() => route.name, async (newRouteName) => {
+  if (newRouteName === 'coach-panel-goals') {
+    await fetchPlayerGoals();
+  }
 });
 
 async function fetchPlayerGoals() {
@@ -312,9 +373,101 @@ function calculateProgress(goal) {
   return Math.min(100, Math.max(0, progress));
 }
 
+async function updateGoalProgress(goal, newValue, event) {
+  // Convert to number and ensure it's not negative
+  let currentValue = Math.max(0, Number(newValue));
+  
+  // Ensure currentValue doesn't exceed targetValue
+  if (currentValue > goal.targetValue) {
+    currentValue = goal.targetValue;
+  }
+  
+  // If value is the same as current, no need to update
+  if (currentValue === (goal.currentValue || 0)) {
+    // Still update the input field to reflect the validated value
+    if (event && event.target) {
+      event.target.value = goal.currentValue || 0;
+    }
+    return;
+  }
+  
+  try {
+    const response = await axios.put(`${API}/coaches/goals/${goal._id}/progress`, 
+      { currentValue }, 
+      { withCredentials: true }
+    );
+    
+    if (response.data && response.data.goal) {
+      // Update the goal in the list
+      const index = playerGoals.value.findIndex(g => g._id === goal._id);
+      if (index !== -1) {
+        playerGoals.value[index] = response.data.goal;
+      }
+      
+      // Show special notification if goal is achieved
+      if (response.data.goal.status === 'achieved') {
+        if (typeof window.$notify !== 'undefined') {
+          window.$notify.success('Goal Completed!', `Congratulations! The goal "${response.data.goal.title}" has been achieved!`);
+        }
+      } else {
+        if (typeof window.$notify !== 'undefined') {
+          window.$notify.success('Success', 'Goal progress updated successfully');
+        }
+      }
+      
+      // Update the input field to reflect the actual value
+      if (event && event.target) {
+        event.target.value = response.data.goal.currentValue || 0;
+      }
+    }
+  } catch (error) {
+    console.error('Error updating goal progress:', error);
+    if (typeof window.$notify !== 'undefined') {
+      window.$notify.error('Error', 'Failed to update goal progress');
+    } else {
+      alert('Failed to update goal progress');
+    }
+    
+    // Reset the input field to the current value
+    if (event && event.target) {
+      event.target.value = goal.currentValue || 0;
+    }
+  }
+}
+
+function validateAndFormatInput(goal, event) {
+  const inputElement = event.target;
+  let value = Math.max(0, Number(inputElement.value));
+  
+  // Ensure value doesn't exceed target
+  if (value > goal.targetValue) {
+    value = goal.targetValue;
+  }
+  
+  // Update the input field to reflect the validated value
+  inputElement.value = value;
+}
+
 function closeGoalModal() {
   showSetGoalModal.value = false;
+  editingGoalId.value = null;
   resetGoalForm();
+}
+
+function editGoal(goal) {
+  // Populate the form with the goal data
+  goalForm.value = {
+    playerId: goal.player,
+    title: goal.title,
+    description: goal.description,
+    targetType: goal.targetType,
+    targetValue: goal.targetValue,
+    deadline: new Date(goal.deadline).toISOString().split('T')[0],
+    currentValue: goal.currentValue || 0,
+    status: goal.status
+  };
+  editingGoalId.value = goal._id;
+  showSetGoalModal.value = true;
 }
 
 function resetGoalForm() {
@@ -324,6 +477,8 @@ function resetGoalForm() {
     description: '',
     targetType: 'skill',
     targetValue: 0,
+    currentValue: 0,
+    status: 'pending',
     deadline: ''
   };
 }
@@ -340,25 +495,43 @@ async function setGoal() {
 
   isSavingGoal.value = true;
   try {
-    const response = await axios.post(`${API}/coaches/goals`, goalForm.value, { withCredentials: true });
-    if (typeof window.$notify !== 'undefined') {
-      window.$notify.success('Success', 'Goal set successfully');
+    let response;
+    if (editingGoalId.value) {
+      // Update existing goal
+      response = await axios.put(`${API}/coaches/goals/${editingGoalId.value}`, goalForm.value, { withCredentials: true });
+      if (typeof window.$notify !== 'undefined') {
+        window.$notify.success('Success', 'Goal updated successfully');
+      } else {
+        alert('Goal updated successfully');
+      }
+      
+      // Update the goal in the list
+      const index = playerGoals.value.findIndex(g => g._id === editingGoalId.value);
+      if (index !== -1 && response.data && response.data.goal) {
+        playerGoals.value[index] = response.data.goal;
+      }
     } else {
-      alert('Goal set successfully');
-    }
-    
-    // Add the new goal to the list immediately
-    if (response.data && response.data.goal) {
-      playerGoals.value.unshift(response.data.goal);
+      // Create new goal
+      response = await axios.post(`${API}/coaches/goals`, goalForm.value, { withCredentials: true });
+      if (typeof window.$notify !== 'undefined') {
+        window.$notify.success('Success', 'Goal set successfully');
+      } else {
+        alert('Goal set successfully');
+      }
+      
+      // Add the new goal to the list immediately
+      if (response.data && response.data.goal) {
+        playerGoals.value.unshift(response.data.goal);
+      }
     }
     
     closeGoalModal();
   } catch (error) {
-    console.error('Error setting goal:', error);
+    console.error('Error saving goal:', error);
     if (typeof window.$notify !== 'undefined') {
-      window.$notify.error('Error', 'Failed to set goal. Please try again.');
+      window.$notify.error('Error', `Failed to ${editingGoalId.value ? 'update' : 'set'} goal. Please try again.`);
     } else {
-      alert('Failed to set goal. Please try again.');
+      alert(`Failed to ${editingGoalId.value ? 'update' : 'set'} goal. Please try again.`);
     }
   } finally {
     isSavingGoal.value = false;
