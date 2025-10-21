@@ -394,7 +394,7 @@ router.post('/apply-to-club/:clubId', verifyFirebaseToken, async (req, res) => {
 router.get('/applications', verifyFirebaseToken, async (req, res) => {
   try {
     const player = await Player.findOne({ user: req.user._id })
-      .populate('applications.club', 'name clubName district city logoUrl')
+      .populate('applications.club', 'name clubName district city logoUrl description memberCount')
       .populate('applications.processedBy', 'name email');
     
     if (!player) {
@@ -404,6 +404,45 @@ router.get('/applications', verifyFirebaseToken, async (req, res) => {
     res.json({ applications: player.applications });
   } catch (error) {
     console.error('Error fetching applications:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// DELETE /api/players/applications/:id - Cancel a pending application
+router.delete('/applications/:id', verifyFirebaseToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const player = await Player.findOne({ user: req.user._id });
+    
+    if (!player) {
+      return res.status(404).json({ message: 'Player profile not found' });
+    }
+
+    // Find the application
+    const applicationIndex = player.applications.findIndex(
+      app => app._id.toString() === id
+    );
+
+    if (applicationIndex === -1) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    const application = player.applications[applicationIndex];
+
+    // Check if application is pending (can only cancel pending applications)
+    if (application.status !== 'pending') {
+      return res.status(400).json({ 
+        message: `Cannot cancel ${application.status} application. Only pending applications can be cancelled.` 
+      });
+    }
+
+    // Remove the application
+    player.applications.splice(applicationIndex, 1);
+    await player.save();
+
+    res.json({ message: 'Application cancelled successfully' });
+  } catch (error) {
+    console.error('Error cancelling application:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -558,7 +597,7 @@ router.get('/club/applications', verifyFirebaseToken, requireRole('clubManager')
     // Find all players with applications to this club
     const players = await Player.find({ 'applications.club': club._id })
       .populate('user', 'name email')
-      .select('fullName age preferredPosition playingExperience applications careerHistory profilePhoto');
+      .select('fullName age preferredPosition playingExperience applications careerHistory profilePhoto phone battingStyle bowlingStyle jerseyNumber statistics');
 
     // Filter and format applications for this club
     const applications = [];
@@ -578,6 +617,11 @@ router.get('/club/applications', verifyFirebaseToken, requireRole('clubManager')
             playingExperience: player.playingExperience,
             careerHistory: player.careerHistory,
             hasProfilePhoto: !!(player.profilePhoto && player.profilePhoto.data),
+            phone: player.phone,
+            battingStyle: player.battingStyle,
+            bowlingStyle: player.bowlingStyle,
+            jerseyNumber: player.jerseyNumber,
+            statistics: player.statistics,
             user: player.user
           },
           status: app.status,

@@ -94,6 +94,18 @@ const editHistorySchema = new mongoose.Schema({
   changes: { type: Object, default: {} }
 }, { _id: false });
 
+// Schema for team roster/lineup
+const rosterSchema = new mongoose.Schema({
+  players: [{
+    playerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Player', required: true },
+    playerName: { type: String, required: true },
+    position: { type: String, required: true },
+    jerseyNumber: { type: Number }
+  }],
+  submittedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Coach', required: true },
+  submittedAt: { type: Date, default: Date.now }
+}, { _id: false });
+
 const matchSchema = new mongoose.Schema({
   tournament: { type: mongoose.Schema.Types.ObjectId, ref: 'Tournament', required: true },
   homeClub: { type: mongoose.Schema.Types.ObjectId, ref: 'Club', required: true },
@@ -108,6 +120,8 @@ const matchSchema = new mongoose.Schema({
   stage: { type: String, enum: ['Group', 'Knockout', 'Playoff', 'Final', ''], default: '' },
   group: { type: String, default: '' },
   matchType: { type: String, enum: ['League', 'Knockout', 'Final', ''], default: '' },
+  matchFormat: { type: String, enum: ['T20', 'T10', 'ODI', 'Test'], default: 'T20' },
+  oversLimit: { type: Number, default: 20, min: 5, max: 50 },
   status: { type: String, enum: ['Scheduled', 'Live', 'Completed', 'Cancelled'], default: 'Scheduled' },
   finalized: { type: Boolean, default: false },
   // Toss and innings
@@ -135,6 +149,9 @@ const matchSchema = new mongoose.Schema({
     },
     summary: String
   },
+  // Team rosters/lineups
+  homeClubRoster: rosterSchema,
+  awayClubRoster: rosterSchema,
   // Manual edit history
   editHistory: [editHistorySchema]
 }, { timestamps: true });

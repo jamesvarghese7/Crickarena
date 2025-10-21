@@ -38,20 +38,20 @@
               <a :href="href" :class="navLinkClass('/clubs')">Clubs</a>
             </RouterLink>
           </li>
+          <li>
+            <RouterLink :to="'/tournaments'" v-slot="{ href }">
+              <a :href="href" :class="navLinkClass('/tournaments')">Tournaments</a>
+            </RouterLink>
+          </li>
           <template v-if="auth.user">
             <li>
-              <RouterLink :to="'/dashboard'" v-slot="{ href }">
-                <a :href="href" :class="navLinkClass('/dashboard')">Dashboard</a>
+              <RouterLink :to="'/crickhub'" v-slot="{ href }">
+                <a :href="href" :class="navLinkClass('/crickhub')">CrickHub</a>
               </RouterLink>
             </li>
             <li v-if="isClubManager">
               <RouterLink :to="'/club-manager'" v-slot="{ href }">
                 <a :href="href" :class="navLinkClass('/club-manager')">Club Manager</a>
-              </RouterLink>
-            </li>
-            <li v-if="isClubManager">
-              <RouterLink :to="'/club/tournaments'" v-slot="{ href }">
-                <a :href="href" :class="navLinkClass('/club/tournaments')">Tournaments</a>
               </RouterLink>
             </li>
             <li v-if="isPlayer">
@@ -72,8 +72,6 @@
             </li>
           </template>
         </ul>
-
-
 
         <!-- Search (desktop) -->
         <div class="relative w-64 lg:w-80" ref="searchRef">
@@ -143,8 +141,17 @@
             :aria-expanded="openUser.toString()"
             aria-haspopup="menu"
           >
-            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-sm">
-              <span class="text-white text-sm font-semibold">{{ getUserInitials() }}</span>
+            <div class="w-8 h-8 rounded-full overflow-hidden shadow-sm ring-2 ring-emerald-200">
+              <img
+                v-if="userPhotoUrl"
+                :src="userPhotoUrl"
+                alt="Profile"
+                class="w-full h-full object-cover"
+                @error="userPhotoUrl = null"
+              />
+              <div v-else class="w-full h-full bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center">
+                <span class="text-white text-sm font-semibold">{{ getUserInitials() }}</span>
+              </div>
             </div>
             <div class="hidden xl:flex flex-col text-left">
               <span class="text-sm font-medium text-gray-700 dark:text-gray-200">{{ getUserDisplayName() }}</span>
@@ -169,7 +176,7 @@
                   <RouterLink to="/profile" class="menuItem emerald">Profile</RouterLink>
                 </li>
                 <li>
-                  <RouterLink to="/dashboard" class="menuItem emerald">Dashboard</RouterLink>
+                  <RouterLink to="/crickhub" class="menuItem emerald">CrickHub</RouterLink>
                 </li>
                 <li v-if="isClubManager">
                   <RouterLink to="/club-manager" class="menuItem emerald">Club Manager</RouterLink>
@@ -227,17 +234,26 @@
           <ul class="space-y-1 text-sm font-medium">
             <li><RouterLink @click="openMobile=false" to="/" class="mobileLink">Home</RouterLink></li>
             <li><RouterLink @click="openMobile=false" to="/clubs" class="mobileLink">Clubs</RouterLink></li>
+            <li><RouterLink @click="openMobile=false" to="/tournaments" class="mobileLink">Tournaments</RouterLink></li>
             <template v-if="auth.user">
-              <li><RouterLink @click="openMobile=false" to="/dashboard" class="mobileLink">Dashboard</RouterLink></li>
+              <li><RouterLink @click="openMobile=false" to="/crickhub" class="mobileLink">CrickHub</RouterLink></li>
               <li v-if="isClubManager"><RouterLink @click="openMobile=false" to="/club-manager" class="mobileLink">Club Manager</RouterLink></li>
-              <li v-if="isClubManager"><RouterLink @click="openMobile=false" to="/club/tournaments" class="mobileLink">Tournaments</RouterLink></li>
               <li v-if="isPlayer"><RouterLink @click="openMobile=false" to="/player-panel" class="mobileLink">Player Dashboard</RouterLink></li>
               <li v-if="isCoach"><RouterLink @click="openMobile=false" to="/coach-panel" class="mobileLink">Coach Dashboard</RouterLink></li>
               <li v-if="isAdmin"><RouterLink @click="openMobile=false" to="/admin" class="mobileLink">Admin Panel</RouterLink></li>
               <li class="py-2 border-t border-gray-200 dark:border-neutral-800">
                 <div class="flex items-center gap-3 mb-2">
-                  <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-sm">
-                    <span class="text-white text-sm font-semibold">{{ getUserInitials() }}</span>
+                  <div class="w-10 h-10 rounded-full overflow-hidden shadow-sm ring-2 ring-emerald-200">
+                    <img
+                      v-if="userPhotoUrl"
+                      :src="userPhotoUrl"
+                      alt="Profile"
+                      class="w-full h-full object-cover"
+                      @error="userPhotoUrl = null"
+                    />
+                    <div v-else class="w-full h-full bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center">
+                      <span class="text-white text-sm font-semibold">{{ getUserInitials() }}</span>
+                    </div>
                   </div>
                   <div class="flex-1">
                     <div class="text-sm font-medium text-gray-700 dark:text-gray-200">{{ getUserDisplayName() }}</div>
@@ -265,13 +281,16 @@ import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../store/auth'
 import api from '../utils/api'
+import axios from 'axios'
 
 const auth = useAuthStore()
 const route = useRoute()
+const API = import.meta.env.VITE_API_BASE || 'http://localhost:4000/api'
 
 const openMobile = ref(false)
 const openUser = ref(false)
 const userMenuRef = ref(null)
+const userPhotoUrl = ref(null)
 
 // Global search state (kept in sync with route.query.q)
 const navbarQuery = ref('')
@@ -287,6 +306,39 @@ let tournamentsCache = []
 let matchesCache = []
 let dataLoaded = false
 let debounceTimer = null
+
+// Load user profile photo
+async function loadUserPhoto() {
+  const role = auth.userProfile?.role
+  if (!role || role === 'public' || role === 'clubManager') {
+    userPhotoUrl.value = null
+    return
+  }
+  
+  try {
+    const idTok = auth.user ? await auth.user.getIdToken(true) : null
+    const endpoint = role === 'player' ? '/players/photo' : role === 'coach' ? '/coaches/photo' : null
+    if (!endpoint) return
+    
+    const response = await axios.get(`${API}${endpoint}`, {
+      headers: { ...(idTok ? { Authorization: `Bearer ${idTok}` } : {}) },
+      responseType: 'blob',
+      withCredentials: true
+    })
+    
+    if (userPhotoUrl.value) {
+      URL.revokeObjectURL(userPhotoUrl.value)
+    }
+    
+    const blob = new Blob([response.data], { type: response.headers['content-type'] })
+    userPhotoUrl.value = URL.createObjectURL(blob)
+  } catch (error) {
+    if (error.response?.status !== 404) {
+      console.error('Error loading user photo:', error)
+    }
+    userPhotoUrl.value = null
+  }
+}
 
 function resetHighlight() {
   highlightedIndex.value = suggestions.value.length ? 0 : -1
@@ -494,11 +546,31 @@ onMounted(() => {
   document.addEventListener('click', onDocClick)
   // Store for cleanup
   userMenuRef.value && (userMenuRef.value._onDocClick = onDocClick)
+  
+  // Load user photo
+  loadUserPhoto()
+  
+  // Listen for profile photo updates
+  window.addEventListener('profile-photo-updated', loadUserPhoto)
+  window.addEventListener('profile-updated', loadUserPhoto)
 })
 
 onBeforeUnmount(() => {
   const onDocClick = userMenuRef.value?._onDocClick
   if (onDocClick) document.removeEventListener('click', onDocClick)
+  
+  // Clean up photo URL
+  if (userPhotoUrl.value) {
+    URL.revokeObjectURL(userPhotoUrl.value)
+  }
+  
+  // Remove event listeners
+  window.removeEventListener('profile-photo-updated', loadUserPhoto)
+  window.removeEventListener('profile-updated', loadUserPhoto)
+})
+// Watch for auth changes to reload photo
+watch(() => auth.userProfile?.role, () => {
+  loadUserPhoto()
 })
 </script>
 

@@ -174,6 +174,79 @@ export function validateRole(role) {
 }
 
 /**
+ * Validate Indian mobile number
+ * @param {string} phone - Phone number to validate
+ * @returns {Object} - { isValid: boolean, error: string }
+ */
+export function validatePhone(phone) {
+  const trimmedPhone = phone.trim();
+  
+  if (!trimmedPhone) {
+    return { isValid: false, error: 'Phone number is required' };
+  }
+  
+  // Remove spaces, hyphens, and plus sign for validation
+  const cleanPhone = trimmedPhone.replace(/[\s-]/g, '');
+  
+  // Indian mobile number patterns:
+  // With country code: +919876543210 or 919876543210
+  // Without country code: 9876543210
+  const phoneRegex = /^(\+91|91)?[6-9]\d{9}$/;
+  
+  if (!phoneRegex.test(cleanPhone)) {
+    if (cleanPhone.length < 10) {
+      return { isValid: false, error: 'Phone number must be 10 digits' };
+    }
+    if (cleanPhone.length > 13) {
+      return { isValid: false, error: 'Phone number is too long' };
+    }
+    if (!/^(\+91|91)?[0-9]+$/.test(cleanPhone)) {
+      return { isValid: false, error: 'Phone number can only contain digits, +, -, and spaces' };
+    }
+    if (!/^(\+91|91)?[6-9]/.test(cleanPhone)) {
+      return { isValid: false, error: 'Indian mobile numbers must start with 6, 7, 8, or 9' };
+    }
+    return { isValid: false, error: 'Please enter a valid Indian mobile number' };
+  }
+  
+  return { isValid: true, error: '', cleanPhone };
+}
+
+/**
+ * Validate Indian pincode
+ * @param {string} pincode - Pincode to validate
+ * @returns {Object} - { isValid: boolean, error: string }
+ */
+export function validatePincode(pincode) {
+  const trimmedPincode = pincode.trim();
+  
+  if (!trimmedPincode) {
+    return { isValid: false, error: 'Pincode is required' };
+  }
+  
+  // Remove spaces for validation
+  const cleanPincode = trimmedPincode.replace(/\s/g, '');
+  
+  // Must be exactly 6 digits
+  const pincodeRegex = /^\d{6}$/;
+  
+  if (!pincodeRegex.test(cleanPincode)) {
+    if (!/^\d+$/.test(cleanPincode)) {
+      return { isValid: false, error: 'Pincode must contain only numbers' };
+    }
+    if (cleanPincode.length < 6) {
+      return { isValid: false, error: 'Pincode must be exactly 6 digits' };
+    }
+    if (cleanPincode.length > 6) {
+      return { isValid: false, error: 'Pincode cannot be more than 6 digits' };
+    }
+    return { isValid: false, error: 'Please enter a valid 6-digit pincode' };
+  }
+  
+  return { isValid: true, error: '', cleanPincode };
+}
+
+/**
  * Check if all validation criteria are met
  * @param {...Object} validations - Validation objects to check
  * @returns {boolean} - True if all validations pass

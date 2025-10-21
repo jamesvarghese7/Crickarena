@@ -1,5 +1,63 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+  <div v-if="clubData === null && clubChecked" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4">
+    <div class="bg-white rounded-3xl shadow-xl p-8 max-w-md w-full text-center">
+      <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+        </svg>
+      </div>
+      <h2 class="text-2xl font-bold text-slate-900 mb-2">Club Registration Required</h2>
+      <p class="text-slate-600 mb-6">
+        You need to register your club before accessing the Club Manager dashboard.
+      </p>
+      <RouterLink 
+        :to="{ name: 'club-registration' }" 
+        class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-2xl hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl"
+      >
+        Register Your Club
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+        </svg>
+      </RouterLink>
+      <button 
+        @click="logout" 
+        class="mt-4 text-slate-500 hover:text-slate-700 font-medium"
+      >
+        Logout
+      </button>
+    </div>
+  </div>
+
+  <div v-else-if="clubData && clubData.status !== 'approved'" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4">
+    <div class="bg-white rounded-3xl shadow-xl p-8 max-w-md w-full text-center">
+      <div class="w-20 h-20 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+      </div>
+      <h2 class="text-2xl font-bold text-slate-900 mb-2">Club Registration Pending</h2>
+      <p class="text-slate-600 mb-2">
+        Your club registration is currently {{ clubData.status }}.
+      </p>
+      <p class="text-slate-500 text-sm mb-6">
+        Please wait for admin approval before accessing the Club Manager dashboard.
+      </p>
+      <RouterLink 
+        :to="{ name: 'home' }" 
+        class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-2xl hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl"
+      >
+        Back to Home
+      </RouterLink>
+      <button 
+        @click="logout" 
+        class="mt-4 text-slate-500 hover:text-slate-700 font-medium"
+      >
+        Logout
+      </button>
+    </div>
+  </div>
+
+  <div v-else class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
     <div class="flex min-h-screen">
       <!-- Sidebar -->
       <aside :class="['bg-white/80 backdrop-blur-xl border-r border-white/20 w-80 shrink-0 flex-col shadow-2xl shadow-blue-500/10', sidebarOpen ? 'flex' : 'hidden md:flex']">
@@ -153,6 +211,21 @@
           </RouterLink>
 
           <RouterLink 
+            :to="{ name: 'club-manager-messages' }" 
+            class="nav-link group"
+            :class="isActive('club-manager-messages')"
+            @click="sidebarOpen = false"
+          >
+            <div class="nav-icon-wrapper">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+              </svg>
+            </div>
+            <span class="nav-text">Messages</span>
+            <div class="nav-indicator"></div>
+          </RouterLink>
+
+          <RouterLink 
             :to="{ name: 'club-manager-profile' }" 
             class="nav-link group"
             :class="isActive('club-manager-profile')"
@@ -258,6 +331,7 @@ const auth = useAuthStore();
 const clubData = ref(null);
 const sidebarOpen = ref(false);
 const logoError = ref(false);
+const clubChecked = ref(false);
 
 // Using centralized API instance
 
@@ -279,9 +353,26 @@ async function loadClubData() {
   try {
     const response = await api.get('/clubs/my-club');
     clubData.value = response.data.club;
+    clubChecked.value = true;
     logoError.value = false; // Reset logo error when loading new data
   } catch (error) {
-    console.error('Failed to load club data:', error);
+    // If club not found, set clubData to null to show registration prompt
+    if (error.response && error.response.status === 404) {
+      clubData.value = null;
+      clubChecked.value = true;
+      
+      // Show notification about club registration requirement
+      if (typeof window.$notify !== 'undefined') {
+        window.$notify.info('Club Registration Required', 'Please register your club to access the dashboard.');
+      }
+    } else {
+      console.error('Failed to load club data:', error);
+      
+      // Show error notification
+      if (typeof window.$notify !== 'undefined') {
+        window.$notify.error('Error', 'Failed to load club data. Please try again.');
+      }
+    }
   }
 }
 
@@ -320,7 +411,19 @@ const userInitials = computed(() => {
 async function logout(){
   try {
     await auth.logout();
-  } catch {}
+    
+    // Show logout success notification
+    if (typeof window.$notify !== 'undefined') {
+      window.$notify.success('Logged Out', 'You have been successfully logged out.');
+    }
+  } catch (error) {
+    console.error('Logout error:', error);
+    
+    // Show error notification
+    if (typeof window.$notify !== 'undefined') {
+      window.$notify.error('Logout Error', 'There was an error logging out. Please try again.');
+    }
+  }
   window.location.href = '/';
 }
 </script>

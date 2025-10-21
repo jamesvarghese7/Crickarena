@@ -171,6 +171,15 @@
                 </svg>
                 Seed
               </button>
+              
+              <!-- Delete Tournament Button -->
+              <button @click="deleteTournament(t)" 
+                      class="px-4 py-2 bg-red-50 text-red-600 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors">
+                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                Delete
+              </button>
             </div>
           </div>
         </div>
@@ -379,6 +388,96 @@
                     <textarea v-model="form.rules" required rows="4"
                               class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200 resize-none"
                               placeholder="Key rules including eligibility criteria, overs per match, player limits, dress code, fees, conduct rules, etc."></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Match Time Slots Section -->
+              <div class="space-y-6">
+                <div class="flex items-center gap-2 pb-2 border-b border-gray-100">
+                  <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
+                    <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                  </div>
+                  <h3 class="text-lg font-semibold text-gray-900">Match Scheduling Configuration</h3>
+                </div>
+
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+                  <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <div class="text-sm text-blue-800">
+                      <p class="font-semibold mb-1">Smart Scheduling</p>
+                      <p>Configure available match times to control fixture scheduling. By default, only one match will be scheduled per time slot unless tournament days are limited.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="space-y-4">
+                  <!-- Time Slots Configuration -->
+                  <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-gray-700">Available Match Time Slots</label>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div v-for="(slot, idx) in timeSlots" :key="idx" class="flex items-center gap-2">
+                        <input 
+                          v-model="slot.time" 
+                          type="time" 
+                          class="flex-1 border-2 border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"
+                        />
+                        <button 
+                          v-if="timeSlots.length > 1"
+                          @click="removeTimeSlot(idx)" 
+                          type="button"
+                          class="w-8 h-8 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                    <button 
+                      @click="addTimeSlot" 
+                      type="button"
+                      class="mt-2 inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-medium hover:bg-indigo-100 transition-colors">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                      </svg>
+                      Add Time Slot
+                    </button>
+                  </div>
+
+                  <!-- Parallel Match Settings -->
+                  <div class="bg-gray-50 rounded-xl p-4 space-y-4">
+                    <div class="flex items-center gap-3">
+                      <input 
+                        id="allowParallel" 
+                        v-model="form.allowParallelMatches" 
+                        type="checkbox" 
+                        class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                      />
+                      <label for="allowParallel" class="text-sm font-medium text-gray-700">
+                        Allow multiple matches at the same time (when necessary)
+                      </label>
+                    </div>
+                    
+                    <div v-if="form.allowParallelMatches" class="space-y-2 pl-7">
+                      <label class="block text-sm font-semibold text-gray-700">Maximum Parallel Matches</label>
+                      <div class="flex items-center gap-3">
+                        <input 
+                          v-model.number="form.maxParallelMatches" 
+                          type="number" 
+                          min="1" 
+                          max="10"
+                          class="w-24 border-2 border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"
+                        />
+                        <span class="text-sm text-gray-600">matches can run simultaneously</span>
+                      </div>
+                      <p class="text-xs text-gray-500 mt-1">
+                        Parallel matches will only be scheduled if tournament duration is insufficient for sequential scheduling.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -651,9 +750,16 @@ const form = reactive({
   name: '', format: 'league', district: districts[0], maxTeams: 16,
   entryFee: 0, prizePool: 0, sponsorInfo: '',
   startDate: '', endDate: '', registrationDeadline: '', description: '', rules: '', bannerUrl: '', venues: [],
-  matchFormat: 'T20', oversLimit: 20, restDaysMin: 1
+  matchFormat: 'T20', oversLimit: 20, restDaysMin: 1,
+  allowParallelMatches: false,
+  maxParallelMatches: 1
 });
 const bannerPreview = ref('');
+const timeSlots = ref([
+  { time: '09:00' },
+  { time: '14:00' },
+  { time: '18:00' }
+]);
 
 const today = new Date().toISOString().split('T')[0];
 
@@ -742,6 +848,63 @@ async function seedKnockout(t){
   }
 }
 
+async function deleteTournament(tournament) {
+  // Use the global confirm dialog instead of native confirm
+  const confirmed = await window.$confirm({
+    title: 'Delete Tournament',
+    message: `Are you sure you want to permanently delete the tournament "${tournament.name}"? This action cannot be undone and will also delete all associated matches.`,
+    confirmText: 'Delete',
+    cancelText: 'Cancel',
+    isDangerous: true
+  });
+  
+  if (!confirmed) return;
+  
+  try {
+    // Add more detailed logging
+    console.log('Deleting tournament with ID:', tournament._id);
+    
+    // Check if tournament ID is valid
+    if (!tournament._id) {
+      throw new Error('Invalid tournament ID');
+    }
+    
+    await api.delete(`/admin/tournaments/${tournament._id}`);
+    await fetchTournaments();
+    // Use the global notification instead of native alert
+    window.$notify.success('Tournament Deleted', 'Tournament deleted successfully');
+  } catch (e) {
+    console.error('Failed to delete tournament:', e);
+    console.error('Error details:', {
+      message: e.message,
+      code: e.code,
+      response: e.response?.data,
+      status: e.response?.status,
+      tournamentId: tournament._id
+    });
+    
+    // Provide more specific error messages
+    let errorMessage = 'Failed to delete tournament';
+    if (e.response) {
+      if (e.response.status === 404) {
+        errorMessage = 'Tournament not found';
+      } else if (e.response.status === 403) {
+        errorMessage = 'Access denied. You may not have permission to delete this tournament.';
+      } else if (e.response.status === 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else {
+        errorMessage = e.response.data?.message || errorMessage;
+      }
+    } else if (e.code === 'ECONNABORTED') {
+      errorMessage = 'Request timed out. Please check your connection and try again.';
+    } else if (!e.response) {
+      errorMessage = 'Network error. Please check your connection and try again.';
+    }
+    
+    window.$notify.error('Delete Failed', errorMessage);
+  }
+}
+
 function openGenerate(t){
   currentTournament.value = t;
   gen.value = { doubleRoundRobin: false, respectRoundOrder: true, groups: 2, qualifyPerGroup: 2 };
@@ -754,7 +917,8 @@ async function generateNow(){
   if (!currentTournament.value) return;
   genLoading.value = true; genError.value = ''; genDiag.value = null;
   try{
-    const { data } = await api.post(`/admin/tournaments/${currentTournament.value._id}/fixtures/generate`, { ...gen.value });
+    // Use V2 endpoint with time slot support
+    const { data } = await api.post(`/admin/tournaments/${currentTournament.value._id}/fixtures/generate-v2`, { ...gen.value });
     genOpen.value = false;
     await fetchTournaments();
   } catch(e){
@@ -795,11 +959,28 @@ function closeDialog(){
   Object.assign(form, { name: '', format: 'league', district: districts[0], maxTeams: 16,
     entryFee: 0, prizePool: 0, sponsorInfo: '',
     startDate: '', endDate: '', registrationDeadline: '', description: '', rules: '', bannerUrl: '', venues: [],
-    matchFormat: 'T20', oversLimit: 20, restDaysMin: 1
+    matchFormat: 'T20', oversLimit: 20, restDaysMin: 1,
+    allowParallelMatches: false,
+    maxParallelMatches: 1
   });
   venuesText.value = '';
+  timeSlots.value = [
+    { time: '09:00' },
+    { time: '14:00' },
+    { time: '18:00' }
+  ];
   if (bannerPreview.value) { URL.revokeObjectURL(bannerPreview.value); }
   bannerPreview.value = '';
+}
+
+function addTimeSlot() {
+  timeSlots.value.push({ time: '12:00' });
+}
+
+function removeTimeSlot(index) {
+  if (timeSlots.value.length > 1) {
+    timeSlots.value.splice(index, 1);
+  }
 }
 
 // Editing moved to Tournament Details page; retain placeholder for code compatibility
@@ -842,7 +1023,8 @@ async function saveTournament(){
 
   const payload = { 
     ...form, 
-    venues: venuesText.value.split(',').map(s=>s.trim()).filter(Boolean) 
+    venues: venuesText.value.split(',').map(s=>s.trim()).filter(Boolean),
+    matchTimeSlots: timeSlots.value.map(slot => slot.time).filter(Boolean)
   };
   
   try {

@@ -289,6 +289,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
+import { notify } from '../utils/notifications';
 
 const clubData = ref(null);
 const isEditing = ref(false);
@@ -309,6 +310,7 @@ async function loadClubData() {
     logoError.value = false;
   } catch (error) {
     console.error('Failed to load club data:', error);
+    notify.error('Failed to load club profile');
   }
 }
 
@@ -328,7 +330,21 @@ function formatDate(dateString) {
 
 function startEdit() {
   isEditing.value = true;
-  editForm.value = { ...clubData.value };
+  // Only include editable fields that match the backend schema
+  editForm.value = {
+    clubName: clubData.value.clubName || '',
+    district: clubData.value.district || '',
+    city: clubData.value.city || '',
+    foundedYear: clubData.value.foundedYear || '',
+    managerName: clubData.value.managerName || '',
+    phone: clubData.value.phone || '',
+    email: clubData.value.email || '',
+    description: clubData.value.description || '',
+    groundName: clubData.value.groundName || '',
+    memberCount: clubData.value.memberCount || '',
+    website: clubData.value.website || '',
+    achievements: clubData.value.achievements || ''
+  };
 }
 
 function cancelEdit() {
@@ -339,14 +355,16 @@ function cancelEdit() {
 async function saveChanges() {
   saving.value = true;
   try {
+    console.log('Sending update data:', editForm.value);
     const response = await axios.put(`${API}/clubs/my-club`, editForm.value);
     clubData.value = response.data.club;
     isEditing.value = false;
     editForm.value = {};
-    alert('Club profile updated successfully!');
+    notify.success('Club profile updated successfully! Your changes will be reviewed.');
   } catch (error) {
     console.error('Failed to update club:', error);
-    alert(error.response?.data?.message || 'Failed to update club profile');
+    console.error('Error response:', error.response?.data);
+    notify.error(error.response?.data?.message || 'Failed to update club profile');
   } finally {
     saving.value = false;
   }

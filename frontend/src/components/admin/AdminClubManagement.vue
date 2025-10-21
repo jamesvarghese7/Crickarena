@@ -173,24 +173,21 @@
             </div>
             
             <!-- Club Header Info -->
-            <div class="flex items-start gap-4 mb-4">
-              <div class="w-16 h-16 rounded-xl overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
-                <img v-if="club.logoUrl" :src="club.logoUrl" alt="Club Logo" 
+            <div class="flex items-center gap-4 mb-3">
+              <div class="w-12 h-12 rounded-xl overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center flex-shrink-0">
+                <img v-if="club.logoData" :src="club.logoData" alt="Club Logo" 
                      class="w-full h-full object-cover" 
                      @error="($event.target.style.display='none')">
-                <span v-else class="text-blue-600 font-bold text-xl">
+                <img v-else-if="club.logoUrl" :src="club.logoUrl" alt="Club Logo" 
+                     class="w-full h-full object-cover" 
+                     @error="($event.target.style.display='none')">
+                <span v-else class="text-blue-600 font-bold text-lg">
                   {{ (club.clubName || 'C')?.charAt(0)?.toUpperCase() }}
                 </span>
               </div>
               <div class="flex-1 min-w-0">
-                <h4 class="text-xl font-bold text-gray-900 mb-1 truncate">{{ club.clubName }}</h4>
-                <p class="text-gray-600 flex items-center gap-1">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                  </svg>
-                  {{ club.district }}<span v-if="club.city">, {{ club.city }}</span>
-                </p>
+                <h4 class="text-lg font-bold text-gray-900 truncate">{{ club.clubName }}</h4>
+                <p class="text-gray-600 text-sm truncate">{{ club.district }}<span v-if="club.city">, {{ club.city }}</span></p>
               </div>
             </div>
           </div>
@@ -309,9 +306,12 @@
             </svg>
           </button>
           
-          <div class="flex items-start gap-6">
-            <div class="w-24 h-24 rounded-2xl overflow-hidden bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
-              <img v-if="selectedClub.logoUrl" :src="selectedClub.logoUrl" alt="Club Logo" 
+          <div class="flex items-start gap-5">
+            <div class="w-20 h-20 rounded-2xl overflow-hidden bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+              <img v-if="selectedClub.logoData" :src="selectedClub.logoData" alt="Club Logo" 
+                   class="w-full h-full object-cover" 
+                   @error="($event.target.style.display='none')">
+              <img v-else-if="selectedClub.logoUrl" :src="selectedClub.logoUrl" alt="Club Logo" 
                    class="w-full h-full object-cover" 
                    @error="($event.target.style.display='none')">
               <span v-else class="text-white font-bold text-3xl">
@@ -419,10 +419,13 @@
             </h4>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <!-- Club Logo -->
-              <div class="bg-gray-50 rounded-2xl p-6">
+              <div class="bg-gray-50 rounded-2xl p-5">
                 <h5 class="font-semibold text-gray-900 mb-3">Club Logo</h5>
-                <div class="aspect-square max-w-48 mx-auto bg-white rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden">
-                  <img v-if="selectedClub.logoUrl" :src="selectedClub.logoUrl" alt="Club Logo" 
+                <div class="aspect-square max-w-40 mx-auto bg-white rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden">
+                  <img v-if="selectedClub.logoData" :src="selectedClub.logoData" alt="Club Logo" 
+                       class="w-full h-full object-cover rounded-xl" 
+                       @error="($event.target.style.display='none')">
+                  <img v-else-if="selectedClub.logoUrl" :src="selectedClub.logoUrl" alt="Club Logo" 
                        class="w-full h-full object-cover rounded-xl" 
                        @error="($event.target.style.display='none')">
                   <div v-else class="text-center text-gray-400">
@@ -656,7 +659,29 @@ const fetchClubs = async () => {
     if (searchQuery.value) url += `search=${encodeURIComponent(searchQuery.value)}&`
 
     const response = await api.get(url)
+    console.log('Full API response:', response);
     clubs.value = response.data.clubs
+
+    // Log details about the clubs
+    if (response.data.clubs && response.data.clubs.length > 0) {
+      console.log('Number of clubs received:', response.data.clubs.length);
+      
+      // Log details about the first club
+      const firstClub = response.data.clubs[0];
+      console.log('First club details:', {
+        id: firstClub.id,
+        clubName: firstClub.clubName,
+        hasLogoData: !!firstClub.logoData,
+        hasLogoUrl: !!firstClub.logoUrl,
+        logoDataLength: firstClub.logoData ? firstClub.logoData.length : 0,
+        logoDataPreview: firstClub.logoData ? firstClub.logoData.substring(0, 100) : null
+      });
+      
+      // Count clubs with logo data
+      const clubsWithLogoData = response.data.clubs.filter(club => club.logoData).length;
+      console.log('Clubs with logoData:', clubsWithLogoData);
+      console.log('Clubs with logoUrl:', response.data.clubs.filter(club => club.logoUrl).length);
+    }
 
     // Update districts
     const uniqueDistricts = [...new Set(clubs.value.map(club => club.district).filter(Boolean))]

@@ -223,6 +223,29 @@ router.get('/:id/matches', async (req, res) => {
   }
 });
 
+// Get specific match by ID within a tournament
+router.get('/:id/matches/:matchId', async (req, res) => {
+  try {
+    const match = await Match.findOne({ 
+      _id: req.params.matchId, 
+      tournament: req.params.id 
+    })
+      .populate('homeClub', 'clubName name logoUrl district')
+      .populate('awayClub', 'clubName name logoUrl district')
+      .populate('tournament', 'name bannerUrl district startDate endDate format status')
+      .lean();
+    
+    if (!match) {
+      return res.status(404).json({ message: 'Match not found' });
+    }
+    
+    res.json(match);
+  } catch (error) {
+    console.error('Error fetching match:', error);
+    res.status(500).json({ message: 'Failed to fetch match' });
+  }
+});
+
 // Matches for the logged-in club manager in a tournament
 router.get('/:id/matches/mine', verifyFirebaseToken, requireRole('clubManager'), async (req, res) => {
   try {
@@ -347,68 +370,22 @@ router.get('/matches/upcoming', async (req, res) => {
   }
 });
 
-// ===== Public: Match details (read-only scoreboard) =====
-function sr(runs, balls) {
-  const r = Number(runs) || 0, b = Number(balls) || 0;
-  return b > 0 ? Number(((r / b) * 100).toFixed(2)) : 0;
-}
-function eco(runs, balls) {
-  const r = Number(runs) || 0, b = Number(balls) || 0;
-  const overs = b / 6;
-  return overs > 0 ? Number((r / overs).toFixed(2)) : 0;
-}
-function deriveInningsForView(inn) {
-  if (!inn) return inn;
-  const bats = Array.isArray(inn.battingCard) ? inn.battingCard.map(e => ({
-    ...e,
-    strikeRate: e?.strikeRate ?? sr(e.runs, e.balls)
-  })) : [];
-  const bowls = Array.isArray(inn.bowlingCard) ? inn.bowlingCard.map(bw => ({
-    ...bw,
-    economy: bw?.economy ?? eco(bw.runs, bw.balls)
-  })) : [];
-  const ex = inn.extras || { wides: 0, noBalls: 0, byes: 0, legByes: 0, penalty: 0 };
-  const total = (Number(ex.wides)||0) + (Number(ex.noBalls)||0) + (Number(ex.byes)||0) + (Number(ex.legByes)||0) + (Number(ex.penalty)||0);
-  return { ...inn.toObject?.() ?? inn, battingCard: bats, bowlingCard: bowls, extras: { ...ex, total } };
-}
-
-router.get('/:id/matches/:matchId', async (req, res) => {
+// Live matches across tournaments (for home page)
+router.get('/matches/live', async (req, res) => {
   try {
-    const m = await Match.findOne({ _id: req.params.matchId, tournament: req.params.id })
+    const limit = Math.min(Number(req.query.limit) || 10, 50);
+    const liveMatches = await Match.find({ status: 'Live' })
       .populate('homeClub', 'clubName name logoUrl district')
       .populate('awayClub', 'clubName name logoUrl district')
+      .populate('tournament', 'name bannerUrl district startDate endDate format status')
+      .sort({ date: -1 })
+      .limit(limit)
       .lean();
-    if (!m) return res.status(404).json({ message: 'Match not found' });
 
-    const teamA = m.homeClub, teamB = m.awayClub;
-    const innings = Array.isArray(m.innings) ? m.innings.map(deriveInningsForView) : [];
-
-    const payload = {
-      id: m._id,
-      matchCode: m.matchCode || '',
-      date: m.date,
-      time: m.time,
-      venue: m.venue,
-      matchType: m.matchType || (m.stage === 'Knockout' ? (m.round === 'Final' ? 'Final' : 'Knockout') : 'League'),
-      stage: m.stage,
-      round: m.round,
-      group: m.group || '',
-      status: m.status,
-      teams: {
-        home: { id: teamA?._id, name: teamA?.clubName || teamA?.name, logoUrl: teamA?.logoUrl },
-        away: { id: teamB?._id, name: teamB?.clubName || teamB?.name, logoUrl: teamB?.logoUrl }
-      },
-      toss: m.toss || { wonBy: null, decision: '' },
-      inningsOrder: m.inningsOrder || [],
-      innings,
-      summary: m.summary || {},
-      result: m.result || { summary: '' }
-    };
-
-    res.json(payload);
+    res.json(liveMatches);
   } catch (error) {
-    console.error('Error fetching match details:', error);
-    res.status(500).json({ message: 'Failed to fetch match details' });
+    console.error('Error fetching live matches:', error);
+    res.status(500).json({ message: 'Failed to fetch live matches' });
   }
 });
 

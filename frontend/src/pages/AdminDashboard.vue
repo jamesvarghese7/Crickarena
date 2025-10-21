@@ -1,5 +1,38 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <!-- Rejection Modal -->
+    <div v-if="showRejectModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Reject Club Application</h3>
+        <p class="text-gray-600 mb-4">
+          Please provide a reason for rejecting this club's application:
+        </p>
+        <textarea 
+          v-model="rejectionReason"
+          rows="4"
+          placeholder="Enter rejection reason (optional)..."
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 mb-6 focus:outline-none focus:ring-2 focus:ring-red-500"
+        ></textarea>
+        <div class="flex gap-3">
+          <button 
+            @click="confirmReject"
+            :disabled="processingClub"
+            class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors disabled:opacity-50"
+          >
+            <span v-if="processingClub">Processing...</span>
+            <span v-else>Reject Application</span>
+          </button>
+          <button 
+            @click="closeRejectModal"
+            :disabled="processingClub"
+            class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div class="max-w-7xl mx-auto px-4 py-8">
       <!-- Modern Header with Gradient -->
       <div class="relative bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-3xl shadow-2xl overflow-hidden mb-8">
@@ -457,10 +490,14 @@ button:hover {
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
+import { notify } from '../utils/notifications';
 
 const clubRequests = ref([]);
 const activeFilter = ref('all');
 const processingClub = ref(null);
+const showRejectModal = ref(false);
+const rejectionReason = ref('');
+const clubToReject = ref(null);
 
 // Stats from backend
 const stats = ref({ pending: 0, approved: 0, rejected: 0, total: 0 });
@@ -512,7 +549,7 @@ async function loadClubRequests() {
   } catch (error) {
     console.error('Error loading admin data:', error);
     const msg = error?.response?.data?.message || error.message || 'Failed to load admin data';
-    alert(msg);
+    notify.error(msg);
     clubRequests.value = [];
     // keep existing stats values
   }
@@ -531,38 +568,50 @@ async function approveClub(clubId) {
       club.processedAt = new Date().toISOString();
     }
     
-    alert('Club application approved successfully! The club manager will be notified.');
+    notify.success('Club application approved successfully! The club manager will be notified.');
     await loadClubRequests(); // Refresh data
   } catch (error) {
     console.error('Error approving club:', error);
-    alert('Failed to approve club. Please try again.');
+    notify.error('Failed to approve club. Please try again.');
   } finally {
     processingClub.value = null;
   }
 }
 
-async function rejectClub(clubId) {
-  const reason = prompt('Please provide a reason for rejection (optional):');
-  if (reason === null) return; // User cancelled
+function rejectClub(clubId) {
+  clubToReject.value = clubId;
+  rejectionReason.value = '';
+  showRejectModal.value = true;
+}
+
+function closeRejectModal() {
+  showRejectModal.value = false;
+  clubToReject.value = null;
+  rejectionReason.value = '';
+}
+
+async function confirmReject() {
+  if (!clubToReject.value) return;
   
-  processingClub.value = clubId;
+  processingClub.value = clubToReject.value;
   try {
     const API = import.meta.env.VITE_API_BASE || 'http://localhost:4000/api';
-    await axios.put(`${API}/admin/clubs/${clubId}/reject`, { reason });
+    await axios.put(`${API}/admin/clubs/${clubToReject.value}/reject`, { reason: rejectionReason.value });
     
     // Update local state
-    const club = clubRequests.value.find(c => c.id === clubId);
+    const club = clubRequests.value.find(c => c.id === clubToReject.value);
     if (club) {
       club.status = 'rejected';
       club.processedAt = new Date().toISOString();
-      club.rejectionReason = reason || 'No reason provided';
+      club.rejectionReason = rejectionReason.value || 'No reason provided';
     }
     
-    alert('Club application rejected successfully!');
+    closeRejectModal();
+    notify.success('Club application rejected successfully!');
     await loadClubRequests(); // Refresh data
   } catch (error) {
     console.error('Error rejecting club:', error);
-    alert('Failed to reject club. Please try again.');
+    notify.error('Failed to reject club. Please try again.');
   } finally {
     processingClub.value = null;
   }

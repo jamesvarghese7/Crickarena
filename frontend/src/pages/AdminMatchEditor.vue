@@ -838,6 +838,19 @@ function economy(r, b) { r = Number(r)||0; b = Number(b)||0; const ov = b/6; ret
 function totals(idx) {
   const inn = form.innings[idx];
   if (!inn) return { runs: 0, wickets: 0, balls: 0, rr: '0.00' };
+  
+  // Use pre-calculated totals if available
+  if (inn.totalRuns !== undefined && inn.totalWickets !== undefined && inn.totalBalls !== undefined) {
+    const rr = inn.runRate ? inn.runRate.toFixed(2) : (inn.totalBalls > 0 ? (inn.totalRuns / (inn.totalBalls / 6)).toFixed(2) : '0.00');
+    return {
+      runs: inn.totalRuns,
+      wickets: inn.totalWickets,
+      balls: inn.totalBalls,
+      rr
+    };
+  }
+  
+  // Fallback: calculate from individual entries
   let runs = 0, balls = 0, wickets = 0;
   for (const b of inn.battingCard) {
     runs += toNum(b.runs);
@@ -848,6 +861,13 @@ function totals(idx) {
   const ex = inn.extras || {};
   runs += toNum(ex.wides) + toNum(ex.noBalls) + toNum(ex.byes) + toNum(ex.legByes) + toNum(ex.penalty);
   const rr = balls > 0 ? (runs / (balls / 6)).toFixed(2) : '0.00';
+  
+  // Update the innings with calculated values for consistency
+  inn.totalRuns = runs;
+  inn.totalWickets = wickets;
+  inn.totalBalls = balls;
+  inn.runRate = parseFloat(rr);
+  
   return { runs, wickets, balls, rr };
 }
 
@@ -890,8 +910,18 @@ function mapInningsFromAPI(inn) {
       legByes: inn?.extras?.legByes || 0,
       penalty: inn?.extras?.penalty || 0,
     },
+    // Preserve calculated totals from backend
+    totalRuns: inn?.totalRuns,
+    totalWickets: inn?.totalWickets,
+    totalBalls: inn?.totalBalls,
+    oversString: typeof inn?.overs === 'string' ? inn.overs : undefined, // Cricket format overs (e.g., "15.3")
+    runRate: inn?.runRate,
+    // Legacy fields for backward compatibility
+    runs: inn?.runs,
+    wickets: inn?.wickets,
+    balls: inn?.balls,
     // Ball-by-ball data
-    overs: inn?.overs || [],
+    overs: Array.isArray(inn?.overs) ? inn.overs : [], // Array of over objects
     currentOver: inn?.currentOver || 1,
     currentBall: inn?.currentBall || 1
   };
@@ -970,6 +1000,14 @@ async function save() {
   if (msg) { notify.error(msg); return; }
   saving.value = true; error.value = '';
   try {
+    // Ensure all innings have up-to-date calculated totals before saving
+    form.innings.forEach((innings, index) => {
+      if (innings.battingCard && innings.battingCard.length > 0) {
+        // Recalculate totals to ensure consistency
+        totals(index);
+      }
+    });
+    
     const payload = {
       // Basic match metadata
       date: form.date,
@@ -980,7 +1018,7 @@ async function save() {
       // Toss information
       toss: form.toss,
       
-      // Innings data
+      // Innings data (now includes calculated totals)
       innings: form.innings,
       
       // Match summary
@@ -992,7 +1030,9 @@ async function save() {
     notify.success('Match details updated');
     await load();
   } catch (e) {
-    const msg = e?.response?.data?.message || e.message || 'Failed to save';
+    console.error('Save error:', e);
+    console.error('Error response:', e?.response?.data);
+    const msg = e?.response?.data?.error || e?.response?.data?.message || e.message || 'Failed to save';
     error.value = msg;
     notify.error(msg);
   } finally {
@@ -1163,10 +1203,23 @@ function calculateInningsTotals(inningsIndex) {
     });
   });
   
-  // Update innings totals
+  // Update innings totals (both legacy and standardized fields)
   innings.runs = totalRuns;
   innings.wickets = totalWickets;
   innings.balls = totalBalls;
+  
+  // Update standardized fields
+  innings.totalRuns = totalRuns;
+  innings.totalWickets = totalWickets;
+  innings.totalBalls = totalBalls;
+  
+  // Calculate and update overs string (e.g., "15.3")
+  const completeOvers = Math.floor(totalBalls / 6);
+  const remainingBalls = totalBalls % 6;
+  innings.oversString = remainingBalls > 0 ? `${completeOvers}.${remainingBalls}` : `${completeOvers}.0`;
+  
+  // Calculate and update run rate
+  innings.runRate = totalBalls > 0 ? parseFloat((totalRuns / (totalBalls / 6)).toFixed(2)) : 0;
   
   // Update extras breakdown
   innings.extras.wides = innings.overs.reduce((sum, over) => 

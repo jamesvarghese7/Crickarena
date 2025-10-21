@@ -1,6 +1,36 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      <!-- Loading / Not Found -->
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
+    <!-- Dynamic Field Grid Background Animation -->
+    <div class="absolute inset-0 -z-10 overflow-hidden">
+      <!-- Cricket field wireframe elements -->
+      <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-full">
+        <!-- Boundary circle -->
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] h-[90%] rounded-full border border-emerald-200/20 animate-pulse-slow"></div>
+        
+        <!-- Pitch rectangle -->
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1/3 h-2/3 border border-emerald-300/20"></div>
+        
+        <!-- Creases -->
+        <div class="absolute top-1/4 left-1/2 transform -translate-x-1/2 w-1/3 h-0.5 bg-emerald-200/20"></div>
+        <div class="absolute top-3/4 left-1/2 transform -translate-x-1/2 w-1/3 h-0.5 bg-emerald-200/20"></div>
+        
+        <!-- Wickets -->
+        <div class="absolute top-1/4 left-1/3 transform -translate-x-1/2 w-1 h-6 bg-emerald-300/30"></div>
+        <div class="absolute top-1/4 left-2/3 transform -translate-x-1/2 w-1 h-6 bg-emerald-300/30"></div>
+        <div class="absolute top-3/4 left-1/3 transform -translate-x-1/2 w-1 h-6 bg-emerald-300/30"></div>
+        <div class="absolute top-3/4 left-2/3 transform -translate-x-1/2 w-1 h-6 bg-emerald-300/30"></div>
+        
+        <!-- Animated moving dots (representing ball movement) -->
+        <div class="absolute top-1/3 left-1/4 w-2 h-2 rounded-full bg-emerald-400/40 animate-move-dot-1"></div>
+        <div class="absolute top-2/3 right-1/4 w-2 h-2 rounded-full bg-emerald-400/40 animate-move-dot-2"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-emerald-300/30 animate-ping-slow"></div>
+      </div>
+      
+      <!-- Subtle grid pattern -->
+      <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(110,255,180,0.05)_0%,rgba(255,255,255,0)_70%)]"></div>
+    </div>
+    
+    <!-- Loading / Not Found -->
     <div v-if="loading" class="flex items-center justify-center min-h-screen">
       <div class="text-center">
         <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent mb-4"></div>
@@ -31,50 +61,50 @@
         </div>
         
         <!-- Hero Content -->
-        <div class="relative px-4 sm:px-6 lg:px-8 py-2">
-          <div class="max-w-4xl mx-auto">
+        <div class="relative px-4 sm:px-6 lg:px-8 py-4">
+          <div class="max-w-6xl mx-auto">
             <!-- Tournament Header -->
-            <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8">
+            <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
               <div class="flex-1">
                 <!-- Status and Format Badges -->
-                <div class="flex flex-wrap items-center gap-3 mb-2">
-                  <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-white/20 backdrop-blur-sm ring-1 ring-white/30">
-                    <span class="w-2 h-2 rounded-full mr-2" :class="statusDotClass(tournament.status)"></span>
+                <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-white/20 backdrop-blur-sm ring-1 ring-white/30">
+                    <span class="w-1.5 h-1.5 rounded-full mr-1.5" :class="statusDotClass(tournament.status)"></span>
                     {{ tournament.status }}
                   </span>
-                  <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-white/20 backdrop-blur-sm ring-1 ring-white/30">
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-white/20 backdrop-blur-sm ring-1 ring-white/30">
                     {{ prettyFormat }}
                   </span>
-                  <span v-if="tournament.matchFormat" class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-white/20 backdrop-blur-sm ring-1 ring-white/30">
+                  <span v-if="tournament.matchFormat" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-white/20 backdrop-blur-sm ring-1 ring-white/30">
                     {{ tournament.matchFormat }}
                   </span>
-                  <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-white/10 backdrop-blur-sm">
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-white/10 backdrop-blur-sm">
                     {{ fmtDate(tournament.startDate) }} - {{ fmtDate(tournament.endDate) }}
                   </span>
                 </div>
                 
                 <!-- Tournament Title -->
-                <h1 class="text-xl lg:text-2xl font-black tracking-tight text-white mb-2">
+                <h1 class="text-lg lg:text-xl font-bold tracking-tight text-white mb-1.5">
                   {{ tournament.name }}
                 </h1>
                 
                 <!-- Tournament Info -->
-                <div class="flex flex-wrap items-center gap-6 text-white/90">
-                  <div v-if="tournament.district" class="flex items-center gap-2">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <div class="flex flex-wrap items-center gap-4 text-sm text-white/90">
+                  <div v-if="tournament.district" class="flex items-center gap-1.5">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/>
                     </svg>
-                    <span class="font-semibold">{{ tournament.district }}</span>
+                    <span class="font-medium">{{ tournament.district }}</span>
               </div>
-                  <div v-if="venueCount" class="flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div v-if="venueCount" class="flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
                     <span>{{ venueCount }} venues</span>
                   </div>
-                  <div v-if="participants.length" class="flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div v-if="participants.length" class="flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                     </svg>
                     <span>{{ participants.length }} teams</span>
@@ -83,60 +113,61 @@
               </div>
               
               <!-- Action Buttons -->
-              <div class="flex flex-wrap items-center gap-3">
+              <div class="flex flex-wrap items-center gap-2">
                 <!-- User Actions -->
                 <button @click="toggleFavorite" 
-                        class="group relative inline-flex items-center gap-2 px-6 py-3 bg-white/20 backdrop-blur-sm text-white rounded-xl font-semibold hover:bg-white/30 transition-all duration-200">
-                  <span v-if="isFav" class="text-yellow-400">★</span>
-                  <span v-else class="text-white/70">☆</span>
-                  <span>Favorite</span>
+                        class="group relative inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur-sm text-white rounded-lg text-sm font-medium hover:bg-white/30 transition-all duration-200">
+                  <span v-if="isFav" class="text-yellow-400 text-base">★</span>
+                  <span v-else class="text-white/70 text-base">☆</span>
                 </button>
                 
                 <button @click="share" 
-                        class="group relative inline-flex items-center gap-2 px-6 py-3 bg-white/20 backdrop-blur-sm text-white rounded-xl font-semibold hover:bg-white/30 transition-all duration-200">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        class="group relative inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur-sm text-white rounded-lg text-sm font-medium hover:bg-white/30 transition-all duration-200">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"/>
                   </svg>
-                  <span>Share</span>
                 </button>
                 
                 <!-- Admin Actions -->
-                <div v-if="isAdmin" class="flex flex-wrap items-center gap-1">
+                <div v-if="isAdmin" class="flex flex-wrap items-center gap-1.5">
                   <button @click="syncStatuses" :disabled="syncing"
-                          class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors disabled:opacity-60">
+                          class="px-2.5 py-1.5 bg-gray-200 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-300 transition-colors disabled:opacity-60">
                     {{ syncing ? 'Syncing…' : 'Sync' }}
                   </button>
                   <button v-if="!tournament.fixturesGenerated && tournament.status === 'open'" 
                           @click="closeRegs" 
-                          class="px-3 py-1.5 bg-yellow-500 text-white rounded-lg text-sm font-medium hover:bg-yellow-600 transition-colors">
+                          class="px-2.5 py-1.5 bg-yellow-500 text-white rounded-lg text-xs font-medium hover:bg-yellow-600 transition-colors">
                     Close Reg
                   </button>
                   
                   <button v-if="!tournament.fixturesGenerated && tournament.status !== 'open' && !['cancelled','completed'].includes(tournament.status)" 
                           @click="openRegs" 
-                          class="px-3 py-1.5 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition-colors">
+                          class="px-2.5 py-1.5 bg-green-500 text-white rounded-lg text-xs font-medium hover:bg-green-600 transition-colors">
                     Open Reg
                   </button>
                   
                   <button v-if="!tournament.fixturesGenerated && tournament.status === 'upcoming'" 
                           @click="openGenerateModal" 
-                          class="px-3 py-1.5 bg-indigo-500 text-white rounded-lg text-sm font-medium hover:bg-indigo-600 transition-colors">
+                          class="px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg text-xs font-semibold hover:from-indigo-600 hover:to-purple-600 shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
                     Generate
                   </button>
                   
                   <button v-if="tournament.fixturesGenerated" 
-                          @click="deleteFixtures" 
-                          class="px-3 py-1.5 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-colors">
+                          @click="openDeleteFixturesModal" 
+                          class="px-2.5 py-1.5 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition-colors">
                     Delete
                   </button>
                   
                   <button @click="beginEdit" 
-                          class="px-3 py-1.5 bg-white/20 backdrop-blur-sm text-white rounded-lg text-sm font-medium hover:bg-white/30 transition-colors">
+                          class="px-2.5 py-1.5 bg-white/20 backdrop-blur-sm text-white rounded-lg text-xs font-medium hover:bg-white/30 transition-colors">
                     Edit
                   </button>
                   
                   <button @click="cancelTournament" 
-                          class="px-3 py-1.5 bg-red-500/80 backdrop-blur-sm text-white rounded-lg text-sm font-medium hover:bg-red-500 transition-colors">
+                          class="px-2.5 py-1.5 bg-red-500/80 backdrop-blur-sm text-white rounded-lg text-xs font-medium hover:bg-red-500 transition-colors">
                     Cancel
                   </button>
                 </div>
@@ -144,54 +175,54 @@
             </div>
 
             <!-- Key Metrics -->
-            <div class="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-6 ring-1 ring-white/20 hover:bg-white/20 transition-all duration-200">
-                <div class="flex items-center gap-3 mb-2">
-                  <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 ring-1 ring-white/20 hover:bg-white/20 transition-all duration-200">
+                <div class="flex items-center gap-2 mb-1.5">
+                  <div class="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center">
+                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
               </div>
-                  <div class="text-sm text-white/70 font-medium">Matches</div>
+                  <div class="text-xs text-white/70 font-medium">Matches</div>
               </div>
-                <div class="text-3xl font-bold text-white">{{ matches.length }}</div>
+                <div class="text-2xl font-bold text-white">{{ matches.length }}</div>
               </div>
               
-              <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-6 ring-1 ring-white/20 hover:bg-white/20 transition-all duration-200">
-                <div class="flex items-center gap-3 mb-2">
-                  <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 ring-1 ring-white/20 hover:bg-white/20 transition-all duration-200">
+                <div class="flex items-center gap-2 mb-1.5">
+                  <div class="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center">
+                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                     </svg>
               </div>
-                  <div class="text-sm text-white/70 font-medium">Teams</div>
+                  <div class="text-xs text-white/70 font-medium">Teams</div>
             </div>
-                <div class="text-3xl font-bold text-white">{{ participants.length }}</div>
+                <div class="text-2xl font-bold text-white">{{ participants.length }}</div>
           </div>
               
-              <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-6 ring-1 ring-white/20 hover:bg-white/20 transition-all duration-200">
-                <div class="flex items-center gap-3 mb-2">
-                  <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 ring-1 ring-white/20 hover:bg-white/20 transition-all duration-200">
+                <div class="flex items-center gap-2 mb-1.5">
+                  <div class="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center">
+                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
                   </div>
-                  <div class="text-sm text-white/70 font-medium">Venues</div>
+                  <div class="text-xs text-white/70 font-medium">Venues</div>
                 </div>
-                <div class="text-3xl font-bold text-white">{{ venueCount }}</div>
+                <div class="text-2xl font-bold text-white">{{ venueCount }}</div>
         </div>
 
-              <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-6 ring-1 ring-white/20 hover:bg-white/20 transition-all duration-200">
-                <div class="flex items-center gap-3 mb-2">
-                  <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 ring-1 ring-white/20 hover:bg-white/20 transition-all duration-200">
+                <div class="flex items-center gap-2 mb-1.5">
+                  <div class="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center">
+                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
                   </div>
-                  <div class="text-sm text-white/70 font-medium">Duration</div>
+                  <div class="text-xs text-white/70 font-medium">Duration</div>
                 </div>
-                <div class="text-3xl font-bold text-white">{{ durationDays }} days</div>
+                <div class="text-2xl font-bold text-white">{{ durationDays }} days</div>
               </div>
             </div>
           </div>
@@ -414,7 +445,14 @@
                       </div>
                     </div>
                     <div v-if="isClubManager && Number(tournament.entryFee) > 0" class="mt-4">
-                      <button @click="payEntryFee" :disabled="payLoading"
+                      <!-- Show "Paid" button if payment is completed -->
+                      <button v-if="clubPaymentStatus === 'paid' && clubPaymentVerified"
+                              disabled
+                              class="w-full px-4 py-2 rounded-lg bg-green-100 text-green-700 font-semibold cursor-not-allowed">
+                        ✓ Paid
+                      </button>
+                      <!-- Show "Pay Entry Fee" button if not paid -->
+                      <button v-else @click="payEntryFee" :disabled="payLoading"
                               class="w-full px-4 py-2 rounded-lg text-white font-semibold"
                               :class="payLoading ? 'bg-emerald-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700'">
                         {{ payLoading ? 'Processing Payment...' : `Pay Entry Fee (₹${Number(tournament.entryFee).toFixed(0)})` }}
@@ -686,10 +724,32 @@
                     </select>
                   </div>
                 </div>
+                <!-- Tournament Date Range Info -->
+                <div v-if="tournament?.startDate && tournament?.endDate" class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+                  <div class="flex items-center gap-2 text-sm">
+                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span class="text-blue-800 font-medium">Tournament Duration:</span>
+                    <span class="text-blue-700">{{ formatDate(tournament.startDate) }} to {{ formatDate(tournament.endDate) }}</span>
+                    <span class="text-blue-600">({{ tournamentDurationDays }} days)</span>
+                  </div>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                   <div>
                     <label class="text-sm text-gray-600">Date</label>
-                    <input v-model="editFxForm.date" type="date" class="px-3 py-2 border rounded w-full" />
+                    <input 
+                      v-model="editFxForm.date" 
+                      type="date" 
+                      :min="tournamentStartDateISO" 
+                      :max="tournamentEndDateISO"
+                      class="px-3 py-2 border rounded w-full"
+                      :class="{ 'border-red-300': isDateOutOfRange }" 
+                    />
+                    <p v-if="isDateOutOfRange" class="text-xs text-red-600 mt-1">
+                      Date must be between {{ formatDate(tournament.startDate) }} and {{ formatDate(tournament.endDate) }}
+                    </p>
                   </div>
                   <div>
                     <label class="text-sm text-gray-600">Time</label>
@@ -704,11 +764,6 @@
                       <option value="">Select venue</option>
                       <option v-for="v in venueOptions" :key="v" :value="v">{{ v }}</option>
                     </select>
-                  </div>
-                  <div class="flex items-end">
-                    <label class="inline-flex items-center gap-2 text-sm text-gray-600">
-                      <input type="checkbox" v-model="editFxForm.override" /> Override rules
-                    </label>
                   </div>
                 </div>
                 <div class="flex items-center justify-end gap-2 mt-4">
@@ -889,149 +944,425 @@
       </div>
     </div>
 
-    <!-- Admin Edit Modal -->
-    <div v-if="isAdmin && editOpen" class="fixed inset-0 bg-black/30 flex items-center justify-center p-4">
-      <div class="bg-white w-full max-w-2xl rounded-lg shadow-lg">
-        <div class="px-4 py-3 border-b flex items-center justify-between">
-          <h2 class="font-semibold text-gray-800">Edit Tournament</h2>
-          <button class="text-gray-500" @click="editOpen = false">✕</button>
+    <!-- Admin Edit Modal - Enhanced UI -->
+    <div v-if="isAdmin && editOpen" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div class="bg-white w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl transform transition-all duration-300 scale-100">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 px-6 py-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-xl font-bold text-white">Edit Tournament</h2>
+              <p class="text-indigo-100 text-sm">Update tournament details and settings</p>
+            </div>
+          </div>
+          <button @click="editOpen = false" class="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
         </div>
-        <form class="p-4 space-y-4" @submit.prevent="saveEdit">
-          <div class="grid md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium">Tournament Name</label>
-              <input v-model="editForm.name" type="text" required class="mt-1 w-full border rounded px-3 py-2" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium">Tournament Type</label>
-              <select v-model="editForm.format" class="mt-1 w-full border rounded px-3 py-2">
-                <option value="knockout">Knockout</option>
-                <option value="league">League</option>
-                <option value="round-robin">Round-robin</option>
-                <option value="league+playoff">League+Playoff</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium">District</label>
-              <input v-model="editForm.district" type="text" class="mt-1 w-full border rounded px-3 py-2" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium">Max Teams Allowed</label>
-              <input v-model.number="editForm.maxTeams" type="number" min="2" class="mt-1 w-full border rounded px-3 py-2" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium">Start Date</label>
-              <input v-model="editForm.startDate" type="date" required class="mt-1 w-full border rounded px-3 py-2" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium">End Date</label>
-              <input v-model="editForm.endDate" type="date" required class="mt-1 w-full border rounded px-3 py-2" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium">Registration Deadline</label>
-              <input v-model="editForm.registrationDeadline" type="date" class="mt-1 w-full border rounded px-3 py-2" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium">Entry Fee (INR)</label>
-              <div class="relative">
-                <span class="absolute left-3 top-2.5 text-gray-500">₹</span>
-                <input v-model.number="editForm.entryFee" type="number" min="0" step="1" class="mt-1 w-full border rounded pl-7 pr-3 py-2" placeholder="0" />
+
+        <!-- Form Content -->
+        <div class="overflow-y-auto max-h-[calc(90vh-140px)]">
+          <form class="p-6 space-y-8" @submit.prevent="saveEdit">
+            <!-- Basic Information Section -->
+            <div class="space-y-6">
+              <div class="flex items-center gap-2 pb-2 border-b border-gray-200">
+                <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
+                  <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900">Basic Information</h3>
+              </div>
+
+              <div class="grid md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                  <label class="block text-sm font-semibold text-gray-700 flex items-center gap-1">
+                    Tournament Name <span class="text-red-500">*</span>
+                  </label>
+                  <input v-model="editForm.name" type="text" required
+                         class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"
+                         placeholder="Enter tournament name"/>
+                </div>
+
+                <div class="space-y-2">
+                  <label class="block text-sm font-semibold text-gray-700">Tournament Format</label>
+                  <select v-model="editForm.format"
+                          class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200 appearance-none">
+                    <option value="knockout">🏆 Knockout</option>
+                    <option value="league">📊 League</option>
+                    <option value="round-robin">🔄 Round-robin</option>
+                    <option value="league+playoff">🏅 League+Playoff</option>
+                    <option value="groups+knockouts">🗂️ Groups+Knockouts</option>
+                  </select>
+                </div>
+
+                <div class="space-y-2">
+                  <label class="block text-sm font-semibold text-gray-700">District</label>
+                  <input v-model="editForm.district" type="text"
+                         class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"
+                         placeholder="Enter district"/>
+                </div>
+
+                <div class="space-y-2">
+                  <label class="block text-sm font-semibold text-gray-700">Max Teams Allowed</label>
+                  <input v-model.number="editForm.maxTeams" type="number" min="2" max="128"
+                         class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"
+                         placeholder="16"/>
+                </div>
+
+                <div class="space-y-2">
+                  <label class="block text-sm font-semibold text-gray-700">Match Format</label>
+                  <select v-model="editForm.matchFormat"
+                          class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200 appearance-none">
+                    <option value="T20">T20 (20 overs)</option>
+                    <option value="ODI">ODI (50 overs)</option>
+                    <option value="Test">Test (90 overs)</option>
+                    <option value="T10">T10 (10 overs)</option>
+                    <option value="Custom">Custom</option>
+                  </select>
+                </div>
+
+                <div class="space-y-2">
+                  <label class="block text-sm font-semibold text-gray-700">Overs Limit</label>
+                  <input v-model.number="editForm.oversLimit" type="number" min="1" max="100"
+                         class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"
+                         placeholder="20"/>
+                </div>
               </div>
             </div>
-            <div>
-              <label class="block text-sm font-medium">Prize Pool (INR)</label>
-              <div class="relative">
-                <span class="absolute left-3 top-2.5 text-gray-500">₹</span>
-                <input v-model.number="editForm.prizePool" type="number" min="0" step="1" class="mt-1 w-full border rounded pl-7 pr-3 py-2" placeholder="0" />
+
+            <!-- Dates & Financial Details Section -->
+            <div class="space-y-6">
+              <div class="flex items-center gap-2 pb-2 border-b border-gray-200">
+                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                  <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900">Dates & Financial Details</h3>
+              </div>
+
+              <div class="grid md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                  <label class="block text-sm font-semibold text-gray-700">Start Date <span class="text-red-500">*</span></label>
+                  <input v-model="editForm.startDate" type="date" required
+                         class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"/>
+                </div>
+
+                <div class="space-y-2">
+                  <label class="block text-sm font-semibold text-gray-700">End Date <span class="text-red-500">*</span></label>
+                  <input v-model="editForm.endDate" type="date" required
+                         class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"/>
+                </div>
+
+                <div class="space-y-2">
+                  <label class="block text-sm font-semibold text-gray-700">Registration Deadline</label>
+                  <input v-model="editForm.registrationDeadline" type="date"
+                         class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"/>
+                </div>
+
+                <div class="space-y-2">
+                  <label class="block text-sm font-semibold text-gray-700">Minimum Rest Days</label>
+                  <input v-model.number="editForm.restDaysMin" type="number" min="0" max="7"
+                         class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"
+                         placeholder="1"/>
+                </div>
+
+                <div class="space-y-2">
+                  <label class="block text-sm font-semibold text-gray-700">Entry Fee (INR)</label>
+                  <div class="relative">
+                    <span class="absolute left-4 top-3.5 text-gray-500 font-medium">₹</span>
+                    <input v-model.number="editForm.entryFee" type="number" min="0" step="1"
+                           class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 pl-12 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"
+                           placeholder="0"/>
+                  </div>
+                </div>
+
+                <div class="space-y-2">
+                  <label class="block text-sm font-semibold text-gray-700">Prize Pool (INR)</label>
+                  <div class="relative">
+                    <span class="absolute left-4 top-3.5 text-gray-500 font-medium">₹</span>
+                    <input v-model.number="editForm.prizePool" type="number" min="0" step="1"
+                           class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 pl-12 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"
+                           placeholder="0"/>
+                  </div>
+                </div>
+
+                <div class="space-y-2 md:col-span-2">
+                  <label class="block text-sm font-semibold text-gray-700">Sponsor Information</label>
+                  <div class="relative">
+                    <input v-model="editForm.sponsorInfo" type="text"
+                           class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 pr-10 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"
+                           placeholder="Enter sponsor details (e.g., Sponsored by XYZ Company)"/>
+                    <svg class="w-5 h-5 text-gray-400 absolute right-3 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                  </div>
+                </div>
               </div>
             </div>
-            <div>
-              <label class="block text-sm font-medium">Match Format</label>
-              <select v-model="editForm.matchFormat" class="mt-1 w-full border rounded px-3 py-2">
-                <option value="T20">T20</option>
-                <option value="ODI">ODI</option>
-                <option value="Test">Test</option>
-                <option value="T10">T10</option>
-                <option value="Custom">Custom</option>
-              </select>
+
+            <!-- Venue & Description Section -->
+            <div class="space-y-6">
+              <div class="flex items-center gap-2 pb-2 border-b border-gray-200">
+                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                  <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900">Venue & Description</h3>
+              </div>
+
+              <div class="space-y-6">
+                <div class="space-y-2">
+                  <label class="block text-sm font-semibold text-gray-700">Venues (comma separated)</label>
+                  <div class="relative">
+                    <textarea v-model="editForm.venuesText" rows="2"
+                              class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 pr-10 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200 resize-none"
+                              placeholder="Ground A, Ground B, Ground C"></textarea>
+                    <svg class="w-5 h-5 text-gray-400 absolute right-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                    </svg>
+                  </div>
+                </div>
+
+                <div class="space-y-2">
+                  <label class="block text-sm font-semibold text-gray-700">Tournament Description</label>
+                  <textarea v-model="editForm.description" rows="3"
+                            class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200 resize-none"
+                            placeholder="Provide a brief overview of the tournament, its significance, and what participants can expect..."></textarea>
+                </div>
+
+                <div class="space-y-2">
+                  <label class="block text-sm font-semibold text-gray-700">Rules & Regulations</label>
+                  <textarea v-model="editForm.rules" rows="4"
+                            class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200 resize-none"
+                            placeholder="Key rules including eligibility criteria, overs per match, player limits, dress code, fees, conduct rules, etc."></textarea>
+                </div>
+              </div>
             </div>
-            <div>
-              <label class="block text-sm font-medium">Overs Limit</label>
-              <input v-model.number="editForm.oversLimit" type="number" min="1" class="mt-1 w-full border rounded px-3 py-2" />
+
+            <!-- Action Buttons -->
+            <div class="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
+              <button type="button" @click="editOpen = false"
+                      class="px-6 py-3 border-2 border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold transition-all duration-200">
+                Cancel
+              </button>
+              <button type="submit"
+                      class="px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl hover:from-emerald-700 hover:to-teal-700 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200">
+                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                Save Changes
+              </button>
             </div>
-            <div>
-              <label class="block text-sm font-medium">Minimum Rest Days</label>
-              <input v-model.number="editForm.restDaysMin" type="number" min="0" class="mt-1 w-full border rounded px-3 py-2" />
-            </div>
-            <div class="md:col-span-2">
-              <label class="block text-sm font-medium">Sponsor Information</label>
-              <input v-model="editForm.sponsorInfo" type="text" class="mt-1 w-full border rounded px-3 py-2" placeholder="Enter sponsor details" />
-            </div>
-            <div class="md:col-span-2">
-              <label class="block text-sm font-medium">Description</label>
-              <textarea v-model="editForm.description" rows="3" class="mt-1 w-full border rounded px-3 py-2" placeholder="Brief overview of the tournament"></textarea>
-            </div>
-            <div class="md:col-span-2">
-              <label class="block text-sm font-medium">Rules</label>
-              <textarea v-model="editForm.rules" rows="4" class="mt-1 w-full border rounded px-3 py-2" placeholder="Key rules, eligibility, overs, player limits, dress code, fees, etc."></textarea>
-            </div>
-            <div class="md:col-span-2">
-              <label class="block text-sm font-medium">Venues (comma separated)</label>
-              <input v-model="editForm.venuesText" type="text" placeholder="Ground A, Ground B" class="mt-1 w-full border rounded px-3 py-2" />
-            </div>
-          </div>
-          <div class="flex items-center justify-end gap-2 pt-2">
-            <button type="button" @click="editOpen = false" class="px-4 py-2 rounded border">Cancel</button>
-            <button type="submit" class="px-4 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700">Save</button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
 
     <!-- Generate Fixtures Modal -->
-    <div v-if="isAdmin && showGenerateModal" class="fixed inset-0 bg-black/30 flex items-center justify-center p-4">
-      <div class="bg-white w-full max-w-md rounded-lg shadow-lg">
-        <div class="px-4 py-3 border-b flex items-center justify-between">
-          <h2 class="font-semibold text-gray-800">Generate Fixtures</h2>
-          <button class="text-gray-500" @click="showGenerateModal = false">✕</button>
-        </div>
-        <div class="p-4 space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Tournament</label>
-            <input class="w-full px-3 py-2 border rounded bg-gray-50" :value="tournament?.name" disabled />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Format</label>
-            <input class="w-full px-3 py-2 border rounded bg-gray-50" :value="tournament?.format" disabled />
-          </div>
-          <div v-if="tournament?.format === 'round-robin' || tournament?.format === 'league'" class="flex items-center gap-2">
-            <input id="doubleRR" type="checkbox" v-model="gen.doubleRoundRobin" />
-            <label for="doubleRR" class="text-sm">Double round robin</label>
-          </div>
-          <div v-if="tournament?.format === 'groups+knockouts' || tournament?.format === 'league+playoff'" class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-sm mb-1">Groups</label>
-              <input v-model.number="gen.groups" type="number" min="2" class="w-full px-3 py-2 border rounded" />
+    <div v-if="isAdmin && showGenerateModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl transform transition-all">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 px-6 py-4 rounded-t-2xl">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+              </svg>
             </div>
             <div>
-              <label class="block text-sm mb-1">Qualify / group</label>
-              <input v-model.number="gen.qualifyPerGroup" type="number" min="1" class="w-full px-3 py-2 border rounded" />
+              <h2 class="text-xl font-bold text-white">Generate Fixtures</h2>
+              <p class="text-indigo-100 text-sm">Create match schedule for this tournament</p>
             </div>
           </div>
-          <div class="flex items-center gap-2">
-            <input id="respectRounds" type="checkbox" v-model="gen.respectRoundOrder" />
-            <label for="respectRounds" class="text-sm">Respect round order (strict)</label>
+        </div>
+        
+        <!-- Content -->
+        <div class="p-6 space-y-6">
+
+          <!-- Tournament Info -->
+          <div class="bg-gray-50 rounded-xl p-4">
+            <div class="grid md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <span class="text-gray-600">Tournament:</span>
+                <span class="ml-2 font-semibold text-gray-900">{{ tournament?.name }}</span>
+              </div>
+              <div>
+                <span class="text-gray-600">Format:</span>
+                <span class="ml-2 font-semibold text-gray-900">{{ tournament?.format }}</span>
+              </div>
+            </div>
           </div>
-          <p v-if="genError" class="text-sm text-red-600">{{ genError }}</p>
-          <div v-if="genDiag" class="text-xs text-gray-600 bg-gray-50 border rounded p-2">
-            <div>Required matches: {{ genDiag.required }}</div>
-            <div>Capacity (slots): {{ genDiag.capacity }}</div>
+
+          <!-- Format-Specific Options -->
+          <div v-if="tournament?.format === 'round-robin' || tournament?.format === 'league'" class="bg-gray-50 rounded-xl p-4">
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input id="doubleRR" type="checkbox" v-model="gen.doubleRoundRobin" class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" />
+              <div>
+                <span class="text-sm font-medium text-gray-900">Double round robin</span>
+                <p class="text-xs text-gray-500">Each team plays every other team twice (home & away)</p>
+              </div>
+            </label>
+          </div>
+
+          <div v-if="tournament?.format === 'groups+knockouts' || tournament?.format === 'league+playoff'" class="bg-gray-50 rounded-xl p-4 space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Number of Groups</label>
+                <input v-model.number="gen.groups" type="number" min="2" class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all" />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Qualify per group</label>
+                <input v-model.number="gen.qualifyPerGroup" type="number" min="1" class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Advanced Options -->
+          <div class="bg-gray-50 rounded-xl p-4">
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input id="respectRounds" type="checkbox" v-model="gen.respectRoundOrder" class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" />
+              <div>
+                <span class="text-sm font-medium text-gray-900">Respect round order (strict)</span>
+                <p class="text-xs text-gray-500">Complete all Round 1 matches before starting Round 2</p>
+              </div>
+            </label>
+          </div>
+
+          <!-- Error/Diagnostics -->
+          <div v-if="genError" class="bg-red-50 border border-red-200 rounded-xl p-4">
+            <div class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-red-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <p class="text-sm text-red-800 font-medium">{{ genError }}</p>
+            </div>
+          </div>
+
+          <div v-if="genDiag" class="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
+            <div class="text-sm text-indigo-800 space-y-2">
+              <div class="flex justify-between">
+                <span class="font-medium">Required matches:</span>
+                <span class="font-bold">{{ genDiag.required }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="font-medium">Available capacity:</span>
+                <span class="font-bold">{{ genDiag.capacity }}</span>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="px-4 py-3 border-t flex items-center justify-end gap-2">
-          <button class="px-3 py-2 border rounded" @click="showGenerateModal = false">Cancel</button>
-          <button class="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-50" :disabled="genLoading" @click="generateNow">
-            {{ genLoading ? 'Generating...' : 'Generate' }}
+        
+        <!-- Actions -->
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-2xl flex items-center justify-end gap-3">
+            <button 
+              @click="showGenerateModal = false"
+              :disabled="genLoading"
+              class="px-6 py-2.5 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              Cancel
+            </button>
+            <button 
+              @click="generateNow"
+              :disabled="genLoading"
+              class="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+              <span v-if="genLoading" class="flex items-center gap-2">
+                <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                Generating...
+              </span>
+              <span v-else class="flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                Generate Fixtures
+              </span>
+            </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Fixtures Confirmation Modal -->
+    <div v-if="isAdmin && showDeleteFixturesModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl transform transition-all">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-red-600 to-rose-600 px-6 py-4 rounded-t-2xl">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-xl font-bold text-white">Delete All Fixtures</h2>
+              <p class="text-red-100 text-sm">This action cannot be undone</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="p-6">
+          <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+            <div class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <div class="text-sm text-red-800">
+                <p class="font-semibold mb-1">Warning: Permanent Deletion</p>
+                <p>You are about to delete <strong>all {{ matches.length }} fixtures</strong> for this tournament. This will:</p>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                  <li>Remove all scheduled matches</li>
+                  <li>Clear all match dates and venues</li>
+                  <li>Allow you to regenerate fixtures from scratch</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-gray-50 rounded-xl p-4">
+            <div class="flex items-center gap-2 text-sm text-gray-600">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span><strong>{{ matches.length }}</strong> matches will be deleted</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Actions -->
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-2xl flex items-center justify-end gap-3">
+          <button 
+            @click="closeDeleteFixturesModal" 
+            :disabled="deletingFixtures"
+            class="px-6 py-2.5 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            Cancel
+          </button>
+          <button 
+            @click="confirmDeleteFixtures" 
+            :disabled="deletingFixtures"
+            class="px-6 py-2.5 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl font-semibold hover:from-red-700 hover:to-rose-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+            <span v-if="deletingFixtures" class="flex items-center gap-2">
+              <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              Deleting...
+            </span>
+            <span v-else class="flex items-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+              Delete All Fixtures
+            </span>
           </button>
         </div>
       </div>
@@ -1045,6 +1376,7 @@ import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../store/auth';
 import api from '../utils/api';
+import { notify } from '../utils/notifications';
 // FixtureDraw import removed
 
 const route = useRoute();
@@ -1060,6 +1392,8 @@ const activeTab = ref('overview');
 const isAdmin = computed(() => auth.userProfile?.role === 'admin');
 const isClubManager = computed(() => auth.userProfile?.role === 'clubManager');
 const payLoading = ref(false);
+const clubPaymentStatus = ref('pending');
+const clubPaymentVerified = ref(false);
 const showRegistrationSuccess = ref(false);
 const syncing = ref(false);
 
@@ -1069,6 +1403,13 @@ const syncing = ref(false);
 async function payEntryFee(){
   try{
     if (!tournament.value?._id) return;
+    
+    // Check if already paid
+    if (clubPaymentStatus.value === 'paid' && clubPaymentVerified.value) {
+      notify.warning('Entry fee has already been paid for this tournament');
+      return;
+    }
+    
     payLoading.value = true;
 
     // Create payment order only if admin has approved registration and payment is pending
@@ -1099,13 +1440,16 @@ async function payEntryFee(){
             razorpay_payment_id: response.razorpay_payment_id,
             razorpay_signature: response.razorpay_signature
           });
+          
+          // Update payment status
+          await loadClubPaymentStatus();
           await loadAll(tournament.value._id);
 
           // Show registration success modal
           showRegistrationSuccess.value = true;
 
         }catch(err){
-          alert(err?.response?.data?.message || 'Payment verification failed. Please contact support.');
+          notify.error(err?.response?.data?.message || 'Payment verification failed. Please contact support.');
         }
       },
       modal: { ondismiss: function(){ payLoading.value = false; } }
@@ -1116,7 +1460,7 @@ async function payEntryFee(){
     // Surface detailed backend error to help diagnose (e.g., invalid key, network error)
     const detail = err?.response?.data?.detail;
     const msg = err?.response?.data?.message || err.message || 'Failed to initiate payment';
-    alert(detail ? `${msg}: ${detail}` : msg);
+    notify.error(detail ? `${msg}: ${detail}` : msg);
     console.error('Payment init error:', err?.response?.data || err);
   }finally{
     setTimeout(() => { payLoading.value = false; }, 600);
@@ -1146,6 +1490,14 @@ function tabClass(name){
 // Formatting
 function fmtDate(d){ if(!d) return ''; return new Date(d).toLocaleDateString(); }
 function fmtShortDate(d){ if(!d) return ''; const dt = new Date(d); return dt.toLocaleDateString(undefined,{ month:'short', day:'numeric' }); }
+
+// Format date for display (e.g., "Nov 15, 2025")
+function formatDate(d) {
+  if (!d) return '';
+  const date = new Date(d);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 const prettyFormat = computed(() => (tournament.value?.format || '').replace(/\b\w/g, c => c.toUpperCase()));
 const venueCount = computed(() => Array.isArray(tournament.value?.venues) ? tournament.value.venues.length : 0);
 const durationDays = computed(() => {
@@ -1187,7 +1539,7 @@ function share(){
     navigator.share({ title: tournament.value?.name || 'Tournament', url }).catch(()=>{});
   } else {
     navigator.clipboard?.writeText(url);
-    alert('Link copied to clipboard');
+    notify.success('Link copied to clipboard');
   }
 }
 
@@ -1199,14 +1551,32 @@ async function syncStatuses(){
     await api.post('/admin/tournaments/status-sync');
     const id = route.params.id;
     await loadAll(id);
+    notify.success('Tournament statuses synced successfully');
   } catch(e){
-    alert(e?.response?.data?.message || 'Status sync failed');
+    notify.error(e?.response?.data?.message || 'Status sync failed');
   } finally {
     syncing.value = false;
   }
 }
 
 // Data loading
+async function loadClubPaymentStatus() {
+  if (!isClubManager.value || !tournament.value?._id) return;
+  
+  try {
+    // Fetch club's registered tournaments to get payment status
+    const { data } = await api.get('/clubs/my-club/tournaments');
+    const tournamentData = data.tournaments?.find(t => String(t.id) === String(tournament.value._id));
+    
+    if (tournamentData) {
+      clubPaymentStatus.value = tournamentData.paymentStatus || 'pending';
+      clubPaymentVerified.value = tournamentData.paymentVerified || false;
+    }
+  } catch (error) {
+    console.error('Failed to load payment status:', error);
+  }
+}
+
 async function loadAll(id){
   // Optional: warm from cache to avoid blank UI after refresh
   try{
@@ -1249,6 +1619,11 @@ onMounted(async () => {
     const id = route.params.id;
     loadFav();
     await loadAll(id);
+    
+    // Load payment status for club managers
+    if (isClubManager.value) {
+      await loadClubPaymentStatus();
+    }
     
     // Check for hash navigation to fixtures
     if (window.location.hash === '#fixtures') {
@@ -1299,6 +1674,8 @@ async function closeRegs(){
 }
 // Generate Fixtures state
 const showGenerateModal = ref(false);
+const showDeleteFixturesModal = ref(false);
+const deletingFixtures = ref(false);
 const gen = ref({ doubleRoundRobin: false, respectRoundOrder: true, groups: 2, qualifyPerGroup: 2 });
 const genLoading = ref(false);
 const genError = ref('');
@@ -1317,7 +1694,8 @@ async function generateNow() {
   genError.value = '';
   genDiag.value = null;
   try {
-    const { data } = await api.post(`/admin/tournaments/${tournament.value._id}/fixtures/generate`, { ...gen.value });
+    // Use V2 endpoint with time slot support
+    const { data } = await api.post(`/admin/tournaments/${tournament.value._id}/fixtures/generate-v2`, { ...gen.value });
     showGenerateModal.value = false;
     await loadAll(tournament.value._id);
   } catch (e) {
@@ -1329,9 +1707,17 @@ async function generateNow() {
   }
 }
 
-async function deleteFixtures(){
+function openDeleteFixturesModal() {
+  showDeleteFixturesModal.value = true;
+}
+
+function closeDeleteFixturesModal() {
+  showDeleteFixturesModal.value = false;
+}
+
+async function confirmDeleteFixtures(){
   const id = route.params.id;
-  if (!confirm('Delete all fixtures? This cannot be undone.')) return;
+  deletingFixtures.value = true;
   try {
     // Ensure Authorization header is present (fallback to current idToken)
     let token = auth.idToken;
@@ -1339,20 +1725,24 @@ async function deleteFixtures(){
     // Only attach headers if we actually have a token to avoid passing undefined headers (breaks interceptor)
     const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
     const { data } = await api.delete(`/admin/tournaments/${id}/fixtures`, config);
-    // Safety: refresh data and verify local state cleared
+    
+    // Immediately clear local state
+    matches.value = [];
+    if (tournament.value) tournament.value.fixturesGenerated = false;
+    
+    // Close modal immediately
+    showDeleteFixturesModal.value = false;
+    
+    // Switch to overview tab
+    activeTab.value = 'overview';
+    
+    // Refresh tournament data in background
     await loadAll(id);
-    if (Array.isArray(matches.value) && matches.value.length > 0) {
-      console.warn('Fixtures still present after delete:', matches.value.length);
-      alert(`Tried to delete fixtures, but ${matches.value.length} match(es) still remain. Please refresh or try again.`);
-    } else {
-      // Ensure UI reflects deletion
-      if (tournament.value) tournament.value.fixturesGenerated = false;
-      // Optionally switch tab back to overview to avoid empty fixtures confusion
-      activeTab.value = 'overview';
-    }
   } catch (e) {
     console.error('Delete fixtures failed', e);
-    alert(e?.response?.data?.message || 'Failed to delete fixtures');
+    notify.error(e?.response?.data?.message || 'Failed to delete fixtures');
+  } finally {
+    deletingFixtures.value = false;
   }
 }
 async function cancelTournament(){
@@ -1424,7 +1814,7 @@ const loadingMatches = ref(false);
 // Inline fixture editor state
 const editFxOpen = ref(false);
 const savingEditFx = ref(false);
-const editFxForm = ref({ matchId: '', homeClub: '', awayClub: '', date: '', time: '', venue: '', override: false });
+const editFxForm = ref({ matchId: '', homeClub: '', awayClub: '', date: '', time: '', venue: '' });
 const timeSlotOptions = ref(['09:00','13:00','17:00']);
 const venueOptions = computed(() => Array.isArray(tournament.value?.venues) ? tournament.value.venues : []);
 const participantOptions = computed(() => {
@@ -1434,6 +1824,34 @@ const participantOptions = computed(() => {
   return base.map(p => ({ id: p._id || p, name: p.clubName || p.name || String(p) }));
 });
 
+// Tournament date range validation
+const tournamentStartDateISO = computed(() => {
+  if (!tournament.value?.startDate) return null;
+  return new Date(tournament.value.startDate).toISOString().slice(0, 10);
+});
+
+const tournamentEndDateISO = computed(() => {
+  if (!tournament.value?.endDate) return null;
+  return new Date(tournament.value.endDate).toISOString().slice(0, 10);
+});
+
+const tournamentDurationDays = computed(() => {
+  if (!tournament.value?.startDate || !tournament.value?.endDate) return 0;
+  const start = new Date(tournament.value.startDate);
+  const end = new Date(tournament.value.endDate);
+  const diffTime = Math.abs(end - start);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays + 1; // Include both start and end days
+});
+
+const isDateOutOfRange = computed(() => {
+  if (!editFxForm.value.date || !tournament.value?.startDate || !tournament.value?.endDate) return false;
+  const selectedDate = new Date(editFxForm.value.date);
+  const startDate = new Date(tournament.value.startDate);
+  const endDate = new Date(tournament.value.endDate);
+  return selectedDate < startDate || selectedDate > endDate;
+});
+
 function openFixtureEditor(fx){
   editFxForm.value = {
     matchId: fx._id,
@@ -1441,8 +1859,7 @@ function openFixtureEditor(fx){
     awayClub: fx.awayClub?._id || fx.awayClub || '',
     date: fx.date ? String(fx.date).slice(0,10) : '',
     time: fx.time || '',
-    venue: fx.venue || '',
-    override: false
+    venue: fx.venue || ''
   };
   editFxOpen.value = true;
 }
@@ -1451,9 +1868,9 @@ function closeFixtureEditor(){ editFxOpen.value = false; }
 async function saveFixtureEdit(){
   const id = route.params.id;
   const f = editFxForm.value;
-  if (!f.homeClub || !f.awayClub) { alert('Select both teams'); return; }
-  if (String(f.homeClub) === String(f.awayClub)) { alert('Home and away cannot be the same'); return; }
-  if (!f.date || !f.time || !f.venue) { alert('Please fill date, time and venue'); return; }
+  if (!f.homeClub || !f.awayClub) { notify.error('Select both teams'); return; }
+  if (String(f.homeClub) === String(f.awayClub)) { notify.error('Home and away cannot be the same'); return; }
+  if (!f.date || !f.time || !f.venue) { notify.error('Please fill date, time and venue'); return; }
   savingEditFx.value = true;
   try{
     await api.put(`/admin/tournaments/${id}/matches/${f.matchId}`, {
@@ -1462,13 +1879,13 @@ async function saveFixtureEdit(){
       date: f.date,
       time: f.time,
       venue: f.venue,
-      allowedTimeSlots: timeSlotOptions.value,
-      override: !!f.override
+      allowedTimeSlots: timeSlotOptions.value
     });
     editFxOpen.value = false;
     await loadAll(id);
+    notify.success('Fixture updated successfully');
   } catch(e){
-    alert(e?.response?.data?.message || 'Failed to update fixture');
+    notify.error(e?.response?.data?.message || 'Failed to update fixture');
   } finally {
     savingEditFx.value = false;
   }

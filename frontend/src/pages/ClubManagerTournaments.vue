@@ -202,6 +202,18 @@
                     ]">
                       {{ tournament.applicationStatus?.charAt(0).toUpperCase() + tournament.applicationStatus?.slice(1) }}
                     </span>
+                    <span v-if="tournament.entryFee > 0" :class="[
+                      'px-3 py-1 rounded-full text-xs font-semibold',
+                      tournament.paymentStatus === 'paid' && tournament.paymentVerified ? 'bg-green-100 text-green-700' :
+                      tournament.paymentStatus === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                      tournament.paymentStatus === 'failed' ? 'bg-red-100 text-red-700' :
+                      'bg-slate-100 text-slate-700'
+                    ]">
+                      {{ tournament.paymentStatus === 'paid' && tournament.paymentVerified ? '✓ Paid' :
+                         tournament.paymentStatus === 'pending' ? 'Payment Pending' :
+                         tournament.paymentStatus === 'failed' ? 'Payment Failed' :
+                         'Payment Required' }}
+                    </span>
                   </div>
                 </div>
                 
@@ -281,12 +293,19 @@
                                class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors">
                       View Details
                     </RouterLink>
-                    <button v-if="tournament.applicationStatus === 'pending'" 
-                            @click="withdrawFromTournament(tournament)" 
-                            :disabled="withdrawing === tournament.id"
-                            class="px-4 py-2 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                      <span v-if="withdrawing === tournament.id">Withdrawing...</span>
-                      <span v-else>Withdraw</span>
+                    <!-- Payment Button: Only show if entry fee exists and not yet paid -->
+                    <button v-if="tournament.entryFee > 0 && !(tournament.paymentStatus === 'paid' && tournament.paymentVerified)" 
+                            @click="handlePayment(tournament)"
+                            :disabled="paying === tournament.id"
+                            class="px-4 py-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl">
+                      <span v-if="paying === tournament.id">Processing...</span>
+                      <span v-else>Pay Entry Fee</span>
+                    </button>
+                    <!-- Paid Status Button -->
+                    <button v-else-if="tournament.entryFee > 0 && tournament.paymentStatus === 'paid' && tournament.paymentVerified" 
+                            disabled
+                            class="px-4 py-2 rounded-xl bg-green-100 text-green-700 font-medium cursor-not-allowed">
+                      ✓ Paid
                     </button>
                   </div>
                 </div>
@@ -302,6 +321,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
+import { notify } from '../utils/notifications';
 
 const activeTab = ref('available');
 const availableTournaments = ref([]);
@@ -309,7 +329,7 @@ const registeredTournaments = ref([]);
 const loadingAvailable = ref(false);
 const loadingRegistered = ref(false);
 const registering = ref(null);
-const withdrawing = ref(null);
+const paying = ref(null);
 
 const API = import.meta.env.VITE_API_BASE || 'http://localhost:4000/api';
 
@@ -362,30 +382,87 @@ async function registerForTournament(tournament) {
     // Move tournament from available to registered
     availableTournaments.value = availableTournaments.value.filter(t => t._id !== tournament._id);
     registeredTournaments.value.push({ ...tournament, registrationDate: new Date().toISOString() });
-    alert('Successfully registered for tournament!');
+    notify.success('Successfully registered for tournament!');
   } catch (error) {
     console.error('Failed to register for tournament:', error);
-    alert(error.response?.data?.message || 'Failed to register for tournament');
+    notify.error(error.response?.data?.message || 'Failed to register for tournament');
   } finally {
     registering.value = null;
   }
 }
 
-async function withdrawFromTournament(tournament) {
-  if (!confirm('Are you sure you want to withdraw from this tournament?')) return;
-  
-  withdrawing.value = tournament._id;
+async function handlePayment(tournament) {
+  if (!tournament.entryFee || tournament.entryFee <= 0) {
+    notify.info('No entry fee required for this tournament');
+    return;
+  }
+
+  // Check if already paid
+  if (tournament.paymentStatus === 'paid' && tournament.paymentVerified) {
+    notify.success('Entry fee has already been paid for this tournament');
+    return;
+  }
+
+  paying.value = tournament.id;
   try {
-    await axios.delete(`${API}/tournaments/${tournament._id}/withdraw`);
-    // Move tournament from registered to available
-    registeredTournaments.value = registeredTournaments.value.filter(t => t._id !== tournament._id);
-    availableTournaments.value.push(tournament);
-    alert('Successfully withdrawn from tournament');
+    // Create Razorpay order
+    const orderResponse = await axios.post(`${API}/payments/orders`, {
+      tournamentId: tournament.id
+    });
+
+    const { keyId, order, amount, currency } = orderResponse.data;
+
+    // Initialize Razorpay payment
+    const options = {
+      key: keyId,
+      amount: amount,
+      currency: currency,
+      name: 'CrickArena',
+      description: `Entry fee for ${tournament.name}`,
+      order_id: order.id,
+      handler: async function (response) {
+        try {
+          // Verify payment on backend
+          await axios.post(`${API}/payments/verify`, {
+            tournamentId: tournament.id,
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature
+          });
+
+          notify.success('Payment successful! Entry fee paid.');
+          // Reload tournament data to reflect payment status
+          await loadRegisteredTournaments();
+        } catch (error) {
+          console.error('Payment verification error:', error);
+          notify.error('Payment verification failed. Please contact support.');
+        }
+      },
+      theme: {
+        color: '#3B82F6'
+      }
+    };
+
+    // Check if Razorpay is loaded
+    if (typeof window.Razorpay === 'undefined') {
+      notify.error('Payment system not loaded. Please refresh the page.');
+      paying.value = null;
+      return;
+    }
+
+    const razorpay = new window.Razorpay(options);
+    razorpay.on('payment.failed', function (response) {
+      notify.error('Payment failed: ' + response.error.description);
+      paying.value = null;
+    });
+    razorpay.open();
+    
   } catch (error) {
-    console.error('Failed to withdraw from tournament:', error);
-    alert(error.response?.data?.message || 'Failed to withdraw from tournament');
+    console.error('Payment error:', error);
+    const errorMsg = error.response?.data?.message || 'Payment failed. Please try again.';
+    notify.error(errorMsg);
   } finally {
-    withdrawing.value = null;
+    paying.value = null;
   }
 }
 

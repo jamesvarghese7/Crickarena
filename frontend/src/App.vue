@@ -24,6 +24,12 @@
     <template v-else>
       <router-view />
     </template>
+    
+    <!-- Global Notification Component -->
+    <NotificationPopup />
+    
+    <!-- Global Confirm Dialog -->
+    <ConfirmDialog />
   </div>
 </template>
 
@@ -31,6 +37,8 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import Navbar from './components/Navbar.vue';
+import NotificationPopup from './components/NotificationPopup.vue';
+import ConfirmDialog from './components/ConfirmDialog.vue';
 
 const route = useRoute();
 const isAdminRoute = computed(() => route.matched.some(r => r.meta && (r.meta.requiresAdmin || r.meta.requiresClubManager || r.meta.requiresCoach || r.meta.requiresPlayer)));

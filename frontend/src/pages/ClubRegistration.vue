@@ -198,6 +198,18 @@
               </div>
             </div>
 
+            <!-- Club Proof Document Upload -->
+            <div class="mb-6">
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Proof of Registration/Documents *</label>
+              <div class="flex items-center gap-4">
+                <div class="flex flex-col gap-2">
+                  <input type="file" accept=".pdf,.jpg,.jpeg,.png" @change="onProofSelected" />
+                  <p class="text-xs text-gray-500">PDF/JPG/PNG up to ~2MB recommended</p>
+                  <p v-if="form.proofPreview" class="text-xs text-green-600">Document selected: {{ proofFileName }}</p>
+                </div>
+              </div>
+            </div>
+
             <!-- Club Banner Upload removed -->
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">Club Website/Social Media</label>
@@ -259,7 +271,7 @@
                 <span v-else>Submit Registration</span>
               </button>
               <RouterLink 
-                to="/dashboard" 
+                to="/crickhub" 
                 class="flex-1 py-4 px-8 rounded-xl font-semibold text-lg border-2 border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50 transition-all duration-300 text-center"
               >
                 Cancel
@@ -297,6 +309,7 @@ const form = ref({
   achievements: '',
   logoUrl: '', // final URL to send to backend
   logoPreview: '', // local preview of selected file
+  proofPreview: '', // local preview of selected proof file
 
   agreeTerms: false
 });
@@ -322,7 +335,16 @@ const isFormValid = computed(() => {
          form.value.phone.trim() !== '' &&
          form.value.email.trim() !== '' &&
          form.value.agreeTerms &&
+         selectedProofFile.value !== null && // Proof document is required
          !Object.values(errors.value).some(error => error !== '');
+});
+
+// Computed property for proof file name
+const proofFileName = computed(() => {
+  if (selectedProofFile.value) {
+    return selectedProofFile.value.name;
+  }
+  return '';
 });
 
 // Validation functions
@@ -397,6 +419,7 @@ function validateWebsite() {
 }
 
 const selectedLogoFile = ref(null);
+const selectedProofFile = ref(null);
 const selectedBannerFile = ref(null);
 
 // Handle logo file selection
@@ -451,6 +474,54 @@ async function onLogoSelected(event) {
   } catch (e) {
     console.error('Logo processing failed', e);
     notify.error('Failed to process logo. Please try a different image.');
+  }
+}
+
+// Handle proof document selection
+async function onProofSelected(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  selectedProofFile.value = file;
+
+  // Validate file type
+  const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+  if (!allowedTypes.includes(file.type)) {
+    notify.error('Please select a valid document (PDF, JPEG, or PNG).');
+    return;
+  }
+
+  // Size guard ~2MB
+  if (file.size > 2 * 1024 * 1024) {
+    notify.error('Document too large. Please choose a file under 2MB.');
+    return;
+  }
+
+  // Additional security: Check file header (magic bytes)
+  const buffer = await file.slice(0, 4).arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+  
+  const validHeaders = {
+    '25504446': 'application/pdf', // PDF
+    'ffd8ff': 'image/jpeg', // JPEG
+    '89504e47': 'image/png' // PNG
+  };
+  
+  const isValidDocument = Object.keys(validHeaders).some(header => hex.startsWith(header));
+  if (!isValidDocument) {
+    notify.error('Invalid document file. Please select a valid PDF, JPEG, or PNG file.');
+    return;
+  }
+
+  // Show preview indicator
+  form.value.proofPreview = 'selected';
+
+  try {
+    // Document is valid
+    notify.success('Document selected successfully.');
+  } catch (e) {
+    console.error('Document processing failed', e);
+    notify.error('Failed to process document. Please try a different file.');
   }
 }
 
@@ -509,7 +580,7 @@ async function submitRegistration() {
   validateWebsite();
   
   if (!isFormValid.value) {
-    notify.warning('Please fix all validation errors before submitting');
+    notify.warning('Please fix all validation errors before submitting. Proof document is required.');
     return;
   }
 
@@ -525,6 +596,7 @@ async function submitRegistration() {
     const payload = { ...form.value };
     // Remove UI-only fields rejected by backend validation
     delete payload.logoPreview;
+    delete payload.proofPreview;
     delete payload.bannerPreview;
 
     // Coerce numeric fields and drop if empty
@@ -549,6 +621,7 @@ async function submitRegistration() {
     });
     // attach files if present
     if (selectedLogoFile.value) formData.append('logo', selectedLogoFile.value);
+    if (selectedProofFile.value) formData.append('proof', selectedProofFile.value);
     if (selectedBannerFile.value) formData.append('banner', selectedBannerFile.value);
 
     await axios.post(`${API}/clubs/register`, formData, {
@@ -556,7 +629,7 @@ async function submitRegistration() {
     });
 
     notify.success('Club registration submitted successfully! You will receive an email once your registration is reviewed by our admin team.');
-    router.push('/dashboard');
+    router.push('/crickhub');
   } catch (error) {
     console.error('Registration error:', error);
     const errorMessage = error.response?.data?.message || 'Registration failed. Please try again.';

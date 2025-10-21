@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import Dashboard from '../pages/Dashboard.vue';
+import CrickHub from '../pages/CrickHub.vue';
 import HomePage from '../pages/HomePage.vue';
 import Login from '../pages/Login.vue';
 import Register from '../pages/Register.vue';
@@ -34,6 +34,7 @@ import PlayerRegistration from '../pages/PlayerRegistration.vue';
 import PlayerDashboard from '../pages/PlayerDashboard.vue';
 import PlayerPanel from '../pages/PlayerPanel.vue';
 // Import new player page components
+import PlayerPanelDashboard from '../pages/PlayerPanelDashboard.vue';
 import PlayerPerformance from '../pages/player/Performance.vue';
 import PlayerTraining from '../pages/player/Training.vue';
 import PlayerProgress from '../pages/player/Progress.vue';
@@ -50,7 +51,14 @@ import CoachSessions from '../pages/coach/Sessions.vue';
 import CoachPlayers from '../pages/coach/Players.vue';
 import CoachPlayerDetails from '../pages/coach/PlayerDetails.vue';
 import CoachProfile from '../pages/coach/Profile.vue';
-import CoachMatchesAndTournaments from '../pages/coach/MatchesAndTournaments.vue'; // Added import
+import CoachEditProfile from '../pages/coach/EditProfile.vue';
+import CoachOverview from '../pages/coach/CoachOverview.vue'; // Added import
+import CoachMatches from '../pages/coach/CoachMatches.vue'; // Added import
+import CoachMessages from '../pages/coach/CoachMessages.vue'; // Added import
+
+// Messaging components
+import PlayerMessages from '../pages/player/Messages.vue';
+import ClubManagerMessages from '../pages/ClubManagerMessages.vue';
 
 // OTP verification removed
 // import VerifyOtp from '../pages/VerifyOtp.vue';
@@ -66,7 +74,8 @@ const API = import.meta.env.VITE_API_BASE || 'http://localhost:4000/api';
 const routes = [
   { path: '/', name: 'home', component: HomePage },
   { path: '/search', name: 'search', component: Search },
-  { path: '/dashboard', name: 'dashboard', component: Dashboard, meta: { requiresAuth: true } },
+  { path: '/dashboard', redirect: { name: 'crickhub' } },
+  { path: '/crickhub', name: 'crickhub', component: CrickHub, meta: { requiresAuth: true } },
   { path: '/clubs', name: 'clubs', component: ClubsList },
   { path: '/clubs/:id', name: 'club-details', component: ClubDetails, props: true },
   { path: '/club-registration', name: 'club-registration', component: ClubRegistration, meta: { requiresAuth: true, requiresClubManager: true } },
@@ -82,6 +91,7 @@ const routes = [
       { path: 'coaches', name: 'club-manager-coaches', component: ClubManagerCoaches },
       { path: 'matches', name: 'club-manager-matches', component: ClubManagerMatches },
       { path: 'training-sessions', name: 'club-manager-training-sessions', component: ClubManagerTrainingSessions }, // Added route
+      { path: 'messages', name: 'club-manager-messages', component: ClubManagerMessages },
       { path: 'profile', name: 'club-manager-profile', component: ClubManagerProfile }
     ]
   },
@@ -128,11 +138,12 @@ const routes = [
     component: PlayerPanel, 
     meta: { requiresAuth: true, requiresPlayer: true },
     children: [
-      { path: '', name: 'player-panel', component: PlayerPerformance },
+      { path: '', name: 'player-panel', component: PlayerPanelDashboard },
       { path: 'performance', name: 'player-panel-performance', component: PlayerPerformance },
       { path: 'training', name: 'player-panel-training', component: PlayerTraining },
       { path: 'progress', name: 'player-panel-progress', component: PlayerProgress },
       { path: 'applications', name: 'player-panel-applications', component: PlayerApplications },
+      { path: 'messages', name: 'player-panel-messages', component: PlayerMessages },
       { path: 'profile', name: 'player-panel-profile', component: PlayerProfile }
     ]
   },
@@ -148,14 +159,17 @@ const routes = [
     component: CoachPanel, 
     meta: { requiresAuth: true, requiresCoach: true },
     children: [
-      { path: '', name: 'coach-panel', component: CoachAnalytics },
+      { path: '', name: 'coach-panel', component: CoachOverview },
       { path: 'analytics', name: 'coach-panel-analytics', component: CoachAnalytics },
       { path: 'programs', name: 'coach-panel-programs', component: CoachTrainingPrograms },
       { path: 'sessions', name: 'coach-panel-sessions', component: CoachSessions },
       { path: 'players', name: 'coach-panel-players', component: CoachPlayers },
       { path: 'players/:playerId', name: 'coach-panel-player-details', component: CoachPlayerDetails, props: true },
-      { path: 'matches', name: 'coach-panel-matches', component: CoachMatchesAndTournaments }, // Added route
-      { path: 'profile', name: 'coach-panel-profile', component: CoachProfile }
+      { path: 'matches', name: 'coach-panel-matches', component: CoachMatches }, // Dedicated matches page
+      { path: 'messages', name: 'coach-panel-messages', component: CoachMessages },
+      { path: 'overview', name: 'coach-panel-overview', component: CoachOverview }, // Overview page
+      { path: 'profile', name: 'coach-panel-profile', component: CoachProfile },
+      { path: 'profile/edit', name: 'coach-panel-edit-profile', component: CoachEditProfile }
     ]
   },
   
@@ -186,13 +200,18 @@ router.beforeEach(async (to, from, next) => {
   // Check admin access
   if (to.meta.requiresAdmin && isAuthed) {
     if (!isAdmin) {
-      alert('Access denied. Admin privileges required.');
-      return next({ name: 'dashboard' });
+      // Show notification instead of alert
+      if (typeof window.$notify !== 'undefined') {
+        window.$notify.error('Access Denied', 'Admin privileges required.');
+      } else {
+        alert('Access denied. Admin privileges required.');
+      }
+      return next({ name: 'crickhub' });
     }
   }
 
   // If heading to dashboard but user is admin, route them to admin panel
-  if (isAuthed && isAdmin && to.name === 'dashboard') {
+  if (isAuthed && isAdmin && (to.name === 'dashboard' || to.name === 'crickhub')) {
     return next({ name: 'admin' });
   }
 
@@ -200,8 +219,55 @@ router.beforeEach(async (to, from, next) => {
   if (to.meta.requiresClubManager && isAuthed) {
     const role = auth.userProfile?.role || 'public';
     if (role !== 'clubManager') {
-      alert('Only Club Managers can register a club. Please register an account as Club Manager.');
-      return next({ name: 'dashboard' });
+      // Show notification instead of alert
+      if (typeof window.$notify !== 'undefined') {
+        window.$notify.error('Access Denied', 'Only Club Managers can register a club. Please register an account as Club Manager.');
+      } else {
+        alert('Only Club Managers can register a club. Please register an account as Club Manager.');
+      }
+      return next({ name: 'crickhub' });
+    }
+    
+    // Check if club manager has registered and approved club
+    if (to.path.startsWith('/club-manager')) {
+      try {
+        const response = await axios.get(`${API}/clubs/my-club`, { withCredentials: true });
+        const club = response.data.club;
+        
+        // If club exists but is not approved, redirect to club registration
+        if (club && club.status !== 'approved') {
+          // Show notification instead of alert
+          if (typeof window.$notify !== 'undefined') {
+            window.$notify.warning('Club Registration Pending', 'Your club registration is pending approval. Please wait for admin approval.');
+          } else {
+            alert('Your club registration is pending approval. Please wait for admin approval.');
+          }
+          return next({ name: 'club-registration' });
+        }
+        
+        // If no club exists, redirect to club registration
+        if (!club) {
+          // Show notification instead of alert
+          if (typeof window.$notify !== 'undefined') {
+            window.$notify.info('Club Registration Required', 'Please register your club first.');
+          } else {
+            alert('Please register your club first.');
+          }
+          return next({ name: 'club-registration' });
+        }
+      } catch (e) {
+        // If no club exists (404), redirect to club registration
+        if (e?.response?.status === 404) {
+          // Show notification instead of alert
+          if (typeof window.$notify !== 'undefined') {
+            window.$notify.info('Club Registration Required', 'Please register your club first.');
+          } else {
+            alert('Please register your club first.');
+          }
+          return next({ name: 'club-registration' });
+        }
+        console.warn('Failed to check club status:', e?.response?.data || e.message);
+      }
     }
   }
 
@@ -209,7 +275,12 @@ router.beforeEach(async (to, from, next) => {
   if (to.meta.requiresPlayer && isAuthed) {
     const role = auth.userProfile?.role || 'public';
     if (role !== 'player') {
-      alert('Player access required. Please register as a player first.');
+      // Show notification instead of alert
+      if (typeof window.$notify !== 'undefined') {
+        window.$notify.error('Access Denied', 'Player access required. Please register as a player first.');
+      } else {
+        alert('Player access required. Please register as a player first.');
+      }
       return next({ name: 'player-registration' });
     }
 
@@ -218,7 +289,12 @@ router.beforeEach(async (to, from, next) => {
       const response = await axios.get(`${API}/players/profile`, { withCredentials: true });
       const player = response.data.player;
       if (!player || !player.profileCompleted) {
-        alert('Please complete your profile before accessing the player dashboard.');
+        // Show notification instead of alert
+        if (typeof window.$notify !== 'undefined') {
+          window.$notify.info('Profile Incomplete', 'Please complete your profile before accessing the player dashboard.');
+        } else {
+          alert('Please complete your profile before accessing the player dashboard.');
+        }
         return next({ name: 'player-registration' });
       }
     } catch (e) {
@@ -234,7 +310,12 @@ router.beforeEach(async (to, from, next) => {
   if (to.meta.requiresCoach && isAuthed) {
     const role = auth.userProfile?.role || 'public';
     if (role !== 'coach') {
-      alert('Coach access required. Please register as a coach first.');
+      // Show notification instead of alert
+      if (typeof window.$notify !== 'undefined') {
+        window.$notify.error('Access Denied', 'Coach access required. Please register as a coach first.');
+      } else {
+        alert('Coach access required. Please register as a coach first.');
+      }
       return next({ name: 'coach-registration' });
     }
 
@@ -243,7 +324,12 @@ router.beforeEach(async (to, from, next) => {
       const response = await axios.get(`${API}/coaches/profile`, { withCredentials: true });
       const coach = response.data.coach;
       if (!coach || !coach.profileCompleted) {
-        alert('Please complete your profile before accessing the coach dashboard.');
+        // Show notification instead of alert
+        if (typeof window.$notify !== 'undefined') {
+          window.$notify.info('Profile Incomplete', 'Please complete your profile before accessing the coach dashboard.');
+        } else {
+          alert('Please complete your profile before accessing the coach dashboard.');
+        }
         return next({ name: 'coach-registration' });
       }
     } catch (e) {
@@ -263,7 +349,12 @@ router.beforeEach(async (to, from, next) => {
         const response = await axios.get(`${API}/players/profile`, { withCredentials: true });
         const player = response.data.player;
         if (player && player.profileCompleted) {
-          alert('Your profile is already completed. Redirecting to dashboard.');
+          // Show notification instead of alert
+          if (typeof window.$notify !== 'undefined') {
+            window.$notify.info('Profile Completed', 'Your profile is already completed. Redirecting to dashboard.');
+          } else {
+            alert('Your profile is already completed. Redirecting to dashboard.');
+          }
           return next({ name: 'player-dashboard' });
         }
       } catch (e) {
@@ -281,7 +372,12 @@ router.beforeEach(async (to, from, next) => {
         const response = await axios.get(`${API}/coaches/profile`, { withCredentials: true });
         const coach = response.data.coach;
         if (coach && coach.profileCompleted) {
-          alert('Your profile is already completed. Redirecting to dashboard.');
+          // Show notification instead of alert
+          if (typeof window.$notify !== 'undefined') {
+            window.$notify.info('Profile Completed', 'Your profile is already completed. Redirecting to dashboard.');
+          } else {
+            alert('Your profile is already completed. Redirecting to dashboard.');
+          }
           return next({ name: 'coach-dashboard' });
         }
       } catch (e) {
@@ -298,7 +394,12 @@ router.beforeEach(async (to, from, next) => {
       try {
         const resp = await axios.get(`${API}/clubs/my-club`);
         if (resp?.data?.club) {
-          alert('You have already registered a club.');
+          // Show notification instead of alert
+          if (typeof window.$notify !== 'undefined') {
+            window.$notify.info('Club Already Registered', 'You have already registered a club.');
+          } else {
+            alert('You have already registered a club.');
+          }
           return next({ name: 'club-manager' });
         }
       } catch (e) {
@@ -311,8 +412,8 @@ router.beforeEach(async (to, from, next) => {
   }
   
   if ((to.name === 'login' || to.name === 'register') && isAuthed) {
-    // Send admins to admin panel; others to dashboard
-    return next({ name: isAdmin ? 'admin' : 'dashboard' });
+    // Send admins to admin panel; others to CrickHub
+    return next({ name: isAdmin ? 'admin' : 'crickhub' });
   }
   // Optional: redirect authenticated users away from public landing if desired
   if (to.name === 'home' && isAuthed && from.name !== 'login') {
