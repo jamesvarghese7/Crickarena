@@ -1634,6 +1634,128 @@ router.get('/club/session-attendance/:sessionId', verifyFirebaseToken, requireRo
   }
 });
 
+// GET /api/coaches/club/matches - Get matches for the coach's club
+router.get('/club/matches', verifyFirebaseToken, async (req, res) => {
+  try {
+    const coach = await Coach.findOne({ user: req.user._id }).populate('currentClub', 'name clubName district city');
+    if (!coach) {
+      return res.status(404).json({ message: 'Coach profile not found' });
+    }
+
+    // Check if coach is associated with a club
+    if (!coach.currentClub) {
+      return res.status(400).json({ message: 'Coach is not associated with any club' });
+    }
+
+    // Import Match model
+    const Match = (await import('../models/Match.js')).default;
+    const Tournament = (await import('../models/Tournament.js')).default;
+
+    // Find all matches where this club is either homeClub or awayClub
+    const matches = await Match.find({
+      $or: [
+        { homeClub: coach.currentClub._id },
+        { awayClub: coach.currentClub._id }
+      ]
+    })
+    .populate('homeClub', 'clubName name logoUrl')
+    .populate('awayClub', 'clubName name logoUrl')
+    .populate('tournament', 'name status format')
+    .sort({ date: 1, time: 1 });
+
+    // Transform matches for frontend
+    const formattedMatches = matches.map(match => {
+      const isHomeTeam = match.homeClub._id.toString() === coach.currentClub._id.toString();
+      const opponent = isHomeTeam ? match.awayClub : match.homeClub;
+      
+      return {
+        _id: match._id,
+        date: match.date,
+        time: match.time,
+        venue: match.venue,
+        status: match.status,
+        round: match.round,
+        stage: match.stage,
+        tournament: {
+          _id: match.tournament._id,
+          name: match.tournament.name,
+          status: match.tournament.status,
+          format: match.tournament.format
+        },
+        homeClub: {
+          _id: match.homeClub._id,
+          name: match.homeClub.clubName || match.homeClub.name,
+          logoUrl: match.homeClub.logoUrl
+        },
+        awayClub: {
+          _id: match.awayClub._id,
+          name: match.awayClub.clubName || match.awayClub.name,
+          logoUrl: match.awayClub.logoUrl
+        },
+        opponent: {
+          _id: opponent._id,
+          name: opponent.clubName || opponent.name,
+          logoUrl: opponent.logoUrl
+        },
+        isHomeTeam,
+        score: match.score,
+        result: match.result
+      };
+    });
+
+    res.json({ matches: formattedMatches });
+  } catch (error) {
+    console.error('Error fetching club matches:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// GET /api/coaches/club/players - Get players for the coach's club
+router.get('/club/players', verifyFirebaseToken, async (req, res) => {
+  try {
+    const coach = await Coach.findOne({ user: req.user._id }).populate('currentClub', 'name clubName');
+    if (!coach) {
+      return res.status(404).json({ message: 'Coach profile not found' });
+    }
+
+    // Check if coach is associated with a club
+    if (!coach.currentClub) {
+      return res.status(400).json({ message: 'Coach is not associated with any club' });
+    }
+
+    // Import Player model
+    const Player = (await import('../models/Player.js')).default;
+
+    // Find all active players who are currently members of this club
+    const players = await Player.find({ 
+      currentClub: coach.currentClub._id,
+      isActive: true 
+    })
+    .select('fullName age preferredPosition battingStyle bowlingStyle jerseyNumber')
+    .sort({ fullName: 1 });
+
+    // Format player data
+    const formattedPlayers = players.map(player => ({
+      _id: player._id,
+      fullName: player.fullName,
+      age: player.age,
+      position: player.preferredPosition,
+      battingStyle: player.battingStyle,
+      bowlingStyle: player.bowlingStyle,
+      jerseyNumber: player.jerseyNumber || null
+    }));
+
+    res.json({ 
+      players: formattedPlayers,
+      totalPlayers: formattedPlayers.length,
+      clubName: coach.currentClub.clubName || coach.currentClub.name
+    });
+  } catch (error) {
+    console.error('Error fetching club players:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // Admin Routes
 
 // GET /api/coaches/admin/all - Get all coaches (admin only)

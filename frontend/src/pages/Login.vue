@@ -184,10 +184,29 @@ async function onEmailLogin() {
   try {
     await auth.loginEmail(email.value.trim(), password.value);
     const isAdmin = auth.userProfile?.role === 'admin' || auth.user?.email === 'admin@crickarena.com';
-    router.replace({ name: isAdmin ? 'admin' : 'dashboard' });
+    router.replace({ name: isAdmin ? 'admin' : 'crickhub' });
   } catch (e) {
     console.error(e);
-    const errorMessage = e?.message || 'Login failed. Please check your credentials.';
+    
+    // Map Firebase error codes to user-friendly messages
+    let errorMessage = 'Login failed. Please try again.';
+    
+    if (e?.code === 'auth/invalid-credential' || e?.message?.includes('invalid-credential')) {
+      errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+    } else if (e?.code === 'auth/user-not-found' || e?.message?.includes('user-not-found')) {
+      errorMessage = 'No account found with this email. Please check your email or sign up.';
+    } else if (e?.code === 'auth/wrong-password' || e?.message?.includes('wrong-password')) {
+      errorMessage = 'Incorrect password. Please try again or reset your password.';
+    } else if (e?.code === 'auth/too-many-requests' || e?.message?.includes('too-many-requests')) {
+      errorMessage = 'Too many failed login attempts. Please try again later or reset your password.';
+    } else if (e?.code === 'auth/user-disabled' || e?.message?.includes('user-disabled')) {
+      errorMessage = 'This account has been disabled. Please contact support.';
+    } else if (e?.code === 'auth/invalid-email' || e?.message?.includes('invalid-email')) {
+      errorMessage = 'Invalid email format. Please enter a valid email address.';
+    } else if (e?.message && !e?.message?.includes('Firebase')) {
+      errorMessage = e.message;
+    }
+    
     notify.error(errorMessage);
   } finally {
     isLoading.value = false;
@@ -199,7 +218,7 @@ async function onGoogle() {
   try {
     await auth.loginGoogle();
     const isAdmin = auth.userProfile?.role === 'admin' || auth.user?.email === 'admin@crickarena.com';
-    router.replace({ name: isAdmin ? 'admin' : 'dashboard' });
+    router.replace({ name: isAdmin ? 'admin' : 'crickhub' });
   } catch (e) {
     console.error('Google Sign-In error:', e);
     const msg = e?.code ? `${e.code}: ${e.message || ''}` : (e?.message || 'Unknown error');

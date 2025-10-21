@@ -1,6 +1,8 @@
 import express from 'express';
 import Joi from 'joi';
+import { Router } from 'express';
 import Club from '../models/Club.js';
+import Player from '../models/Player.js';
 import { verifyFirebaseToken } from '../middleware/auth.js';
 import { requireRole } from '../middleware/rbac.js';
 import { logger } from '../utils/logger.js';
@@ -9,7 +11,7 @@ import multer from 'multer';
 // In-memory storage as we store binaries in MongoDB
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
-const router = express.Router();
+const router = Router();
 
 // Enhanced club registration schema with better validation
 const clubRegistrationSchema = Joi.object({
@@ -78,10 +80,33 @@ const clubRegistrationSchema = Joi.object({
   status: Joi.string().valid('pending').default('pending')
 });
 
+// Add a custom validation to check for proof document
+const validateClubRegistration = (body, files) => {
+  // First run the schema validation
+  const { value, error } = clubRegistrationSchema.unknown(true).validate(body);
+  
+  if (error) {
+    return { value, error };
+  }
+  
+  // Check if proof document is provided
+  if (!files || !files.proof || !files.proof[0]) {
+    return { 
+      value, 
+      error: { 
+        details: [{ message: 'Proof document is required for club registration' }] 
+      } 
+    };
+  }
+  
+  return { value, error: null };
+};
+
 // Club registration (restricted to club managers)
-// Accept multipart/form-data with fields and files: logo (optional), banner (optional)
+// Accept multipart/form-data with fields and files: logo (optional), proof (required)
 router.post('/register', verifyFirebaseToken, requireRole('clubManager'), upload.fields([
-  { name: 'logo', maxCount: 1 }
+  { name: 'logo', maxCount: 1 },
+  { name: 'proof', maxCount: 1 }
 ]), async (req, res) => {
   try {
     logger.info('Club registration attempt', { 
@@ -93,7 +118,8 @@ router.post('/register', verifyFirebaseToken, requireRole('clubManager'), upload
     // Combine text fields from multipart form
     const body = req.body || {};
 
-    const { value, error } = clubRegistrationSchema.unknown(true).validate(body);
+    // Use custom validation that checks for proof document
+    const { value, error } = validateClubRegistration(body, req.files);
     if (error) {
       logger.warn('Club registration validation failed', { 
         userId: req.user._id, 
@@ -151,16 +177,24 @@ router.post('/register', verifyFirebaseToken, requireRole('clubManager'), upload
 
     // Read files from multipart upload
     let logo;
+    let proof;
     const logoFile = req.files?.logo?.[0];
+    const proofFile = req.files?.proof?.[0];
+    
     if (logoFile) {
       logo = { data: logoFile.buffer, contentType: logoFile.mimetype };
       // ensure no foreign URL sent
       delete value.logoUrl;
     }
+    
+    if (proofFile) {
+      proof = { data: proofFile.buffer, contentType: proofFile.mimetype };
+    }
 
     const club = await Club.create({
       ...value,
       logo,
+      proof,
       manager: req.user._id,
       submittedAt: new Date(),
       status: 'pending'
@@ -267,8 +301,9 @@ router.get('/my-club/tournaments', verifyFirebaseToken, requireRole('clubManager
       return res.status(404).json({ message: 'No club found' });
     }
 
-    // Import Tournament model
+    // Import Tournament and Payment models
     const Tournament = (await import('../models/Tournament.js')).default;
+    const Payment = (await import('../models/Payment.js')).default;
 
     // Find all tournaments where this club has applied
     const tournaments = await Tournament.find({
@@ -276,11 +311,30 @@ router.get('/my-club/tournaments', verifyFirebaseToken, requireRole('clubManager
     }).select('name description district location startDate endDate status format entryFee prizePool maxTeams registrations')
       .sort({ startDate: -1 });
 
-    // Transform data to include club's application status
+    // Get all payments for this club
+    const payments = await Payment.find({
+      club: club._id,
+      tournament: { $in: tournaments.map(t => t._id) }
+    }).select('tournament status verification');
+
+    // Create a map of tournament ID to payment status
+    const paymentMap = {};
+    payments.forEach(payment => {
+      paymentMap[payment.tournament.toString()] = {
+        status: payment.status,
+        verified: payment.verification?.verified || false,
+        paymentId: payment.paymentId
+      };
+    });
+
+    // Transform data to include club's application status and payment status
     const clubTournaments = tournaments.map(tournament => {
       const clubRegistration = tournament.registrations.find(
         reg => reg.club.toString() === club._id.toString()
       );
+      
+      const paymentInfo = paymentMap[tournament._id.toString()];
+      const hasPaid = paymentInfo && paymentInfo.status === 'paid' && paymentInfo.verified;
 
       return {
         id: tournament._id,
@@ -299,7 +353,9 @@ router.get('/my-club/tournaments', verifyFirebaseToken, requireRole('clubManager
         applicationStatus: clubRegistration?.status || 'not_applied',
         appliedAt: clubRegistration?.appliedAt,
         decisionAt: clubRegistration?.decisionAt,
-        rejectionReason: clubRegistration?.reason
+        rejectionReason: clubRegistration?.reason,
+        paymentStatus: hasPaid ? 'paid' : (paymentInfo ? paymentInfo.status : 'pending'),
+        paymentVerified: hasPaid
       };
     });
 
@@ -632,33 +688,40 @@ const clubUpdateSchema = Joi.object({
   memberCount: Joi.number().integer().min(1).optional(),
   website: Joi.string().uri().allow('').optional(),
   achievements: Joi.string().allow('').optional(),
-  // Accept http/https and data URLs for now (replace with real upload URL later)
-  logoUrl: Joi.string().uri({ scheme: [/https?/, 'data'] }).allow('').optional(),
-  bannerUrl: Joi.string().uri({ scheme: [/https?/, 'data'] }).allow('').optional()
+  // Accept http/https and data URLs, or allow null/empty for existing logos
+  logoUrl: Joi.string().uri({ scheme: [/https?/, 'data'] }).allow('', null).optional(),
+  bannerUrl: Joi.string().uri({ scheme: [/https?/, 'data'] }).allow('', null).optional()
 });
 
 router.put('/my-club', verifyFirebaseToken, requireRole('clubManager'), upload.fields([
   { name: 'logo', maxCount: 1 }
 ]), async (req, res) => {
   try {
-    const { value, error } = clubUpdateSchema.validate(req.body);
+    // Remove logoUrl from validation if it's an existing path (starts with /api/)
+    const bodyToValidate = { ...req.body };
+    if (bodyToValidate.logoUrl && bodyToValidate.logoUrl.startsWith('/api/')) {
+      delete bodyToValidate.logoUrl;
+    }
+    
+    const { value, error } = clubUpdateSchema.validate(bodyToValidate);
     if (error) return res.status(400).json({ message: error.details?.[0]?.message || 'Invalid input' });
 
     const club = await Club.findOne({ manager: req.user._id });
     if (!club) return res.status(404).json({ message: 'No club found' });
 
-    // Apply updates
-    Object.assign(club, value);
+    // Apply updates (excluding logoUrl from value to prevent overwriting)
+    Object.keys(value).forEach(key => {
+      if (key !== 'logoUrl' && key !== 'bannerUrl') {
+        club[key] = value[key];
+      }
+    });
 
     // Handle uploaded files
     const logoFile = req.files?.logo?.[0];
     if (logoFile) {
       club.logo = { data: logoFile.buffer, contentType: logoFile.mimetype };
       club.logoUrl = `/api/clubs/${club._id}/logo`;
-      delete value.logoUrl;
     }
-
-
 
     // If club is approved or rejected, mark back to pending for re-approval when details change
     if (club.status !== 'pending') {
@@ -761,13 +824,26 @@ router.get('/:id/logo', async (req, res) => {
   }
 });
 
+// Serve club proof document
+router.get('/:id/proof', async (req, res) => {
+  try {
+    const club = await Club.findById(req.params.id).select('proof');
+    if (!club || !club.proof || !club.proof.data) return res.status(404).end();
+    res.set('Content-Type', club.proof.contentType || 'application/pdf');
+    res.set('Cache-Control', 'public, max-age=86400');
+    return res.send(club.proof.data);
+  } catch (err) {
+    return res.status(404).end();
+  }
+});
+
 // Note: banner endpoints removed as we only keep club icons (logos).
 
 // Public fetches approved clubs
 router.get('/public', async (req, res) => {
   try {
     const clubs = await Club.find({ status: 'approved' })
-      .select('clubName name logoUrl district city description memberCount groundName')
+      .select('clubName name logoUrl district city description memberCount groundName foundedYear')
       .sort({ clubName: 1 });
 
     // Normalize shape for frontend and ensure stable image URLs
@@ -779,6 +855,7 @@ router.get('/public', async (req, res) => {
       description: c.description,
       memberCount: c.memberCount,
       groundName: c.groundName,
+      foundedYear: c.foundedYear,
       // Always provide stable endpoints; frontend hides image on 404
       logoUrl: c.logoUrl || `/api/clubs/${c._id}/logo`,
     }));
@@ -1022,6 +1099,41 @@ router.delete('/remove-coach/:coachId', verifyFirebaseToken, requireRole('clubMa
     }
   } catch (error) {
     console.error('Error removing coach from club:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// DELETE /api/clubs/remove-player/:playerId - Remove a player from the club
+router.delete('/remove-player/:playerId', verifyFirebaseToken, requireRole('clubManager'), async (req, res) => {
+  try {
+    const { playerId } = req.params;
+    
+    // Find the club managed by this user
+    const club = await Club.findOne({ manager: req.user._id });
+    if (!club) {
+      return res.status(404).json({ message: 'No club found for this manager' });
+    }
+    
+    // Find the player
+    const player = await Player.findById(playerId);
+    if (!player) {
+      return res.status(404).json({ message: 'Player not found' });
+    }
+    
+    // Check if the player is in this club
+    if (player.currentClub && player.currentClub.toString() === club._id.toString()) {
+      // Remove player from club
+      player.currentClub = null;
+      player.joinedClubAt = null;
+      
+      await player.save();
+      
+      return res.json({ message: 'Player removed from club successfully' });
+    } else {
+      return res.status(400).json({ message: 'This player is not associated with your club' });
+    }
+  } catch (error) {
+    console.error('Error removing player from club:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

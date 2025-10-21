@@ -416,8 +416,8 @@
             <p class="text-gray-600">There's no recent activity for your club yet.</p>
           </div>
 
-          <!-- Activity List -->
-          <div v-else class="space-y-4">
+          <!-- Activity List with Scrollbar -->
+          <div v-else class="max-h-96 overflow-y-auto space-y-4 pr-2">
             <div 
               v-for="activity in recentActivity" 
               :key="activity.id"
@@ -1045,7 +1045,7 @@ const filteredApplications = computed(() => {
 });
 
 const recentActivity = computed(() => {
-  return clubActivity.value.slice(0, 5); // Show only the 5 most recent activities
+  return clubActivity.value; // Show all activities with scrollbar
 });
 
 onMounted(async () => {
@@ -1055,3 +1055,24 @@ onMounted(async () => {
   }
 });
 </script>
+
+<style scoped>
+/* Custom scrollbar for Recent Activity */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 8px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #a5b4fc;
+  border-radius: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #818cf8;
+}
+</style>

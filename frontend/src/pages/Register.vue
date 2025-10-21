@@ -384,7 +384,7 @@ async function onSubmit() {
     } else if (role.value === 'coach') {
       router.push({ name: 'coach-registration' });
     } else {
-      router.push({ name: 'dashboard' });
+      router.push({ name: 'crickhub' });
     }
   } catch (e) {
     console.error('Registration failed:', e);
@@ -420,7 +420,7 @@ async function onGoogleRegister() {
     } else if (role.value === 'coach') {
       router.push({ name: 'coach-registration' });
     } else {
-      router.push({ name: 'dashboard' });
+      router.push({ name: 'crickhub' });
     }
   } catch (e) {
     console.error(e);

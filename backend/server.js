@@ -22,6 +22,8 @@ const { default: userRoutes } = await import('./routes/users.js');
 const { default: paymentsRoutes } = await import('./routes/payments.js');
 const { default: playerRoutes } = await import('./routes/players.js');
 const { default: coachRoutes } = await import('./routes/coaches.js');
+const { default: messageRoutes } = await import('./routes/messages.js');
+const { default: matchRoutes } = await import('./routes/matches.js');
 const { errorHandler, logger } = await import('./utils/logger.js');
 
 const app = express();
@@ -121,11 +123,14 @@ app.get('/health', (_, res) => res.json({ ok: true }));
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/clubs', clubRoutes);
-app.use('/api/tournaments', tournamentRoutes);
+// Mount admin routes BEFORE tournament routes to avoid conflicts
 app.use('/api/admin', adminRoutes);
+app.use('/api/tournaments', tournamentRoutes);
 app.use('/api/payments', paymentsRoutes);
 app.use('/api/players', playerRoutes);
 app.use('/api/coaches', coachRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/matches', matchRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

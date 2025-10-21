@@ -33,28 +33,34 @@
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Gender *</label>
-              <select
-                v-model="form.gender"
-                required
-                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              >
-                <option value="">Select Gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-            <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
               <input
                 v-model="form.phone"
                 type="tel"
                 required
-                pattern="^(\+91[\s-]?)?[6-9]\d{9}$"
-                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                @input="validatePhoneNumber"
+                @blur="validatePhoneNumber"
+                :class="[
+                  'w-full border rounded-lg px-4 py-2 focus:ring-2 focus:border-transparent transition',
+                  phoneValidation.error && phoneValidation.touched
+                    ? 'border-red-500 focus:ring-red-500'
+                    : phoneValidation.isValid && form.phone
+                    ? 'border-green-500 focus:ring-green-500'
+                    : 'border-gray-300 focus:ring-green-500'
+                ]"
                 placeholder="+91 9876543210"
               />
+              <div class="mt-1 min-h-[20px]">
+                <p v-if="phoneValidation.error && phoneValidation.touched" class="text-sm text-red-600">
+                  {{ phoneValidation.error }}
+                </p>
+                <p v-else-if="phoneValidation.isValid && form.phone" class="text-sm text-green-600">
+                  ✓ Valid phone number
+                </p>
+                <p v-else class="text-sm text-gray-500">
+                  Enter a 10-digit Indian mobile number
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -64,7 +70,7 @@
           <h2 class="text-xl font-semibold text-gray-900 mb-4">Address Information</h2>
           <div class="grid md:grid-cols-2 gap-6">
             <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-2">Street Address (Optional)</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Street Address</label>
               <input
                 v-model="form.address.street"
                 type="text"
@@ -110,10 +116,30 @@
                 v-model="form.address.pincode"
                 type="text"
                 required
-                pattern="^\d{6}$"
-                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                maxlength="6"
+                @input="validatePincodeField"
+                @blur="validatePincodeField"
+                :class="[
+                  'w-full border rounded-lg px-4 py-2 focus:ring-2 focus:border-transparent transition',
+                  pincodeValidation.error && pincodeValidation.touched
+                    ? 'border-red-500 focus:ring-red-500'
+                    : pincodeValidation.isValid && form.address.pincode
+                    ? 'border-green-500 focus:ring-green-500'
+                    : 'border-gray-300 focus:ring-green-500'
+                ]"
                 placeholder="Enter 6-digit pincode"
               />
+              <div class="mt-1 min-h-[20px]">
+                <p v-if="pincodeValidation.error && pincodeValidation.touched" class="text-sm text-red-600">
+                  {{ pincodeValidation.error }}
+                </p>
+                <p v-else-if="pincodeValidation.isValid && form.address.pincode" class="text-sm text-green-600">
+                  ✓ Valid pincode
+                </p>
+                <p v-else class="text-sm text-gray-500">
+                  Enter a 6-digit pincode
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -167,12 +193,11 @@
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Preferred Jersey Number (0-99)</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Preferred Jersey Number</label>
               <input
                 v-model.number="form.jerseyNumber"
                 type="number"
                 min="0"
-                max="99"
                 class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 placeholder="e.g., 7"
               />
@@ -308,6 +333,8 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../store/auth';
+import { validatePhone, validatePincode } from '../utils/validation';
+import { notify } from '../utils/notifications';
 import axios from 'axios';
 
 const router = useRouter();
@@ -325,7 +352,7 @@ const keralaDistricts = [
 const form = ref({
   fullName: '',
   dateOfBirth: '',
-  gender: '',
+  gender: 'male',
   phone: '',
   email: auth.user?.email || '',
   address: {
@@ -342,6 +369,36 @@ const form = ref({
   jerseyNumber: '',
   careerHistory: []
 });
+
+// Phone validation state
+const phoneValidation = ref({
+  isValid: false,
+  error: '',
+  touched: false
+});
+
+// Pincode validation state
+const pincodeValidation = ref({
+  isValid: false,
+  error: '',
+  touched: false
+});
+
+// Validate phone number in real-time
+const validatePhoneNumber = () => {
+  phoneValidation.value.touched = true;
+  const result = validatePhone(form.value.phone);
+  phoneValidation.value.isValid = result.isValid;
+  phoneValidation.value.error = result.error;
+};
+
+// Validate pincode in real-time
+const validatePincodeField = () => {
+  pincodeValidation.value.touched = true;
+  const result = validatePincode(form.value.address.pincode);
+  pincodeValidation.value.isValid = result.isValid;
+  pincodeValidation.value.error = result.error;
+};
 
 // Calculate min and max dates (16-50 years old)
 const today = new Date();
@@ -398,7 +455,7 @@ const onPhotoSelected = (e) => {
   const file = e.target.files?.[0];
   if (!file) { selectedPhotoFile = null; photoPreview.value = ''; return; }
   if (file.size > 2 * 1024 * 1024) {
-    alert('File size must be less than 2MB');
+    notify.warning('File size must be less than 2MB');
     e.target.value = '';
     return;
   }
@@ -417,7 +474,7 @@ const loadExistingProfile = async () => {
       form.value = {
         fullName: player.fullName || '',
         dateOfBirth: player.dateOfBirth ? new Date(player.dateOfBirth).toISOString().split('T')[0] : '',
-        gender: player.gender || '',
+        gender: 'male',
         phone: player.phone || '',
         email: player.email || auth.user?.email || '',
         address: {
@@ -453,6 +510,22 @@ onMounted(() => {
 });
 
 const submitRegistration = async () => {
+  // Validate phone before submission
+  validatePhoneNumber();
+  
+  if (!phoneValidation.value.isValid) {
+    notify.error('Please enter a valid phone number');
+    return;
+  }
+  
+  // Validate pincode before submission
+  validatePincodeField();
+  
+  if (!pincodeValidation.value.isValid) {
+    notify.error('Please enter a valid 6-digit pincode');
+    return;
+  }
+  
   loading.value = true;
   try {
     // Ensure backend has a User doc first (if not already created during auth/register step)
@@ -514,15 +587,20 @@ const submitRegistration = async () => {
         withCredentials: true
       });
     }
-    alert('Player profile created successfully! You can now apply to clubs.');
-    router.push({ name: 'player-dashboard' });
+    
+    notify.success('Player profile created successfully! You can now apply to clubs.', 6000);
+    
+    // Navigate after a short delay to let user see the success message
+    setTimeout(() => {
+      router.push('/player-panel');
+    }, 1500);
   } catch (error) {
     console.error('Registration error:', error);
     const firstValidation = Array.isArray(error?.response?.data?.errors) && error.response.data.errors.length
       ? (error.response.data.errors[0].msg || error.response.data.errors[0].message || '')
       : '';
     const message = firstValidation || error.response?.data?.message || 'Failed to create player profile';
-    alert(message);
+    notify.error(message, 6000);
   } finally {
     loading.value = false;
   }

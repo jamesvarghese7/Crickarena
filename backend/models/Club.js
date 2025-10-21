@@ -11,6 +11,12 @@ const clubSchema = new mongoose.Schema({
     contentType: String
   },
   
+  // Stored proof document binary in MongoDB
+  proof: {
+    data: Buffer,
+    contentType: String
+  },
+  
   // New registration fields
   clubName: { type: String }, // Primary club name field
   district: { type: String, required: true },

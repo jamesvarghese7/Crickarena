@@ -193,17 +193,7 @@
                   >
                     View
                   </button>
-                  <button
-                    @click="toggleCoachStatus(coach)"
-                    :class="[
-                      'text-sm',
-                      coach.isActive
-                        ? 'text-red-600 hover:text-red-900'
-                        : 'text-green-600 hover:text-green-900'
-                    ]"
-                  >
-                    {{ coach.isActive ? 'Deactivate' : 'Activate' }}
-                  </button>
+                  <!-- Removed deactivate/activate button -->
                 </div>
               </td>
             </tr>
@@ -628,28 +618,7 @@ const viewCoach = async (coach) => {
   }
 };
 
-const toggleCoachStatus = async (coach) => {
-  try {
-    const idTok = auth.user ? await auth.user.getIdToken(true) : null;
-    const action = coach.isActive ? 'deactivate' : 'activate';
-    
-    if (!confirm(`Are you sure you want to ${action} this coach?`)) return;
-    
-    await axios.put(`${API}/admin/coaches/${coach.id}/${action}`, {}, {
-      headers: {
-        ...(idTok ? { Authorization: `Bearer ${idTok}` } : {})
-      },
-      withCredentials: true
-    });
-    
-    toastStore.addToast(`Coach ${action}d successfully`, 'success');
-    fetchCoaches();
-    fetchStats();
-  } catch (error) {
-    console.error('Error toggling coach status:', error);
-    toastStore.addToast('Failed to update coach status', 'error');
-  }
-};
+// Removed toggleCoachStatus function
 
 const getInitials = (name) => {
   if (!name) return '';

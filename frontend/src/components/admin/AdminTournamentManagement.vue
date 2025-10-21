@@ -308,47 +308,33 @@
 
     <!-- Generate Fixtures Modal -->
     <div v-if="showGenerateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div class="bg-white rounded-lg max-w-md w-full">
-        <div class="p-4 border-b">
-          <h3 class="text-lg font-semibold text-gray-900">Generate Fixtures</h3>
-        </div>
-        <div class="p-4 space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Format</label>
-            <input class="w-full px-3 py-2 border rounded-md bg-gray-50" :value="currentTournament?.format" disabled />
-          </div>
-          <div v-if="currentTournament?.format === 'round-robin' || currentTournament?.format === 'league'" class="flex items-center gap-2">
-            <input id="doubleRR" type="checkbox" v-model="gen.doubleRoundRobin" />
-            <label for="doubleRR" class="text-sm">Double round robin</label>
-          </div>
-          <div v-if="currentTournament?.format === 'groups+knockouts' || currentTournament?.format === 'league+playoff'" class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-sm mb-1">Groups</label>
-              <input v-model.number="gen.groups" type="number" min="2" class="w-full px-3 py-2 border rounded-md" />
-            </div>
-            <div>
-              <label class="block text-sm mb-1">Qualify / group</label>
-              <input v-model.number="gen.qualifyPerGroup" type="number" min="1" class="w-full px-3 py-2 border rounded-md" />
-            </div>
-          </div>
-          <div class="flex items-center gap-2">
-            <input id="respectRounds" type="checkbox" v-model="gen.respectRoundOrder" />
-            <label for="respectRounds" class="text-sm">Respect round order (strict)</label>
-          </div>
-          <p v-if="genError" class="text-sm text-red-600">{{ genError }}</p>
-          <div v-if="genDiag" class="text-xs text-gray-600 bg-gray-50 border rounded p-2">
-            <div>Required matches: {{ genDiag.required }}</div>
-            <div>Capacity (slots): {{ genDiag.capacity }}</div>
-          </div>
-        </div>
-        <div class="p-4 border-t flex items-center justify-end gap-2">
-          <button class="px-3 py-2 border rounded" @click="closeGenerateModal">Cancel</button>
-          <button class="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-50" :disabled="genLoading" @click="generateNow">
-            {{ genLoading ? 'Generating...' : 'Generate' }}
+      <div class="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-4 border-b flex justify-between items-center">
+          <h3 class="text-lg font-semibold text-gray-900">Advanced Fixture Generation</h3>
+          <button @click="closeGenerateModal" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
           </button>
+        </div>
+        <div class="p-6">
+          <AdvancedFixtureGenerator 
+            v-if="currentTournament"
+            :tournament="currentTournament"
+            @close="closeGenerateModal"
+            @success="handleFixtureSuccess"
+          />
         </div>
       </div>
     </div>
+
+    <!-- Seed Knockout Modal -->
+    <SeedKnockoutModal
+      v-if="showSeedKnockoutModal"
+      :tournament="currentTournament"
+      @close="closeSeedKnockoutModal"
+      @success="handleSeedKnockoutSuccess"
+    />
 
     <!-- Tournament Details Modal -->
     <div v-if="showDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -519,6 +505,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import api from '../../utils/api.js'
+import AdvancedFixtureGenerator from './AdvancedFixtureGenerator.vue'
+import SeedKnockoutModal from './SeedKnockoutModal.vue'
 
 const tournaments = ref([])
 const filteredTournaments = ref([])
@@ -534,6 +522,7 @@ const registrations = ref([])
 
 // Generate Fixtures state
 const showGenerateModal = ref(false)
+const showSeedKnockoutModal = ref(false)
 const currentTournament = ref(null)
 const gen = ref({ doubleRoundRobin: false, respectRoundOrder: true, groups: 2, qualifyPerGroup: 2 })
 const genLoading = ref(false)
@@ -657,13 +646,30 @@ const openGenerateModal = (t) => {
   genDiag.value = null
   showGenerateModal.value = true
 }
-const closeGenerateModal = () => { showGenerateModal.value = false; currentTournament.value = null }
+
+const closeGenerateModal = () => { 
+  showGenerateModal.value = false
+  currentTournament.value = null 
+}
+
+const handleFixtureSuccess = async (result) => {
+  console.log('Fixture generation successful:', result)
+  showGenerateModal.value = false
+  currentTournament.value = null
+  await fetchTournaments()
+  if (selectedTournament.value) {
+    // Refresh details if we're viewing the tournament
+    const updated = tournaments.value.find(t => t._id === selectedTournament.value._id)
+    if (updated) selectedTournament.value = updated
+  }
+}
 const generateNow = async () => {
   if (!currentTournament.value) return
   genLoading.value = true; genError.value = ''; genDiag.value = null
   try {
     const body = { ...gen.value }
-    const { data } = await api.post(`/admin/tournaments/${currentTournament.value._id}/fixtures/generate`, body)
+    // Use V2 endpoint with time slot support
+    const { data } = await api.post(`/admin/tournaments/${currentTournament.value._id}/fixtures/generate-v2`, body)
     showGenerateModal.value = false
     await fetchTournaments()
   } catch (e) {
@@ -676,13 +682,24 @@ const generateNow = async () => {
 }
 
 async function seedKnockout(t){
-  if (!confirm('Seed knockout bracket from current group standings?')) return
-  try {
-    await api.post(`/admin/tournaments/${t._id}/fixtures/seed-knockout`, { qualifyPerGroup: 2 })
-    await fetchTournaments()
-    alert('Knockout seeded')
-  } catch (e) {
-    alert(e?.response?.data?.message || 'Failed to seed knockout')
+  currentTournament.value = t
+  showSeedKnockoutModal.value = true
+}
+
+const closeSeedKnockoutModal = () => {
+  showSeedKnockoutModal.value = false
+  currentTournament.value = null
+}
+
+const handleSeedKnockoutSuccess = async (result) => {
+  console.log('Knockout seeded successfully:', result)
+  showSeedKnockoutModal.value = false
+  currentTournament.value = null
+  await fetchTournaments()
+  if (selectedTournament.value) {
+    // Refresh details if we're viewing the tournament
+    const updated = tournaments.value.find(t => t._id === selectedTournament.value._id)
+    if (updated) selectedTournament.value = updated
   }
 }
 

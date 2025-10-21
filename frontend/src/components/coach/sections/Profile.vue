@@ -273,11 +273,13 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { useAuthStore } from '../../../store/auth';
 
 const API = import.meta.env.VITE_API_BASE || 'http://localhost:4000/api';
 const auth = useAuthStore();
+const router = useRouter();
 
 // Define props
 const props = defineProps({
@@ -331,8 +333,7 @@ function formatSpecialization(specialization) {
 }
 
 function editProfile() {
-  // In a real implementation, this would navigate to the edit profile page
-  alert('Edit profile functionality would be implemented here');
+  router.push({ name: 'coach-panel-edit-profile' });
 }
 
 function viewDocument(doc) {

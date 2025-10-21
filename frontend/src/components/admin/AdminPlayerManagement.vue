@@ -193,17 +193,7 @@
                   >
                     View
                   </button>
-                  <button
-                    @click="togglePlayerStatus(player)"
-                    :class="[
-                      'text-sm',
-                      player.isActive
-                        ? 'text-red-600 hover:text-red-900'
-                        : 'text-green-600 hover:text-green-900'
-                    ]"
-                  >
-                    {{ player.isActive ? 'Deactivate' : 'Activate' }}
-                  </button>
+                  <!-- Removed deactivate/activate button -->
                 </div>
               </td>
             </tr>
@@ -401,17 +391,7 @@
         </div>
         
         <div class="mt-6 flex justify-end space-x-3">
-          <button
-            @click="togglePlayerStatus(selectedPlayer)"
-            :class="[
-              'px-4 py-2 text-sm font-medium rounded-md',
-              selectedPlayer.isActive
-                ? 'bg-red-600 text-white hover:bg-red-700'
-                : 'bg-green-600 text-white hover:bg-green-700'
-            ]"
-          >
-            {{ selectedPlayer.isActive ? 'Deactivate Player' : 'Activate Player' }}
-          </button>
+          <!-- Removed deactivate/activate button -->
           <button
             @click="closeModal"
             class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
@@ -512,36 +492,7 @@ const viewPlayer = async (player) => {
   }
 }
 
-const togglePlayerStatus = async (player) => {
-  const action = player.isActive ? 'deactivate' : 'activate'
-  const reason = prompt(`Please provide a reason to ${action} this player:`)
-  
-  if (reason === null) return // User cancelled
-  
-  try {
-    await api.put(`/admin/players/${player.id}/status`, {
-      isActive: !player.isActive,
-      reason
-    })
-    
-    // Update the player in the list
-    const index = players.value.findIndex(p => p.id === player.id)
-    if (index !== -1) {
-      players.value[index].isActive = !players.value[index].isActive
-    }
-    
-    // Update selected player if it's the same
-    if (selectedPlayer.value && selectedPlayer.value.id === player.id) {
-      selectedPlayer.value.isActive = !selectedPlayer.value.isActive
-    }
-    
-    // Refresh stats
-    fetchStats()
-  } catch (error) {
-    console.error(`Error ${action}ing player:`, error)
-    alert(`Failed to ${action} player. Please try again.`)
-  }
-}
+// Removed togglePlayerStatus function
 
 const closeModal = () => {
   selectedPlayer.value = null

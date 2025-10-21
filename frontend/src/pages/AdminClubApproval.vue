@@ -5,6 +5,39 @@
       Back to Admin
     </button>
 
+    <!-- Rejection Modal -->
+    <div v-if="showRejectModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Reject Club Registration</h3>
+        <p class="text-gray-600 mb-4">
+          Please provide a reason for rejecting {{ club?.clubName || club?.name }}'s registration:
+        </p>
+        <textarea 
+          v-model="rejectionReason"
+          rows="4"
+          placeholder="Enter rejection reason (optional)..."
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 mb-6 focus:outline-none focus:ring-2 focus:ring-red-500"
+        ></textarea>
+        <div class="flex gap-3">
+          <button 
+            @click="confirmReject"
+            :disabled="processing"
+            class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors disabled:opacity-50"
+          >
+            <span v-if="processing">Processing...</span>
+            <span v-else>Reject Club</span>
+          </button>
+          <button 
+            @click="closeRejectModal"
+            :disabled="processing"
+            class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div v-if="loading" class="py-24 text-center text-gray-500">Loading registration…</div>
     <div v-else-if="error" class="py-24 text-center text-red-600">{{ error }}</div>
     <div v-else-if="!club" class="py-24 text-center text-gray-500">Club not found.</div>
@@ -12,7 +45,18 @@
     <div v-else class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
       <!-- Header / Banner -->
       <div class="relative h-40 bg-gradient-to-r from-red-600 to-rose-600">
-        <img :src="resolvedLogoUrl" alt="logo" class="absolute -bottom-8 left-6 w-20 h-20 rounded-full border-4 border-white object-cover" @error="e => (e.target.style.display='none')" />
+        <div class="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
+          <img v-if="club.logoData" :src="club.logoData" alt="Club Logo" 
+               class="w-full h-full object-cover" 
+               @error="($event.target.style.display='none')">
+          <img v-else-if="club.logoUrl" :src="club.logoUrl" alt="Club Logo" 
+               class="w-full h-full object-cover" 
+               @error="($event.target.style.display='none')">
+          <span v-else class="text-blue-600 font-bold text-xl">
+            {{ (club.clubName || 'C')?.charAt(0)?.toUpperCase() }}
+          </span>
+        </div>
+
       </div>
 
       <div class="pt-12 px-6 pb-6">
@@ -83,12 +127,16 @@
 
         <!-- Proof document -->
         <div class="mb-8">
-          <div class="text-sm font-semibold text-gray-700 mb-2">Submitted Proof</div>
+          <div class="text-sm font-semibold text-gray-700 mb-2">Submitted Proof/Documents</div>
           <div class="flex items-center gap-3">
             <a v-if="proofUrl" :href="proofUrl" target="_blank" class="inline-flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-800">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14m7-7H5"/></svg>
-              View Proof
+              View Proof Document
             </a>
+            <span v-else-if="club.proofData" class="inline-flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-800 cursor-pointer" @click="viewProofData">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14m7-7H5"/></svg>
+              View Proof Document
+            </span>
             <span v-else class="text-gray-500 text-sm">No proof uploaded</span>
           </div>
         </div>
@@ -136,6 +184,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
+import { notify } from '../utils/notifications';
 
 const route = useRoute();
 const router = useRouter();
@@ -145,9 +194,13 @@ const loading = ref(true);
 const error = ref('');
 const processing = ref(false);
 const club = ref(null);
+const showRejectModal = ref(false);
+const rejectionReason = ref('');
 
 const resolvedLogoUrl = computed(() => {
   if (!club.value) return '';
+  // Prioritize base64 logo data if available
+  if (club.value.logoData) return club.value.logoData;
   const id = club.value.id;
   return club.value.logoUrl || (id ? `${API}/clubs/${id}/logo` : '');
 });
@@ -168,6 +221,27 @@ const statusChipClass = computed(() => {
 function formatDate(dateString) {
   if (!dateString) return '—';
   return new Date(dateString).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+// Function to view proof data in a new tab
+function viewProofData() {
+  if (club.value && club.value.proofData) {
+    // Create a blob from the base64 data
+    const base64Data = club.value.proofData.split(',')[1];
+    const contentType = club.value.proofData.split(',')[0].split(':')[1].split(';')[0];
+    
+    const byteCharacters = atob(base64Data);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: contentType });
+    
+    // Create object URL and open in new tab
+    const blobUrl = URL.createObjectURL(blob);
+    window.open(blobUrl, '_blank');
+  }
 }
 
 async function loadClub() {
@@ -195,28 +269,39 @@ async function approveClub() {
     await axios.put(`${API}/admin/clubs/${club.value.id}/approve`);
     club.value.status = 'approved';
     club.value.processedAt = new Date().toISOString();
-    alert('Club approved successfully');
+    notify.success('Club approved successfully!');
   } catch (e) {
     console.error('Approve failed:', e);
-    alert(e?.response?.data?.message || 'Failed to approve club');
+    notify.error(e?.response?.data?.message || 'Failed to approve club');
   } finally {
     processing.value = false;
   }
 }
 
-async function rejectClub() {
+function rejectClub() {
   if (!club.value) return;
-  const reason = prompt('Please provide a reason for rejection (optional):');
+  rejectionReason.value = '';
+  showRejectModal.value = true;
+}
+
+function closeRejectModal() {
+  showRejectModal.value = false;
+  rejectionReason.value = '';
+}
+
+async function confirmReject() {
+  if (!club.value) return;
   processing.value = true;
   try {
-    await axios.put(`${API}/admin/clubs/${club.value.id}/reject`, { reason });
+    await axios.put(`${API}/admin/clubs/${club.value.id}/reject`, { reason: rejectionReason.value });
     club.value.status = 'rejected';
-    club.value.rejectionReason = reason || 'No reason provided';
+    club.value.rejectionReason = rejectionReason.value || 'No reason provided';
     club.value.processedAt = new Date().toISOString();
-    alert('Club rejected');
+    closeRejectModal();
+    notify.success('Club rejected successfully');
   } catch (e) {
     console.error('Reject failed:', e);
-    alert(e?.response?.data?.message || 'Failed to reject club');
+    notify.error(e?.response?.data?.message || 'Failed to reject club');
   } finally {
     processing.value = false;
   }

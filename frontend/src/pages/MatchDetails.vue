@@ -256,6 +256,108 @@
             </div>
           </div>
 
+          <!-- Lineups Tab -->
+          <div v-if="activeTab === 'lineups'" class="space-y-6">
+            <!-- Loading State -->
+            <div v-if="rostersLoading" class="text-center py-12">
+              <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
+              <p class="text-gray-600 mt-4">Loading lineups...</p>
+            </div>
+
+            <!-- Lineups Display -->
+            <div v-else class="grid md:grid-cols-2 gap-6">
+              <!-- Home Team Lineup -->
+              <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                <div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-4">
+                  <h3 class="text-lg font-semibold flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    {{ rosters?.homeTeam?.club?.name || 'Home Team' }}
+                  </h3>
+                </div>
+                
+                <div class="p-6">
+                  <div v-if="rosters?.homeTeam?.roster" class="space-y-4">
+                    <div class="text-sm text-gray-600 mb-4">
+                      Submitted: {{ formatRosterDate(rosters.homeTeam.roster.submittedAt) }}
+                    </div>
+                    <div class="space-y-3">
+                      <div v-for="(player, index) in rosters.homeTeam.roster.players" :key="player.playerId" 
+                           class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center gap-3">
+                          <div class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                            {{ index + 1 }}
+                          </div>
+                          <div>
+                            <div class="font-medium text-gray-900">{{ player.playerName }}</div>
+                            <div class="text-sm text-gray-600">{{ player.position }}</div>
+                          </div>
+                        </div>
+                        <div v-if="player.jerseyNumber" class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm font-medium">
+                          #{{ player.jerseyNumber }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div v-else class="text-center py-8">
+                    <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    <p class="text-gray-500 font-medium">Lineup Not Submitted</p>
+                    <p class="text-sm text-gray-400">Team lineup will appear here once submitted</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Away Team Lineup -->
+              <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                <div class="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-6 py-4">
+                  <h3 class="text-lg font-semibold flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    {{ rosters?.awayTeam?.club?.name || 'Away Team' }}
+                  </h3>
+                </div>
+                
+                <div class="p-6">
+                  <div v-if="rosters?.awayTeam?.roster" class="space-y-4">
+                    <div class="text-sm text-gray-600 mb-4">
+                      Submitted: {{ formatRosterDate(rosters.awayTeam.roster.submittedAt) }}
+                    </div>
+                    <div class="space-y-3">
+                      <div v-for="(player, index) in rosters.awayTeam.roster.players" :key="player.playerId" 
+                           class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center gap-3">
+                          <div class="w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                            {{ index + 1 }}
+                          </div>
+                          <div>
+                            <div class="font-medium text-gray-900">{{ player.playerName }}</div>
+                            <div class="text-sm text-gray-600">{{ player.position }}</div>
+                          </div>
+                        </div>
+                        <div v-if="player.jerseyNumber" class="px-2 py-1 bg-purple-100 text-purple-700 rounded text-sm font-medium">
+                          #{{ player.jerseyNumber }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div v-else class="text-center py-8">
+                    <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    <p class="text-gray-500 font-medium">Lineup Not Submitted</p>
+                    <p class="text-sm text-gray-400">Team lineup will appear here once submitted</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Scorecard Tab -->
           <div v-if="activeTab === 'scorecard'" class="space-y-6">
             <!-- Innings Display -->
@@ -270,19 +372,19 @@
                 <!-- Innings Summary -->
                 <div class="grid md:grid-cols-4 gap-4 mb-6">
                   <div class="text-center p-4 bg-gray-50 rounded-lg">
-                  <div class="text-2xl font-bold text-gray-900">{{ innings.runs || 0 }}</div>
+                    <div class="text-2xl font-bold text-gray-900">{{ innings.totalRuns || innings.runs || 0 }}</div>
                     <div class="text-sm text-gray-600">Total Runs</div>
                   </div>
                   <div class="text-center p-4 bg-gray-50 rounded-lg">
-                    <div class="text-2xl font-bold text-gray-900">{{ innings.wickets || 0 }}</div>
+                    <div class="text-2xl font-bold text-gray-900">{{ innings.totalWickets || innings.wickets || 0 }}</div>
                     <div class="text-sm text-gray-600">Wickets</div>
                   </div>
                   <div class="text-center p-4 bg-gray-50 rounded-lg">
-                  <div class="text-2xl font-bold text-gray-900">{{ toOvers(innings.balls) }}</div>
+                    <div class="text-2xl font-bold text-gray-900">{{ (innings.overs && typeof innings.overs === 'string') ? innings.overs : (innings.oversString || toOvers(innings.totalBalls || innings.balls || 0)) }}</div>
                     <div class="text-sm text-gray-600">Overs</div>
                   </div>
                   <div class="text-center p-4 bg-gray-50 rounded-lg">
-                  <div class="text-2xl font-bold text-gray-900">{{ getInningsRunRate(innings) }}</div>
+                    <div class="text-2xl font-bold text-gray-900">{{ innings.runRate ? innings.runRate.toFixed(2) : getInningsRunRate(innings) }}</div>
                     <div class="text-sm text-gray-600">Run Rate</div>
                   </div>
                 </div>
@@ -441,11 +543,16 @@ const activeTab = ref('overview');
 const lastUpdate = ref(null);
 const showUpdateNotification = ref(false);
 
+// Roster data
+const rosters = ref(null);
+const rostersLoading = ref(false);
+
 // Live update interval
 let updateInterval = null;
 
 const tabs = [
   { key: 'overview', label: 'Overview' },
+  { key: 'lineups', label: 'Lineups' },
   { key: 'scorecard', label: 'Scorecard' },
   { key: 'timeline', label: 'Timeline' },
   { key: 'analytics', label: 'Analytics' }
@@ -480,8 +587,9 @@ function getTeamScore(match, teamType) {
   const battingInnings = match.innings.find(inn => String(inn.battingClub) === String(teamId));
   if (!battingInnings) return '0/0';
   
-  const runs = battingInnings.totalRuns || 0;
-  const wickets = battingInnings.wickets || 0;
+  // Use standardized fields with fallbacks
+  const runs = battingInnings.totalRuns || battingInnings.runs || 0;
+  const wickets = battingInnings.totalWickets || battingInnings.wickets || 0;
   return `${runs}/${wickets}`;
 }
 
@@ -495,7 +603,13 @@ function getTeamOvers(match, teamType) {
   const battingInnings = match.innings.find(inn => String(inn.battingClub) === String(teamId));
   if (!battingInnings) return '0.0';
   
-  return battingInnings.overs || '0.0';
+  // Use standardized overs field with fallback calculation
+  if (battingInnings.overs && typeof battingInnings.overs === 'string') return battingInnings.overs;
+  if (battingInnings.oversString) return battingInnings.oversString;
+  
+  // Fallback: calculate from balls
+  const balls = battingInnings.totalBalls || battingInnings.balls || 0;
+  return toOvers(balls);
 }
 
 // Get team run rate from innings data
@@ -508,11 +622,17 @@ function getTeamRunRate(match, teamType) {
   const battingInnings = match.innings.find(inn => String(inn.battingClub) === String(teamId));
   if (!battingInnings) return '0.00';
   
-  const runs = battingInnings.totalRuns || 0;
-  const overs = battingInnings.overs || '0.0';
-  const overNumber = parseFloat(overs);
+  // Use pre-calculated run rate if available
+  if (battingInnings.runRate !== undefined) {
+    return battingInnings.runRate.toFixed(2);
+  }
   
-  return overNumber > 0 ? (runs / overNumber).toFixed(2) : '0.00';
+  // Fallback calculation
+  const runs = battingInnings.totalRuns || battingInnings.runs || 0;
+  const balls = battingInnings.totalBalls || battingInnings.balls || 0;
+  const overs = balls / 6;
+  
+  return overs > 0 ? (runs / overs).toFixed(2) : '0.00';
 }
 
 // Get toss winner name
@@ -632,6 +752,35 @@ function getTotalExtras(match, type) {
   }, 0);
 }
 
+// Load roster data
+async function loadRosters() {
+  if (!match.value?._id) return;
+  
+  try {
+    rostersLoading.value = true;
+    const { data } = await api.get(`/matches/${match.value._id}/roster`);
+    rosters.value = data;
+  } catch (err) {
+    console.error('Error loading rosters:', err);
+    // Don't show error for rosters as it's not critical
+    rosters.value = null;
+  } finally {
+    rostersLoading.value = false;
+  }
+}
+
+// Format roster submission date
+function formatRosterDate(dateString) {
+  if (!dateString) return 'Unknown';
+  return new Date(dateString).toLocaleDateString('en-IN', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
 // Load match data
 async function loadMatch() {
   try {
@@ -643,9 +792,27 @@ async function loadMatch() {
     
     const { data } = await api.get(`/tournaments/${tournamentId}/matches/${matchId}`);
     
+    // Transform backend data to match frontend expectations
+    // Backend provides homeClub and awayClub, but frontend expects teams.home and teams.away
+    const transformedData = {
+      ...data,
+      teams: {
+        home: {
+          id: data.homeClub?._id || data.homeClub?.id,
+          name: data.homeClub?.clubName || data.homeClub?.name || 'Home Team',
+          logoUrl: data.homeClub?.logoUrl
+        },
+        away: {
+          id: data.awayClub?._id || data.awayClub?.id,
+          name: data.awayClub?.clubName || data.awayClub?.name || 'Away Team',
+          logoUrl: data.awayClub?.logoUrl
+        }
+      }
+    };
+    
     // Check if this is an update (not initial load)
     if (match.value && lastUpdate.value) {
-      const hasChanges = JSON.stringify(match.value) !== JSON.stringify(data);
+      const hasChanges = JSON.stringify(match.value) !== JSON.stringify(transformedData);
       if (hasChanges) {
         showUpdateNotification.value = true;
         setTimeout(() => {
@@ -654,8 +821,11 @@ async function loadMatch() {
       }
     }
     
-    match.value = data;
+    match.value = transformedData;
     lastUpdate.value = new Date();
+    
+    // Load rosters after match is loaded
+    await loadRosters();
   } catch (err) {
     console.error('Error loading match:', err);
     error.value = err?.response?.data?.message || 'Failed to load match details';

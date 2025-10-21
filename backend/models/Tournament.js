@@ -39,8 +39,16 @@ const tournamentSchema = new mongoose.Schema({
     name: { type: String, required: true },
     slotTimes: [{ type: String }]
   }],
+  // Global match time slots (e.g., ['09:00', '14:00', '18:00'])
+  matchTimeSlots: [{ type: String }],
+  // Allow parallel matches only when necessary
+  allowParallelMatches: { type: Boolean, default: false },
+  // Maximum parallel matches at same time (default 1 = no parallel)
+  maxParallelMatches: { type: Number, default: 1, min: 1 },
   bannerUrl: { type: String, default: '' },
   format: { type: String, enum: ['league', 'knockout', 'league+playoff', 'round-robin', 'groups+knockouts'], default: 'league' },
+  matchFormat: { type: String, enum: ['T20', 'T10', 'ODI', 'Test'], default: 'T20' },
+  oversLimit: { type: Number, default: 20, min: 5, max: 50 },
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
   // Legacy date field for backward compatibility
@@ -61,6 +69,9 @@ const tournamentSchema = new mongoose.Schema({
   standings: [standingSchema],
   // Scheduling constraints and preferences
   restDaysMin: { type: Number, default: 1 },
+  doubleRoundRobin: { type: Boolean, default: false },
+  numGroups: { type: Number, default: 2, min: 2, max: 8 },
+  qualifyPerGroup: { type: Number, default: 2, min: 1, max: 4 },
   teamBlackouts: { type: Map, of: [String], default: undefined }, // clubId -> [YYYY-MM-DD]
   venueBlackouts: { type: Map, of: [String], default: undefined }, // venueName -> [YYYY-MM-DD]
   reserveDays: [{ type: Date }]

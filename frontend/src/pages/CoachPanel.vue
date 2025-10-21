@@ -1,8 +1,8 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-    <div class="flex min-h-screen">
+    <div class="flex">
       <!-- Sidebar -->
-      <aside :class="['bg-white/80 backdrop-blur-xl border-r border-white/20 w-80 shrink-0 flex-col shadow-2xl shadow-blue-500/10', sidebarOpen ? 'flex' : 'hidden md:flex']">
+      <aside :class="['bg-white/80 backdrop-blur-xl border-r border-white/20 w-80 shrink-0 flex flex-col shadow-2xl shadow-blue-500/10 fixed h-screen z-10', sidebarOpen ? 'flex' : 'hidden md:flex']">
         <!-- Sidebar Header -->
         <div class="h-20 flex items-center px-6 border-b border-slate-200/50 bg-gradient-to-r from-blue-600 to-indigo-600">
           <div class="flex items-center gap-3">
@@ -127,6 +127,21 @@
           </RouterLink>
 
           <RouterLink 
+            :to="{ name: 'coach-panel-messages' }" 
+            class="nav-link group"
+            :class="isActive('coach-panel-messages')"
+            @click="sidebarOpen = false"
+          >
+            <div class="nav-icon-wrapper">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+              </svg>
+            </div>
+            <span class="nav-text">Messages</span>
+            <div class="nav-indicator"></div>
+          </RouterLink>
+
+          <RouterLink 
             :to="{ name: 'coach-panel-matches' }" 
             class="nav-link group"
             :class="isActive('coach-panel-matches')"
@@ -137,7 +152,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
               </svg>
             </div>
-            <span class="nav-text">Matches</span>
+            <span class="nav-text">Match Management</span>
             <div class="nav-indicator"></div>
           </RouterLink>
 
@@ -181,8 +196,11 @@
         </div>
       </aside>
 
+      <!-- Mobile Overlay -->
+      <div v-if="sidebarOpen" class="fixed inset-0 bg-black/50 z-50 md:hidden" @click="sidebarOpen = false"></div>
+
       <!-- Main Content Area -->
-      <div class="flex-1 flex flex-col min-w-0">
+      <div class="flex-1 flex flex-col min-w-0 ml-0 md:ml-80">
         <!-- Top Header -->
         <header class="h-20 bg-white/80 backdrop-blur-xl border-b border-white/20 shadow-sm flex items-center justify-between px-4 lg:px-8">
           <div class="flex items-center gap-4">
@@ -286,12 +304,12 @@ const isActive = (routeName) => {
 
 const getPageTitle = () => {
   const titles = {
-    'coach-panel': 'Dashboard',
+    'coach-panel': 'Dashboard Overview',
     'coach-panel-analytics': 'Analytics',
     'coach-panel-programs': 'Training Programs',
     'coach-panel-sessions': 'Session Management',
     'coach-panel-players': 'Players',
-    'coach-panel-matches': 'Matches & Tournaments',
+    'coach-panel-matches': 'Match Management',
     'coach-panel-profile': 'Profile'
   };
   return titles[route.name] || 'Coach Portal';
@@ -341,5 +359,24 @@ const logout = async () => {
 
 .nav-link.active .nav-indicator {
   @apply bg-blue-500 opacity-100;
+}
+
+/* Custom scrollbar for sidebar */
+nav::-webkit-scrollbar {
+  width: 8px;
+}
+
+nav::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 10px 0;
+}
+
+nav::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.5);
+  border-radius: 4px;
+}
+
+nav::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(100, 116, 139, 0.7);
 }
 </style>
