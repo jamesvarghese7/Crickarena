@@ -521,21 +521,49 @@
     </section>
 
     <!-- Kerala Districts Section -->
-    <section class="py-20">
+    <section class="py-20 bg-gradient-to-br from-green-50 to-emerald-50">
       <div class="max-w-7xl mx-auto px-4">
-        <div class="text-center mb-12">
+        <div class="text-center mb-16">
+          <div class="inline-flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+            God's Own Country
+          </div>
           <h2 class="text-4xl font-black text-gray-900 mb-4">Cricket Across Kerala</h2>
-          <p class="text-xl text-gray-600">Active cricket clubs and tournaments in all 14 districts of God's Own Country</p>
+          <p class="text-xl text-gray-600 max-w-3xl mx-auto">Discover the vibrant cricket culture spanning all 14 districts of Kerala, from Thiruvananthapuram to Kasaragod</p>
         </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-          <div v-for="district in keralaDistricts" :key="district" 
-               class="group relative bg-white rounded-2xl p-4 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer text-center">
-            <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
-              <span class="text-white font-bold text-sm">{{ district.charAt(0) }}</span>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-6">
+          <div 
+            v-for="(district, index) in keralaDistricts" 
+            :key="district" 
+            class="group relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 cursor-pointer text-center border border-green-100 hover:border-green-300"
+            :style="{ transitionDelay: (index * 50) + 'ms' }"
+            @click="goToDistrictClubs(district)"
+          >
+            <div class="absolute -top-3 -right-3 w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">
+              {{ index + 1 }}
             </div>
-            <h3 class="font-semibold text-gray-900 text-sm">{{ district }}</h3>
+            <div class="w-16 h-16 bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 border-2 border-green-200">
+              <span class="text-green-700 font-bold text-xl">{{ district.charAt(0) }}</span>
+            </div>
+            <h3 class="font-bold text-gray-900 mb-2 group-hover:text-green-700 transition-colors">{{ district }}</h3>
+            <div class="flex items-center justify-center gap-1 text-xs text-gray-500 mt-2">
+              <span class="w-2 h-2 bg-green-400 rounded-full"></span>
+              <span>Active Clubs</span>
+            </div>
           </div>
+        </div>
+
+        <div class="text-center mt-12">
+          <button 
+            @click="goToClubs" 
+            class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-bold text-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+          >
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            Explore District Clubs
+          </button>
         </div>
       </div>
     </section>
@@ -639,137 +667,12 @@
       </div>
     </section> -->
 
-    <!-- News & Updates Section -->
-    <section class="py-20">
-      <div class="max-w-7xl mx-auto px-4">
-        <div class="text-center mb-16">
-          <h2 class="text-4xl font-black text-gray-900 mb-4">Latest Cricket News</h2>
-          <p class="text-xl text-gray-600">Stay updated with Kerala cricket tournaments, club news, and player achievements</p>
-        </div>
-
-        <div class="grid md:grid-cols-3 gap-8">
-          <div class="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-            <div class="h-48 bg-gradient-to-br from-green-400 to-emerald-600 relative overflow-hidden flex items-center justify-center">
-              <div class="text-6xl text-white opacity-80">🏆</div>
-              <div class="absolute bottom-4 left-4 text-white">
-                <span class="bg-green-600 px-3 py-1 rounded-full text-xs font-semibold">Tournament</span>
-              </div>
-            </div>
-            <div class="p-6">
-              <h3 class="text-xl font-bold text-gray-900 mb-2 group-hover:text-green-600 transition-colors">Kerala Inter-District Championship</h3>
-              <p class="text-gray-600 text-sm leading-relaxed mb-4">Annual cricket tournament bringing together teams from all Kerala districts in competitive matches.</p>
-              <div class="flex items-center justify-between text-sm text-gray-500">
-                <span>Coming Soon</span>
-                <span class="text-green-600 font-semibold group-hover:translate-x-1 transition-transform duration-300 cursor-pointer">Learn more →</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-            <div class="h-48 bg-gradient-to-br from-blue-400 to-indigo-600 relative overflow-hidden flex items-center justify-center">
-              <div class="text-6xl text-white opacity-80">🏏</div>
-              <div class="absolute bottom-4 left-4 text-white">
-                <span class="bg-blue-600 px-3 py-1 rounded-full text-xs font-semibold">Infrastructure</span>
-              </div>
-            </div>
-            <div class="p-6">
-              <h3 class="text-xl font-bold text-gray-900 mb-2 group-hover:text-green-600 transition-colors">New Cricket Grounds</h3>
-              <p class="text-gray-600 text-sm leading-relaxed mb-4">Modern cricket facilities being developed across Kerala districts to support local cricket community growth.</p>
-              <div class="flex items-center justify-between text-sm text-gray-500">
-                <span>In Development</span>
-                <span class="text-green-600 font-semibold group-hover:translate-x-1 transition-transform duration-300 cursor-pointer">Learn more →</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-            <div class="h-48 bg-gradient-to-br from-purple-400 to-pink-600 relative overflow-hidden flex items-center justify-center">
-              <div class="text-6xl text-white opacity-80">🌟</div>
-              <div class="absolute bottom-4 left-4 text-white">
-                <span class="bg-purple-600 px-3 py-1 rounded-full text-xs font-semibold">Youth Cricket</span>
-              </div>
-            </div>
-            <div class="p-6">
-              <h3 class="text-xl font-bold text-gray-900 mb-2 group-hover:text-green-600 transition-colors">Young Talent Development</h3>
-              <p class="text-gray-600 text-sm leading-relaxed mb-4">Supporting emerging cricket talents through youth leagues and training programs across Kerala.</p>
-              <div class="flex items-center justify-between text-sm text-gray-500">
-                <span>Ongoing</span>
-                <span class="text-green-600 font-semibold group-hover:translate-x-1 transition-transform duration-300 cursor-pointer">Learn more →</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Player Success Stories -->
-    <section class="py-20 bg-white">
-      <div class="max-w-7xl mx-auto px-4">
-        <div class="text-center mb-16">
-          <h2 class="text-4xl font-black text-gray-900 mb-4">Player Success Stories</h2>
-          <p class="text-xl text-gray-600 max-w-3xl mx-auto">Hear from players who found their cricket home through CrickArena</p>
-        </div>
-
-        <div class="grid md:grid-cols-3 gap-8">
-          <div class="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-8 border border-orange-200">
-            <div class="flex items-center gap-4 mb-6">
-              <div class="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                R
-              </div>
-              <div>
-                <h3 class="font-bold text-gray-900">Rahul Krishna</h3>
-                <p class="text-sm text-gray-600">Batsman • Thiruvananthapuram</p>
-              </div>
-            </div>
-            <p class="text-gray-700 italic mb-4">"CrickArena helped me find the perfect club in my district. Within a month, I was playing in local tournaments and improving my game with experienced players."</p>
-            <div class="flex items-center gap-1 text-orange-500">
-              <span>⭐⭐⭐⭐⭐</span>
-            </div>
-          </div>
-
-          <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-8 border border-green-200">
-            <div class="flex items-center gap-4 mb-6">
-              <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                P
-              </div>
-              <div>
-                <h3 class="font-bold text-gray-900">Priya Nair</h3>
-                <p class="text-sm text-gray-600">All-rounder • Kochi</p>
-              </div>
-            </div>
-            <p class="text-gray-700 italic mb-4">"As a female cricketer, finding the right club was challenging. CrickArena connected me with a supportive team that values diversity and skill."</p>
-            <div class="flex items-center gap-1 text-green-500">
-              <span>⭐⭐⭐⭐⭐</span>
-            </div>
-          </div>
-
-          <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-200">
-            <div class="flex items-center gap-4 mb-6">
-              <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                A
-              </div>
-              <div>
-                <h3 class="font-bold text-gray-900">Arjun Menon</h3>
-                <p class="text-sm text-gray-600">Bowler • Kozhikode</p>
-              </div>
-            </div>
-            <p class="text-gray-700 italic mb-4">"The platform made it easy to showcase my bowling stats and connect with clubs looking for fast bowlers. Now I'm part of a competitive team!"</p>
-            <div class="flex items-center gap-1 text-blue-500">
-              <span>⭐⭐⭐⭐⭐</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="text-center mt-12">
-          <RouterLink to="/register" class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-2xl font-bold text-lg hover:from-orange-600 hover:to-red-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
-            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-            </svg>
-            Start Your Success Story
-          </RouterLink>
-        </div>
-      </div>
-    </section>
+    <!-- District Clubs Modal -->
+    <DistrictClubsModal 
+      v-if="showDistrictClubsModal" 
+      :district="selectedDistrict" 
+      @close="showDistrictClubsModal = false" 
+    />
 
     <!-- CTA Section -->
     <section class="py-20 bg-gradient-to-r from-green-600 to-emerald-600">
@@ -885,6 +788,7 @@ import axios from 'axios';
 import { useAuthStore } from '../store/auth';
 import TournamentList from '../components/TournamentList.vue';
 import TournamentHistory from '../components/TournamentHistory.vue';
+import DistrictClubsModal from '../components/DistrictClubsModal.vue';
 import { useRouter } from 'vue-router';
 
 const auth = useAuthStore();
@@ -905,6 +809,11 @@ function goToTournaments() {
 
 function goToClubs() {
   router.push({ name: 'clubs' });
+}
+
+function goToDistrictClubs(district) {
+  selectedDistrict.value = district;
+  showDistrictClubsModal.value = true;
 }
 
 function navigateToFixtures() {
@@ -942,6 +851,8 @@ const loading = ref(true);
 const showTournamentDetails = ref(false);
 const fixtures = ref([]);
 const ongoingTournaments = ref([]);
+const showDistrictClubsModal = ref(false);
+const selectedDistrict = ref('');
 
 function formatDateRange(start, end) {
   const s = start ? new Date(start) : null;

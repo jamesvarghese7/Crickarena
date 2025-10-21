@@ -98,6 +98,48 @@ const playerProgressSchema = new mongoose.Schema({
   lastUpdated: { type: Date, default: Date.now }
 }, { _id: true });
 
+// Schema for player goals set by coach
+const playerGoalSchema = new mongoose.Schema({
+  player: { type: mongoose.Schema.Types.ObjectId, ref: 'Player', required: true },
+  title: { type: String, required: true },
+  description: { type: String },
+  targetType: { 
+    type: String, 
+    enum: ['skill', 'attendance', 'sessions', 'performance'], 
+    required: true 
+  },
+  targetValue: { type: Number, required: true },
+  currentValue: { type: Number, default: 0 },
+  deadline: { type: Date, required: true },
+  status: { 
+    type: String, 
+    enum: ['pending', 'in-progress', 'achieved', 'missed'], 
+    default: 'pending' 
+  },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+}, { _id: true });
+
+// Schema for feedback given to players
+const playerFeedbackSchema = new mongoose.Schema({
+  player: { type: mongoose.Schema.Types.ObjectId, ref: 'Player', required: true },
+  session: { type: mongoose.Schema.Types.ObjectId, ref: 'Coach.trainingPrograms.sessions' },
+  title: { type: String, required: true },
+  content: { type: String, required: true },
+  type: { 
+    type: String, 
+    enum: ['performance', 'behavior', 'technique', 'attendance', 'general'], 
+    default: 'general' 
+  },
+  priority: { 
+    type: String, 
+    enum: ['low', 'medium', 'high'], 
+    default: 'medium' 
+  },
+  isRead: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now }
+}, { _id: true });
+
 const coachSchema = new mongoose.Schema({
   // User reference
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
@@ -167,6 +209,12 @@ const coachSchema = new mongoose.Schema({
   
   // Player Progress Tracking
   playerProgress: [playerProgressSchema],
+  
+  // Player Goals
+  playerGoals: [playerGoalSchema],
+  
+  // Player Feedback
+  playerFeedback: [playerFeedbackSchema],
   
   // Profile Photo
   profilePhoto: {

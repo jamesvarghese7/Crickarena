@@ -1802,4 +1802,198 @@ router.get('/admin/all', verifyFirebaseToken, requireRole('admin'), async (req, 
   }
 });
 
+// POST /api/coaches/goals - Set a goal for a player
+router.post('/goals', verifyFirebaseToken, async (req, res) => {
+  try {
+    const coach = await Coach.findOne({ user: req.user._id });
+    if (!coach) {
+      return res.status(404).json({ message: 'Coach profile not found' });
+    }
+
+    // Check if coach is associated with a club
+    if (!coach.currentClub) {
+      return res.status(400).json({ message: 'Coach is not associated with any club' });
+    }
+
+    const { playerId, title, description, targetType, targetValue, deadline } = req.body;
+    
+    // Validate required fields
+    if (!playerId || !title || !targetType || !targetValue || !deadline) {
+      return res.status(400).json({ message: 'Player ID, title, target type, target value, and deadline are required' });
+    }
+
+    // Import Player model
+    const Player = (await import('../models/Player.js')).default;
+    
+    // Check if player exists and is in the same club
+    const player = await Player.findOne({ 
+      _id: playerId, 
+      currentClub: coach.currentClub._id 
+    });
+    
+    if (!player) {
+      return res.status(404).json({ message: 'Player not found or not in your club' });
+    }
+
+    // Create new goal
+    const newGoal = {
+      player: playerId,
+      title,
+      description,
+      targetType,
+      targetValue,
+      deadline: new Date(deadline),
+      status: 'pending'
+    };
+
+    coach.playerGoals.push(newGoal);
+    await coach.save();
+
+    res.status(201).json({ 
+      message: 'Goal set successfully',
+      goal: newGoal
+    });
+  } catch (error) {
+    console.error('Error setting player goal:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// GET /api/coaches/goals/:playerId - Get all goals for a specific player
+router.get('/goals/:playerId', verifyFirebaseToken, async (req, res) => {
+  try {
+    const coach = await Coach.findOne({ user: req.user._id });
+    if (!coach) {
+      return res.status(404).json({ message: 'Coach profile not found' });
+    }
+
+    // Check if coach is associated with a club
+    if (!coach.currentClub) {
+      return res.status(400).json({ message: 'Coach is not associated with any club' });
+    }
+
+    const { playerId } = req.params;
+    
+    // Import Player model
+    const Player = (await import('../models/Player.js')).default;
+    
+    // Check if player exists and is in the same club
+    const player = await Player.findOne({ 
+      _id: playerId, 
+      currentClub: coach.currentClub._id 
+    });
+    
+    if (!player) {
+      return res.status(404).json({ message: 'Player not found or not in your club' });
+    }
+
+    // Get goals for this player
+    const playerGoals = coach.playerGoals.filter(goal => 
+      goal.player.toString() === playerId
+    );
+
+    res.json({ goals: playerGoals });
+  } catch (error) {
+    console.error('Error fetching player goals:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// POST /api/coaches/feedback - Send feedback to a player
+router.post('/feedback', verifyFirebaseToken, async (req, res) => {
+  try {
+    const coach = await Coach.findOne({ user: req.user._id });
+    if (!coach) {
+      return res.status(404).json({ message: 'Coach profile not found' });
+    }
+
+    // Check if coach is associated with a club
+    if (!coach.currentClub) {
+      return res.status(400).json({ message: 'Coach is not associated with any club' });
+    }
+
+    const { playerId, session, title, content, type, priority } = req.body;
+    
+    // Validate required fields
+    if (!playerId || !title || !content) {
+      return res.status(400).json({ message: 'Player ID, title, and content are required' });
+    }
+
+    // Import Player model
+    const Player = (await import('../models/Player.js')).default;
+    
+    // Check if player exists and is in the same club
+    const player = await Player.findOne({ 
+      _id: playerId, 
+      currentClub: coach.currentClub._id 
+    });
+    
+    if (!player) {
+      return res.status(404).json({ message: 'Player not found or not in your club' });
+    }
+
+    // Create new feedback
+    const newFeedback = {
+      player: playerId,
+      session,
+      title,
+      content,
+      type: type || 'general',
+      priority: priority || 'medium',
+      isRead: false
+    };
+
+    coach.playerFeedback.push(newFeedback);
+    await coach.save();
+
+    res.status(201).json({ 
+      message: 'Feedback sent successfully',
+      feedback: newFeedback
+    });
+  } catch (error) {
+    console.error('Error sending player feedback:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// GET /api/coaches/feedback/:playerId - Get all feedback for a specific player
+router.get('/feedback/:playerId', verifyFirebaseToken, async (req, res) => {
+  try {
+    const coach = await Coach.findOne({ user: req.user._id });
+    if (!coach) {
+      return res.status(404).json({ message: 'Coach profile not found' });
+    }
+
+    // Check if coach is associated with a club
+    if (!coach.currentClub) {
+      return res.status(400).json({ message: 'Coach is not associated with any club' });
+    }
+
+    const { playerId } = req.params;
+    
+    // Import Player model
+    const Player = (await import('../models/Player.js')).default;
+    
+    // Check if player exists and is in the same club
+    const player = await Player.findOne({ 
+      _id: playerId, 
+      currentClub: coach.currentClub._id 
+    });
+    
+    if (!player) {
+      return res.status(404).json({ message: 'Player not found or not in your club' });
+    }
+
+    // Get feedback for this player
+    const playerFeedback = coach.playerFeedback.filter(feedback => 
+      feedback.player.toString() === playerId
+    );
+
+    res.json({ feedback: playerFeedback });
+  } catch (error) {
+    console.error('Error fetching player feedback:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 export default router;
