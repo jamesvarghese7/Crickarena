@@ -202,7 +202,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import axios from 'axios';
 
 const API = import.meta.env.VITE_API_BASE || 'http://localhost:4000/api';
@@ -236,6 +237,14 @@ onMounted(async () => {
     fetchPlayerFeedback(),
     fetchClubPlayers()
   ]);
+});
+
+// Watch for route changes to re-fetch data
+const route = useRoute();
+watch(() => route.name, async (newRouteName) => {
+  if (newRouteName === 'coach-panel-feedback') {
+    await fetchPlayerFeedback();
+  }
 });
 
 async function fetchPlayerFeedback() {

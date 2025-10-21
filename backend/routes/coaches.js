@@ -1899,6 +1899,128 @@ router.get('/goals/:playerId', verifyFirebaseToken, async (req, res) => {
   }
 });
 
+// GET /api/coaches/goals - Get all goals for the current coach
+router.get('/goals', verifyFirebaseToken, async (req, res) => {
+  try {
+    const coach = await Coach.findOne({ user: req.user._id });
+    if (!coach) {
+      return res.status(404).json({ message: 'Coach profile not found' });
+    }
+
+    // Check if coach is associated with a club
+    if (!coach.currentClub) {
+      return res.status(400).json({ message: 'Coach is not associated with any club' });
+    }
+
+    // Return all goals for this coach
+    res.json({ goals: coach.playerGoals });
+  } catch (error) {
+    console.error('Error fetching coach goals:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// PUT /api/coaches/goals/:goalId - Update a specific goal
+router.put('/goals/:goalId', verifyFirebaseToken, async (req, res) => {
+  try {
+    const coach = await Coach.findOne({ user: req.user._id });
+    if (!coach) {
+      return res.status(404).json({ message: 'Coach profile not found' });
+    }
+
+    // Check if coach is associated with a club
+    if (!coach.currentClub) {
+      return res.status(400).json({ message: 'Coach is not associated with any club' });
+    }
+
+    const { goalId } = req.params;
+    const { title, description, targetType, targetValue, currentValue, deadline, status } = req.body;
+    
+    // Find the goal
+    const goal = coach.playerGoals.id(goalId);
+    if (!goal) {
+      return res.status(404).json({ message: 'Goal not found' });
+    }
+
+    // Update goal fields
+    if (title !== undefined) goal.title = title;
+    if (description !== undefined) goal.description = description;
+    if (targetType !== undefined) goal.targetType = targetType;
+    if (targetValue !== undefined) goal.targetValue = targetValue;
+    if (currentValue !== undefined) goal.currentValue = currentValue;
+    if (deadline !== undefined) goal.deadline = new Date(deadline);
+    if (status !== undefined) goal.status = status;
+    
+    // Update the updatedAt timestamp
+    goal.updatedAt = new Date();
+    
+    await coach.save();
+
+    res.json({ 
+      message: 'Goal updated successfully',
+      goal: goal
+    });
+  } catch (error) {
+    console.error('Error updating goal:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// PUT /api/coaches/goals/:goalId/progress - Update progress of a specific goal
+router.put('/goals/:goalId/progress', verifyFirebaseToken, async (req, res) => {
+  try {
+    const coach = await Coach.findOne({ user: req.user._id });
+    if (!coach) {
+      return res.status(404).json({ message: 'Coach profile not found' });
+    }
+
+    // Check if coach is associated with a club
+    if (!coach.currentClub) {
+      return res.status(400).json({ message: 'Coach is not associated with any club' });
+    }
+
+    const { goalId } = req.params;
+    const { currentValue, status } = req.body;
+    
+    // Find the goal
+    const goal = coach.playerGoals.id(goalId);
+    if (!goal) {
+      return res.status(404).json({ message: 'Goal not found' });
+    }
+
+    // Update progress fields
+    if (currentValue !== undefined) {
+      // Ensure currentValue doesn't exceed targetValue
+      const validatedCurrentValue = Math.min(currentValue, goal.targetValue);
+      goal.currentValue = validatedCurrentValue;
+      
+      // Auto-update status based on progress
+      if (validatedCurrentValue >= goal.targetValue) {
+        goal.status = 'achieved';
+      } else if (validatedCurrentValue > 0) {
+        goal.status = 'in-progress';
+      } else {
+        goal.status = 'pending';
+      }
+    }
+    
+    if (status !== undefined) goal.status = status;
+    
+    // Update the updatedAt timestamp
+    goal.updatedAt = new Date();
+    
+    await coach.save();
+
+    res.json({ 
+      message: 'Goal progress updated successfully',
+      goal: goal
+    });
+  } catch (error) {
+    console.error('Error updating goal progress:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // POST /api/coaches/feedback - Send feedback to a player
 router.post('/feedback', verifyFirebaseToken, async (req, res) => {
   try {
@@ -1992,6 +2114,27 @@ router.get('/feedback/:playerId', verifyFirebaseToken, async (req, res) => {
     res.json({ feedback: playerFeedback });
   } catch (error) {
     console.error('Error fetching player feedback:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// GET /api/coaches/feedback - Get all feedback for the current coach
+router.get('/feedback', verifyFirebaseToken, async (req, res) => {
+  try {
+    const coach = await Coach.findOne({ user: req.user._id });
+    if (!coach) {
+      return res.status(404).json({ message: 'Coach profile not found' });
+    }
+
+    // Check if coach is associated with a club
+    if (!coach.currentClub) {
+      return res.status(400).json({ message: 'Coach is not associated with any club' });
+    }
+
+    // Return all feedback for this coach
+    res.json({ feedback: coach.playerFeedback });
+  } catch (error) {
+    console.error('Error fetching coach feedback:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
