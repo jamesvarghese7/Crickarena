@@ -1,8 +1,8 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
-    <div class="flex min-h-screen">
+    <div class="flex">
       <!-- Sidebar -->
-      <aside :class="['bg-white/80 backdrop-blur-xl border-r border-white/20 w-80 shrink-0 flex-col shadow-2xl shadow-green-500/10', sidebarOpen ? 'flex' : 'hidden md:flex']">
+      <aside :class="['bg-white/80 backdrop-blur-xl border-r border-white/20 w-80 shrink-0 flex flex-col shadow-2xl shadow-green-500/10 fixed h-screen z-10', sidebarOpen ? 'flex' : 'hidden md:flex']">
         <!-- Sidebar Header -->
         <div class="h-20 flex items-center px-6 border-b border-slate-200/50 bg-gradient-to-r from-green-600 to-emerald-600">
           <div class="flex items-center gap-3">
@@ -127,6 +127,36 @@
           </RouterLink>
 
           <RouterLink 
+            :to="{ name: 'player-panel-goals' }" 
+            class="nav-link group"
+            :class="isActive('player-panel-goals')"
+            @click="sidebarOpen = false"
+          >
+            <div class="nav-icon-wrapper">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+            </div>
+            <span class="nav-text">My Goals</span>
+            <div class="nav-indicator"></div>
+          </RouterLink>
+
+          <RouterLink 
+            :to="{ name: 'player-panel-feedback' }" 
+            class="nav-link group"
+            :class="isActive('player-panel-feedback')"
+            @click="sidebarOpen = false"
+          >
+            <div class="nav-icon-wrapper">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+              </svg>
+            </div>
+            <span class="nav-text">Coach Feedback</span>
+            <div class="nav-indicator"></div>
+          </RouterLink>
+
+          <RouterLink 
             :to="{ name: 'player-panel-messages' }" 
             class="nav-link group"
             :class="isActive('player-panel-messages')"
@@ -149,7 +179,7 @@
           >
             <div class="nav-icon-wrapper">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37.996.608 2.296.07 2.572-1.065z"/>
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
               </svg>
             </div>
@@ -181,8 +211,11 @@
         </div>
       </aside>
 
+      <!-- Mobile Overlay -->
+      <div v-if="sidebarOpen" class="fixed inset-0 bg-black/50 z-50 md:hidden" @click="sidebarOpen = false"></div>
+
       <!-- Main Content Area -->
-      <div class="flex-1 flex flex-col min-w-0">
+      <div class="flex-1 flex flex-col min-w-0 ml-0 md:ml-80">
         <!-- Top Header -->
         <header class="h-20 bg-white/80 backdrop-blur-xl border-b border-white/20 shadow-sm flex items-center justify-between px-4 lg:px-8">
           <div class="flex items-center gap-4">
@@ -277,6 +310,8 @@ const getPageTitle = () => {
     'player-panel-training': 'Training Sessions',
     'player-panel-progress': 'Progress Tracking',
     'player-panel-applications': 'Club Applications',
+    'player-panel-goals': 'My Goals',
+    'player-panel-feedback': 'Coach Feedback',
     'player-panel-profile': 'Profile'
   };
   return titles[route.name] || 'Player Portal';
@@ -326,5 +361,24 @@ const logout = async () => {
 
 .nav-link.active .nav-indicator {
   @apply bg-green-500 opacity-100;
+}
+
+/* Custom scrollbar for sidebar */
+nav::-webkit-scrollbar {
+  width: 8px;
+}
+
+nav::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 10px 0;
+}
+
+nav::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.5);
+  border-radius: 4px;
+}
+
+nav::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(100, 116, 139, 0.7);
 }
 </style>

@@ -902,4 +902,72 @@ router.get('/admin/all', verifyFirebaseToken, requireRole('admin'), async (req, 
   }
 });
 
+// GET /api/players/goals - Get goals set by coach for the current player
+router.get('/goals', verifyFirebaseToken, async (req, res) => {
+  try {
+    const player = await Player.findOne({ user: req.user._id });
+    if (!player) {
+      return res.status(404).json({ message: 'Player profile not found' });
+    }
+
+    // Check if player is associated with a club
+    if (!player.currentClub) {
+      return res.status(400).json({ message: 'Player is not associated with any club' });
+    }
+
+    // Import Coach model
+    const Coach = (await import('../models/Coach.js')).default;
+    
+    // Find the coach for this club
+    const coach = await Coach.findOne({ currentClub: player.currentClub._id });
+    if (!coach) {
+      return res.status(404).json({ message: 'No coach found for this club' });
+    }
+
+    // Get goals for this player
+    const playerGoals = coach.playerGoals.filter(goal => 
+      goal.player.toString() === player._id.toString()
+    );
+
+    res.json({ goals: playerGoals });
+  } catch (error) {
+    console.error('Error fetching player goals:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// GET /api/players/feedback - Get feedback from coach for the current player
+router.get('/feedback', verifyFirebaseToken, async (req, res) => {
+  try {
+    const player = await Player.findOne({ user: req.user._id });
+    if (!player) {
+      return res.status(404).json({ message: 'Player profile not found' });
+    }
+
+    // Check if player is associated with a club
+    if (!player.currentClub) {
+      return res.status(400).json({ message: 'Player is not associated with any club' });
+    }
+
+    // Import Coach model
+    const Coach = (await import('../models/Coach.js')).default;
+    
+    // Find the coach for this club
+    const coach = await Coach.findOne({ currentClub: player.currentClub._id });
+    if (!coach) {
+      return res.status(404).json({ message: 'No coach found for this club' });
+    }
+
+    // Get feedback for this player
+    const playerFeedback = coach.playerFeedback.filter(feedback => 
+      feedback.player.toString() === player._id.toString()
+    );
+
+    res.json({ feedback: playerFeedback });
+  } catch (error) {
+    console.error('Error fetching player feedback:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 export default router;

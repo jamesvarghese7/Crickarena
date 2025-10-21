@@ -58,9 +58,9 @@
   </div>
 
   <div v-else class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-    <div class="flex min-h-screen">
+    <div class="flex">
       <!-- Sidebar -->
-      <aside :class="['bg-white/80 backdrop-blur-xl border-r border-white/20 w-80 shrink-0 flex-col shadow-2xl shadow-blue-500/10', sidebarOpen ? 'flex' : 'hidden md:flex']">
+      <aside :class="['bg-white/80 backdrop-blur-xl border-r border-white/20 w-80 shrink-0 flex flex-col shadow-2xl shadow-blue-500/10 fixed h-screen z-10', sidebarOpen ? 'flex' : 'hidden md:flex']">
         <!-- Sidebar Header -->
         <div class="h-20 flex items-center px-6 border-b border-slate-200/50 bg-gradient-to-r from-blue-600 to-indigo-600">
           <div class="flex items-center gap-3">
@@ -265,8 +265,11 @@
         </div>
       </aside>
 
+      <!-- Mobile Overlay -->
+      <div v-if="sidebarOpen" class="fixed inset-0 bg-black/50 z-50 md:hidden" @click="sidebarOpen = false"></div>
+
       <!-- Main Content Area -->
-      <div class="flex-1 flex flex-col min-w-0">
+      <div class="flex-1 flex flex-col min-w-0 ml-0 md:ml-80">
         <!-- Top Header -->
         <header class="h-20 bg-white/80 backdrop-blur-xl border-b border-white/20 shadow-sm flex items-center justify-between px-4 lg:px-8">
           <div class="flex items-center gap-4">
@@ -309,13 +312,6 @@
         </main>
       </div>
     </div>
-
-    <!-- Mobile Sidebar Overlay -->
-    <div 
-      v-if="sidebarOpen" 
-      @click="sidebarOpen = false"
-      class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
-    ></div>
   </div>
 </template>
 
@@ -465,21 +461,22 @@ async function logout(){
   @apply bg-white opacity-100 scale-100;
 }
 
-/* Custom scrollbar */
-.overflow-y-auto::-webkit-scrollbar {
-  width: 6px;
+/* Custom scrollbar for sidebar */
+nav::-webkit-scrollbar {
+  width: 8px;
 }
 
-.overflow-y-auto::-webkit-scrollbar-track {
+nav::-webkit-scrollbar-track {
   background: transparent;
+  margin: 10px 0;
 }
 
-.overflow-y-auto::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.3);
-  border-radius: 3px;
+nav::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.5);
+  border-radius: 4px;
 }
 
-.overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.5);
+nav::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(100, 116, 139, 0.7);
 }
 </style>

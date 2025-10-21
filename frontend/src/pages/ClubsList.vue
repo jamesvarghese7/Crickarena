@@ -33,15 +33,20 @@
       <div>
         <h1 class="text-3xl font-black text-gray-900">Explore Clubs</h1>
         <p class="text-gray-600">Browse approved clubs and view their details</p>
+        <div v-if="selectedDistrict" class="mt-2 inline-flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+          <span>Filtering by: {{ selectedDistrict }}</span>
+          <button @click="clearDistrictFilter" class="hover:text-green-900 font-bold">×</button>
+        </div>
       </div>
       <div class="relative w-full max-w-md">
         <input
           v-model.trim="query"
           type="text"
-          placeholder="Search by club or city..."
+          :placeholder="selectedDistrict ? 'Clear district filter to search' : 'Search by club or city...'"
           class="w-full border px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+          :disabled="!!selectedDistrict"
         />
-        <svg class="w-5 h-5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/></svg>
+        <svg v-if="!selectedDistrict" class="w-5 h-5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/></svg>
       </div>
     </div>
 
@@ -142,12 +147,16 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, ref, computed } from 'vue';
+import { onMounted, onUnmounted, ref, computed, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import api from '../utils/api.js';
 
+const route = useRoute();
+const router = useRouter();
 const loading = ref(true);
 const clubs = ref([]);
 const query = ref('');
+const selectedDistrict = ref('');
 let cancelled = false;
 onMounted(async () => {
   loading.value = true;
@@ -168,14 +177,41 @@ onMounted(async () => {
 
 onUnmounted(() => { cancelled = true; });
 
+// Watch for route changes to handle district filtering
+watch(() => route.query.district, (newDistrict) => {
+  selectedDistrict.value = newDistrict || '';
+  if (newDistrict) {
+    query.value = '';
+  }
+}, { immediate: true });
+
+function clearDistrictFilter() {
+  selectedDistrict.value = '';
+  query.value = '';
+  // Update the URL to remove the district parameter
+  const { district, ...queryWithoutDistrict } = route.query;
+  router.push({ name: 'clubs', query: queryWithoutDistrict });
+}
+
 const filtered = computed(() => {
   const q = query.value.toLowerCase();
-  if (!q) return clubs.value;
+  const district = selectedDistrict.value;
+  
+  // If no filters, return all clubs
+  if (!q && !district) return clubs.value;
+  
   return clubs.value.filter(c => {
     const name = (c.name || c.clubName || '').toLowerCase();
     const city = (c.city || '').toLowerCase();
-    const district = (c.district || '').toLowerCase();
-    return name.includes(q) || city.includes(q) || district.includes(q);
+    const clubDistrict = (c.district || '').toLowerCase();
+    
+    // Check text search
+    const matchesSearch = !q || name.includes(q) || city.includes(q) || clubDistrict.includes(q);
+    
+    // Check district filter
+    const matchesDistrict = !district || clubDistrict === district.toLowerCase();
+    
+    return matchesSearch && matchesDistrict;
   });
 });
 </script>

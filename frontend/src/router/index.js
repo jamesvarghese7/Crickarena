@@ -40,6 +40,8 @@ import PlayerTraining from '../pages/player/Training.vue';
 import PlayerProgress from '../pages/player/Progress.vue';
 import PlayerApplications from '../pages/player/Applications.vue';
 import PlayerProfile from '../pages/player/Profile.vue';
+import PlayerGoals from '../pages/player/Goals.vue'; // Added import
+import PlayerFeedback from '../pages/player/Feedback.vue'; // Added import
 
 import CoachRegistration from '../pages/CoachRegistration.vue';
 import CoachDashboard from '../pages/CoachDashboard.vue';
@@ -55,6 +57,8 @@ import CoachEditProfile from '../pages/coach/EditProfile.vue';
 import CoachOverview from '../pages/coach/CoachOverview.vue'; // Added import
 import CoachMatches from '../pages/coach/CoachMatches.vue'; // Added import
 import CoachMessages from '../pages/coach/CoachMessages.vue'; // Added import
+import CoachGoalSetting from '../pages/coach/GoalSetting.vue'; // Added import
+import CoachFeedbackSystem from '../pages/coach/FeedbackSystem.vue'; // Added import
 
 // Messaging components
 import PlayerMessages from '../pages/player/Messages.vue';
@@ -144,6 +148,8 @@ const routes = [
       { path: 'progress', name: 'player-panel-progress', component: PlayerProgress },
       { path: 'applications', name: 'player-panel-applications', component: PlayerApplications },
       { path: 'messages', name: 'player-panel-messages', component: PlayerMessages },
+      { path: 'goals', name: 'player-panel-goals', component: PlayerGoals }, // Player goals page
+      { path: 'feedback', name: 'player-panel-feedback', component: PlayerFeedback }, // Player feedback page
       { path: 'profile', name: 'player-panel-profile', component: PlayerProfile }
     ]
   },
@@ -167,6 +173,8 @@ const routes = [
       { path: 'players/:playerId', name: 'coach-panel-player-details', component: CoachPlayerDetails, props: true },
       { path: 'matches', name: 'coach-panel-matches', component: CoachMatches }, // Dedicated matches page
       { path: 'messages', name: 'coach-panel-messages', component: CoachMessages },
+      { path: 'goals', name: 'coach-panel-goals', component: CoachGoalSetting }, // Goal setting page
+      { path: 'feedback', name: 'coach-panel-feedback', component: CoachFeedbackSystem }, // Feedback system page
       { path: 'overview', name: 'coach-panel-overview', component: CoachOverview }, // Overview page
       { path: 'profile', name: 'coach-panel-profile', component: CoachProfile },
       { path: 'profile/edit', name: 'coach-panel-edit-profile', component: CoachEditProfile }
