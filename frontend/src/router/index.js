@@ -40,6 +40,7 @@ import PlayerApplications from '../pages/player/Applications.vue';
 import PlayerProfile from '../pages/player/Profile.vue';
 import PlayerGoals from '../pages/player/Goals.vue'; // Added import
 import PlayerFeedback from '../pages/player/Feedback.vue'; // Added import
+import PlayerMatches from '../pages/player/Matches.vue'; // Added import
 
 import CoachRegistration from '../pages/CoachRegistration.vue';
 import CoachDashboard from '../pages/CoachDashboard.vue';
@@ -146,6 +147,7 @@ const routes = [
       { path: 'messages', name: 'player-panel-messages', component: PlayerMessages },
       { path: 'goals', name: 'player-panel-goals', component: PlayerGoals }, // Player goals page
       { path: 'feedback', name: 'player-panel-feedback', component: PlayerFeedback }, // Player feedback page
+      { path: 'matches', name: 'player-panel-matches', component: PlayerMatches }, // Player matches page
       { path: 'profile', name: 'player-panel-profile', component: PlayerProfile }
     ]
   },
@@ -163,7 +165,6 @@ const routes = [
     children: [
       { path: '', name: 'coach-panel', component: CoachOverview },
       { path: 'analytics', name: 'coach-panel-analytics', component: CoachAnalytics },
-      { path: 'programs', name: 'coach-panel-programs', component: CoachTrainingPrograms },
       { path: 'sessions', name: 'coach-panel-sessions', component: CoachSessions },
       { path: 'players', name: 'coach-panel-players', component: CoachPlayers },
       { path: 'players/:playerId', name: 'coach-panel-player-details', component: CoachPlayerDetails, props: true },

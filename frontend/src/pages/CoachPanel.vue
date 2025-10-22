@@ -82,21 +82,6 @@
           </RouterLink>
 
           <RouterLink 
-            :to="{ name: 'coach-panel-programs' }" 
-            class="nav-link group"
-            :class="isActive('coach-panel-programs')"
-            @click="sidebarOpen = false"
-          >
-            <div class="nav-icon-wrapper">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-              </svg>
-            </div>
-            <span class="nav-text">Training Programs</span>
-            <div class="nav-indicator"></div>
-          </RouterLink>
-
-          <RouterLink 
             :to="{ name: 'coach-panel-sessions' }" 
             class="nav-link group"
             :class="isActive('coach-panel-sessions')"
@@ -336,7 +321,6 @@ const getPageTitle = () => {
   const titles = {
     'coach-panel': 'Dashboard Overview',
     'coach-panel-analytics': 'Analytics',
-    'coach-panel-programs': 'Training Programs',
     'coach-panel-sessions': 'Session Management',
     'coach-panel-players': 'Players',
     'coach-panel-goals': 'Goal Setting',
