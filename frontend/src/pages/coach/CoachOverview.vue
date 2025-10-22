@@ -156,31 +156,14 @@
             class="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow group"
           >
             <div class="flex items-center gap-4">
-              <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center group-hover:bg-green-500 transition-colors">
-                <svg class="w-6 h-6 text-green-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-500 transition-colors">
+                <svg class="w-6 h-6 text-blue-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m0 0a5.002 5.002 0 0 1 9.75 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
                 </svg>
               </div>
               <div>
-                <h3 class="font-bold text-gray-900">Player Management</h3>
+                <h3 class="font-bold text-gray-900">Players</h3>
                 <p class="text-sm text-gray-600 mt-1">Manage your club's players</p>
-              </div>
-            </div>
-          </RouterLink>
-          
-          <RouterLink 
-            :to="{ name: 'coach-panel-programs' }"
-            class="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow group"
-          >
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-500 transition-colors">
-                <svg class="w-6 h-6 text-purple-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                </svg>
-              </div>
-              <div>
-                <h3 class="font-bold text-gray-900">Training Programs</h3>
-                <p class="text-sm text-gray-600 mt-1">Create and manage training programs</p>
               </div>
             </div>
           </RouterLink>

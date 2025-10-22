@@ -228,10 +228,10 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
               </svg>
             </div>
-            <p class="text-2xl font-bold text-blue-600">24</p>
+            <p class="text-2xl font-bold text-blue-600">{{ trainingStats.totalSessions }}</p>
           </div>
           <h3 class="text-xs font-medium text-gray-500 uppercase">Training Sessions</h3>
-          <p class="text-xs text-gray-400 mt-1">+3 this week</p>
+          <p class="text-xs text-gray-400 mt-1">+{{ trainingStats.recentSessions }} this week</p>
         </div>
         
         <div class="bg-white rounded-lg shadow p-4 border border-gray-200">
@@ -241,10 +241,10 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
             </div>
-            <p class="text-2xl font-bold text-green-600">87%</p>
+            <p class="text-2xl font-bold text-green-600">{{ trainingStats.attendanceRate }}%</p>
           </div>
           <h3 class="text-xs font-medium text-gray-500 uppercase">Attendance</h3>
-          <p class="text-xs text-gray-400 mt-1">Excellent rate</p>
+          <p class="text-xs text-gray-400 mt-1">{{ getAttendanceRating(trainingStats.attendanceRate) }}</p>
         </div>
         
         <div class="bg-white rounded-lg shadow p-4 border border-gray-200">
@@ -254,10 +254,10 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
               </svg>
             </div>
-            <p class="text-2xl font-bold text-purple-600">85%</p>
+            <p class="text-2xl font-bold text-purple-600">{{ trainingStats.performanceScore }}%</p>
           </div>
           <h3 class="text-xs font-medium text-gray-500 uppercase">Performance</h3>
-          <p class="text-xs text-gray-400 mt-1">Above average</p>
+          <p class="text-xs text-gray-400 mt-1">{{ getPerformanceRating(trainingStats.performanceScore) }}</p>
         </div>
         
         <div class="bg-white rounded-lg shadow p-4 border border-gray-200">
@@ -267,7 +267,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
             </div>
-            <p class="text-2xl font-bold text-yellow-600">2</p>
+            <p class="text-2xl font-bold text-yellow-600">{{ trainingStats.activePrograms }}</p>
           </div>
           <h3 class="text-xs font-medium text-gray-500 uppercase">Programs</h3>
           <p class="text-xs text-gray-400 mt-1">Active enrollment</p>
@@ -332,9 +332,12 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import axios from 'axios';
 
 const router = useRouter();
+const API = import.meta.env.VITE_API_BASE || 'http://localhost:4000/api';
 
 // Define props properly
 const props = defineProps({
@@ -343,6 +346,59 @@ const props = defineProps({
     default: null
   }
 });
+
+// Training stats data
+const trainingStats = ref({
+  totalSessions: 0,
+  attendedSessions: 0,
+  attendanceRate: 0,
+  performanceScore: 0,
+  totalPrograms: 0,
+  activePrograms: 0,
+  recentSessions: 0 // Sessions in the last week
+});
+
+onMounted(async () => {
+  if (props.playerData?.currentClub) {
+    await loadTrainingStats();
+  }
+});
+
+async function loadTrainingStats() {
+  try {
+    const response = await axios.get(`${API}/players/training-stats`, { withCredentials: true });
+    if (response.data && response.data.stats) {
+      trainingStats.value = {
+        ...response.data.stats,
+        recentSessions: calculateRecentSessions(response.data.stats.totalSessions)
+      };
+    }
+  } catch (error) {
+    console.error('Error loading training stats:', error);
+    // Use default values if there's an error
+  }
+}
+
+function calculateRecentSessions(totalSessions) {
+  // For now, we'll use a simple calculation
+  // In a real implementation, this would calculate actual sessions from the last week
+  return Math.min(5, Math.floor(totalSessions / 4));
+}
+
+function getAttendanceRating(attendanceRate) {
+  if (attendanceRate >= 90) return 'Excellent rate';
+  if (attendanceRate >= 80) return 'Good rate';
+  if (attendanceRate >= 70) return 'Average rate';
+  return 'Needs improvement';
+}
+
+function getPerformanceRating(performanceScore) {
+  if (performanceScore >= 90) return 'Outstanding';
+  if (performanceScore >= 80) return 'Above average';
+  if (performanceScore >= 70) return 'Average';
+  if (performanceScore >= 60) return 'Below average';
+  return 'Needs improvement';
+}
 
 function formatDate(dateString) {
   if (!dateString) return 'N/A';

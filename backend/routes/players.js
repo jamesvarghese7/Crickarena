@@ -936,6 +936,82 @@ router.get('/goals', verifyFirebaseToken, async (req, res) => {
   }
 });
 
+// GET /api/players/club/matches - Get matches for the player's club
+router.get('/club/matches', verifyFirebaseToken, async (req, res) => {
+  try {
+    const player = await Player.findOne({ user: req.user._id }).populate('currentClub', 'name clubName district city');
+    if (!player) {
+      return res.status(404).json({ message: 'Player profile not found' });
+    }
+
+    // Check if player is associated with a club
+    if (!player.currentClub) {
+      return res.status(400).json({ message: 'Player is not associated with any club' });
+    }
+
+    // Import Match model
+    const Match = (await import('../models/Match.js')).default;
+    const Tournament = (await import('../models/Tournament.js')).default;
+
+    // Find all matches where this club is either homeClub or awayClub
+    const matches = await Match.find({
+      $or: [
+        { homeClub: player.currentClub._id },
+        { awayClub: player.currentClub._id }
+      ]
+    })
+    .populate('homeClub', 'clubName name logoUrl')
+    .populate('awayClub', 'clubName name logoUrl')
+    .populate('tournament', 'name status format')
+    .sort({ date: 1, time: 1 });
+
+    // Transform matches for frontend
+    const formattedMatches = matches.map(match => {
+      const isHomeTeam = match.homeClub._id.toString() === player.currentClub._id.toString();
+      const opponent = isHomeTeam ? match.awayClub : match.homeClub;
+      
+      return {
+        _id: match._id,
+        date: match.date,
+        time: match.time,
+        venue: match.venue,
+        status: match.status,
+        round: match.round,
+        stage: match.stage,
+        tournament: {
+          _id: match.tournament._id,
+          name: match.tournament.name,
+          status: match.tournament.status,
+          format: match.tournament.format
+        },
+        homeClub: {
+          _id: match.homeClub._id,
+          name: match.homeClub.clubName || match.homeClub.name,
+          logoUrl: match.homeClub.logoUrl
+        },
+        awayClub: {
+          _id: match.awayClub._id,
+          name: match.awayClub.clubName || match.awayClub.name,
+          logoUrl: match.awayClub.logoUrl
+        },
+        opponent: {
+          _id: opponent._id,
+          name: opponent.clubName || opponent.name,
+          logoUrl: opponent.logoUrl
+        },
+        isHomeTeam,
+        score: match.score,
+        result: match.result
+      };
+    });
+
+    res.json({ matches: formattedMatches });
+  } catch (error) {
+    console.error('Error fetching club matches:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // GET /api/players/feedback - Get feedback from coach for the current player
 router.get('/feedback', verifyFirebaseToken, async (req, res) => {
   try {
