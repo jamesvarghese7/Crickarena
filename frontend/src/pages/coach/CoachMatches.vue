@@ -466,6 +466,9 @@ function onRosterSubmitted(data) {
     isModifying ? 'Lineup Updated!' : 'Lineup Submitted!',
     isModifying ? 'Your team lineup has been successfully updated.' : 'Your team lineup has been successfully submitted.'
   );
+  
+  // Reload matches to update UI
+  loadMatches();
 }
 </script>
 

@@ -90,6 +90,18 @@
     <!-- Main Content -->
     <div v-else class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div class="space-y-8">
+        <!-- Roster Warning -->
+        <div v-if="hasRosters" class="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <div>
+              <h3 class="text-yellow-800 font-semibold">Lineup Available</h3>
+              <p class="text-yellow-700 text-sm">Player dropdowns are populated from coach-submitted lineups. Select players from the dropdowns for easier data entry.</p>
+            </div>
+          </div>
+        </div>
         <!-- Match Status Banner -->
         <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
           <div class="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
@@ -156,7 +168,7 @@
               <div class="text-center">
                 <div class="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center mx-auto mb-3">
                   <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                   </svg>
           </div>
                 <div class="text-sm text-gray-600 font-medium">Round</div>
@@ -384,7 +396,15 @@
                 </thead>
                 <tbody>
                   <tr v-for="(b, bi) in inn.battingCard" :key="bi" class="border-b">
-                    <td><input v-model="b.playerName" class="input" placeholder="Name" :disabled="finalized" /></td>
+                    <td>
+                      <select v-if="getBattingPlayerOptions(idx).length > 0" v-model="b.playerName" class="input" :disabled="finalized">
+                        <option value="">Select Player</option>
+                        <option v-for="player in getBattingPlayerOptions(idx)" :key="player.playerId" :value="player.playerName">
+                          {{ player.playerName }}
+                        </option>
+                      </select>
+                      <input v-else v-model="b.playerName" class="input" placeholder="Name" :disabled="finalized" />
+                    </td>
                     <td><input v-model.number="b.runs" type="number" class="input" min="0" :disabled="finalized" /></td>
                     <td><input v-model.number="b.balls" type="number" class="input" min="0" :disabled="finalized" /></td>
                     <td><input v-model.number="b.fours" type="number" class="input" min="0" :disabled="finalized" /></td>
@@ -438,7 +458,15 @@
                 </thead>
                 <tbody>
                   <tr v-for="(bw, wi) in inn.bowlingCard" :key="wi" class="border-b">
-                    <td><input v-model="bw.bowlerName" class="input" placeholder="Name" :disabled="finalized" /></td>
+                    <td>
+                      <select v-if="getBowlingPlayerOptions(idx).length > 0" v-model="bw.bowlerName" class="input" :disabled="finalized">
+                        <option value="">Select Bowler</option>
+                        <option v-for="player in getBowlingPlayerOptions(idx)" :key="player.playerId" :value="player.playerName">
+                          {{ player.playerName }}
+                        </option>
+                      </select>
+                      <input v-else v-model="bw.bowlerName" class="input" placeholder="Name" :disabled="finalized" />
+                    </td>
                     <td>
                       <input v-model.number="bw.balls" type="number" class="input" min="0" :disabled="finalized" />
                       <p class="text-xs text-gray-500 mt-1">{{ toOvers(bw.balls).toFixed(1) }} ov</p>
@@ -489,122 +517,131 @@
               </div>
             </div>
 
-            <!-- Current Ball Entry Form -->
+            <!-- Over-wise Score Entry -->
             <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-              <h4 class="font-semibold text-blue-900 mb-3">Add Ball</h4>
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Runs</label>
-                  <select v-model="newBall.runs" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    <option value="0">0</option>
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="6">6</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Extras</label>
-                  <select v-model="newBall.extras" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    <option value="none">None</option>
-                    <option value="wide">Wide</option>
-                    <option value="no-ball">No Ball</option>
-                    <option value="bye">Bye</option>
-                    <option value="leg-bye">Leg Bye</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Batsman</label>
-                  <input v-model="newBall.batsman" type="text" placeholder="Batsman name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Bowler</label>
-                  <input v-model="newBall.bowler" type="text" placeholder="Bowler name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+              <h4 class="font-semibold text-blue-900 mb-3">Over-wise Score Entry</h4>
+              <div class="grid grid-cols-7 gap-2 mb-3">
+                <div class="text-center font-medium text-gray-700">Ball</div>
+                <div class="text-center font-medium text-gray-700">1</div>
+                <div class="text-center font-medium text-gray-700">2</div>
+                <div class="text-center font-medium text-gray-700">3</div>
+                <div class="text-center font-medium text-gray-700">4</div>
+                <div class="text-center font-medium text-gray-700">5</div>
+                <div class="text-center font-medium text-gray-700">6</div>
+              </div>
+              <div class="grid grid-cols-7 gap-2 mb-3">
+                <div class="text-center font-medium text-gray-700">Runs</div>
+                <div v-for="ballNum in 6" :key="ballNum">
+                  <input 
+                    v-model.number="overWiseScores[ballNum - 1]" 
+                    type="number" 
+                    min="0" 
+                    max="6" 
+                    class="w-full px-2 py-1 text-center border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                    :disabled="finalized"
+                  />
                 </div>
               </div>
-              
-              <!-- Wicket Details -->
-              <div v-if="newBall.wicket" class="mt-3 grid grid-cols-2 md:grid-cols-3 gap-3">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">How Out</label>
-                  <select v-model="newBall.wicketDetails.how" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    <option value="">Select</option>
-                    <option value="bowled">Bowled</option>
+              <div class="grid grid-cols-7 gap-2 mb-3">
+                <div class="text-center font-medium text-gray-700">Extras</div>
+                <div v-for="ballNum in 6" :key="ballNum">
+                  <select 
+                    v-model="overWiseExtras[ballNum - 1]" 
+                    class="w-full px-1 py-1 text-center border border-gray-300 rounded text-xs"
+                    :disabled="finalized"
+                  >
+                    <option value="none">-</option>
+                    <option value="wide">W</option>
+                    <option value="no-ball">NB</option>
+                    <option value="bye">B</option>
+                    <option value="leg-bye">LB</option>
+                  </select>
+                </div>
+              </div>
+              <div class="grid grid-cols-7 gap-2 mb-3">
+                <div class="text-center font-medium text-gray-700">Wicket</div>
+                <div v-for="ballNum in 6" :key="ballNum" class="flex justify-center">
+                  <input 
+                    type="checkbox" 
+                    v-model="overWiseWickets[ballNum - 1]" 
+                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    :disabled="finalized"
+                  />
+                </div>
+              </div>
+              <div class="grid grid-cols-7 gap-2 mb-3">
+                <div class="text-center font-medium text-gray-700">Wicket Type</div>
+                <div v-for="ballNum in 6" :key="ballNum">
+                  <select 
+                    v-model="overWiseWicketTypes[ballNum - 1]" 
+                    class="w-full px-1 py-1 text-center border border-gray-300 rounded text-xs"
+                    :disabled="!overWiseWickets[ballNum - 1] || finalized"
+                  >
+                    <option value="bowled">B</option>
                     <option value="lbw">LBW</option>
-                    <option value="caught">Caught</option>
-                    <option value="run out">Run Out</option>
-                    <option value="stumped">Stumped</option>
-                    <option value="hit wicket">Hit Wicket</option>
-                    <option value="retired hurt">Retired Hurt</option>
+                    <option value="caught">C</option>
+                    <option value="run out">RO</option>
+                    <option value="stumped">S</option>
+                    <option value="hit wicket">HW</option>
                   </select>
                 </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Fielder</label>
-                  <input v-model="newBall.wicketDetails.fielder" type="text" placeholder="Fielder name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Bowler (for wicket)</label>
-                  <input v-model="newBall.wicketDetails.bowler" type="text" placeholder="Bowler name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
-                </div>
               </div>
-              
-              <div class="flex items-center gap-3 mt-4">
-                <label class="flex items-center gap-2">
-                  <input v-model="newBall.wicket" type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                  <span class="text-sm text-gray-700">Wicket</span>
-                </label>
-                <button @click="addBallToInnings(idx)" 
-                        :disabled="finalized || !newBall.batsman || !newBall.bowler"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                  Add Ball
-                </button>
-                <button @click="resetNewBall" 
-                        class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
-                  Reset
-                </button>
-              </div>
-            </div>
-
-            <!-- Overs Display -->
-            <div class="space-y-4">
-              <div v-for="over in inn.overs" :key="over.overNumber" class="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                  <div class="flex items-center justify-between">
-                    <h5 class="font-semibold text-gray-900">Over {{ over.overNumber }}</h5>
-                    <div class="text-sm text-gray-600">
-                      Bowler: {{ over.bowler }} | Runs: {{ over.totalRuns }} | Wickets: {{ over.totalWickets }}
-                    </div>
+              <div class="flex items-center gap-3 mt-3">
+                <button @click="addOverWiseScores(idx)" 
+                          :disabled="finalized"
+                          class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm">
+                    Add Over
+                  </button>
+                  <button @click="resetOverWiseScores" 
+                          class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm">
+                    Reset
+                  </button>
+                  <div class="text-sm text-gray-600 ml-2">
+                    Current Over: {{ inn.currentOver }}
                   </div>
                 </div>
-                
-                <div class="p-4">
-                  <div class="grid grid-cols-6 gap-2">
-                    <div v-for="ball in over.balls" :key="`${over.overNumber}-${ball.ballNumber}`" 
-                         class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
-                      <div class="text-sm font-medium text-gray-900">{{ ball.ballNumber }}</div>
-                      <div class="text-lg font-bold" :class="{
-                        'text-green-600': ball.runs === 4,
-                        'text-purple-600': ball.runs === 6,
-                        'text-red-600': ball.wicket && ball.wicket.how,
-                        'text-blue-600': ball.extras !== 'none'
-                      }">
-                        {{ ball.runs }}{{ ball.extras !== 'none' ? '*' : '' }}
+              </div>
+
+              <!-- Overs Display -->
+              <div class="space-y-4">
+                <div v-for="over in inn.overs" :key="over.overNumber" class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                  <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                      <h5 class="font-semibold text-gray-900">Over {{ over.overNumber }}</h5>
+                      <div class="text-sm text-gray-600">
+                        Bowler: {{ over.bowler }} | Runs: {{ over.totalRuns }} | Wickets: {{ over.totalWickets }}
                       </div>
-                      <div v-if="ball.extras !== 'none'" class="text-xs text-orange-600">
-                        {{ ball.extras }}
-                      </div>
-                      <div v-if="ball.wicket && ball.wicket.how" class="text-xs text-red-600">
-                        W
-                      </div>
-                      <div class="flex items-center justify-center gap-1 mt-1">
-                        <button @click="toggleLikeBall(idx, over.overNumber, ball.ballNumber)" 
-                                class="text-gray-400 hover:text-red-500 transition-colors">
-                          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
-                          </svg>
-                        </button>
-                        <span class="text-xs text-gray-500">{{ ball.likes }}</span>
+                    </div>
+                  </div>
+                  
+                  <div class="p-4">
+                    <div class="grid grid-cols-6 gap-2">
+                      <div v-for="ball in over.balls" :key="`${over.overNumber}-${ball.ballNumber}`" 
+                           class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
+                        <div class="text-sm font-medium text-gray-900">{{ ball.ballNumber }}</div>
+                        <div class="text-lg font-bold" :class="{
+                          'text-green-600': ball.runs === 4,
+                          'text-purple-600': ball.runs === 6,
+                          'text-red-600': ball.wicket && ball.wicket.how,
+                          'text-blue-600': ball.extras !== 'none'
+                        }">
+                          {{ ball.runs }}{{ ball.extras !== 'none' ? '*' : '' }}
+                        </div>
+                        <div v-if="ball.extras !== 'none'" class="text-xs text-orange-600">
+                          {{ ball.extras }}
+                        </div>
+                        <div v-if="ball.wicket && ball.wicket.how" class="text-xs text-red-600">
+                          W
+                        </div>
+                        <div class="flex items-center justify-center gap-1 mt-1">
+                          <button @click="toggleLikeBall(idx, over.overNumber, ball.ballNumber)" 
+                                  class="text-gray-400 hover:text-red-500 transition-colors">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+                            </svg>
+                          </button>
+                          <span class="text-xs text-gray-500">{{ ball.likes }}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -717,8 +754,9 @@
         </div>
       </div>
     </div>
-  </div>
 </template>
+
+
 
 <script setup>
 import { reactive, ref, computed, watch } from 'vue';
@@ -746,6 +784,12 @@ const activeInnings = ref(0);
 const showFinalizeConfirm = ref(false);
 const finalizeOptions = reactive({ noResult: false, cancelled: false, reasonPreset: '', reasonCustom: '' });
 
+// Add over-wise scores data
+const overWiseScores = ref([0, 0, 0, 0, 0, 0]);
+const overWiseExtras = ref(['none', 'none', 'none', 'none', 'none', 'none']);
+const overWiseWickets = ref([false, false, false, false, false, false]);
+const overWiseWicketTypes = ref(['bowled', 'bowled', 'bowled', 'bowled', 'bowled', 'bowled']);
+
 const participantsOptions = ref([]);
 const venueOptions = ref([]);
 const timeSlotOptions = ref(['09:00', '13:00', '17:00']);
@@ -753,6 +797,7 @@ const reschedOpen = ref(false);
 const rescheduling = ref(false);
 const reschedError = ref('');
 const resched = ref({ date: '', time: '09:00', venue: '', reason: '' });
+const rosterData = ref({ homeClub: { clubId: '', roster: null }, awayClub: { clubId: '', roster: null } });
 
 // Ball-by-ball form data
 const newBall = reactive({
@@ -819,7 +864,44 @@ const matchTeamOptions = computed(() => {
   return opts.filter(o => (seen.has(String(o.id)) ? false : (seen.add(String(o.id)), true)));
 });
 
+// Get player options for a specific team
+const getPlayerOptions = (teamId) => {
+  if (!teamId) return [];
+  
+  // Check if this is the home team
+  if (String(teamId) === String(rosterData.value.homeClub.clubId) && rosterData.value.homeClub.roster) {
+    return rosterData.value.homeClub.roster.players || [];
+  }
+  
+  // Check if this is the away team
+  if (String(teamId) === String(rosterData.value.awayClub.clubId) && rosterData.value.awayClub.roster) {
+    return rosterData.value.awayClub.roster.players || [];
+  }
+  
+  return [];
+};
+
+// Get player options for a specific innings based on batting team
+const getBattingPlayerOptions = (inningsIndex) => {
+  const innings = form.innings[inningsIndex];
+  if (!innings || !innings.battingClub) return [];
+  return getPlayerOptions(innings.battingClub);
+};
+
+// Get player options for a specific innings based on bowling team
+const getBowlingPlayerOptions = (inningsIndex) => {
+  const innings = form.innings[inningsIndex];
+  if (!innings || !innings.bowlingClub) return [];
+  return getPlayerOptions(innings.bowlingClub);
+};
+
 const currentStatus = computed(() => match.value?.status || 'Scheduled');
+
+// Check if roster data is available for either team
+const hasRosters = computed(() => {
+  return (rosterData.value.homeClub.roster !== null && rosterData.value.homeClub.roster !== undefined) || 
+         (rosterData.value.awayClub.roster !== null && rosterData.value.awayClub.roster !== undefined);
+});
 
 const tossHint = computed(() => {
   if (!form.toss.wonBy) return '';
@@ -969,6 +1051,18 @@ async function load() {
       topWicketTaker: data?.summary?.topWicketTaker || '',
       bestContribution: data?.summary?.bestContribution || '',
       playerOfTheMatch: data?.summary?.playerOfTheMatch || '',
+    };
+
+    // Extract roster data for dropdowns
+    rosterData.value = {
+      homeClub: {
+        clubId: data?.homeClub?._id || data?.homeClub || '',
+        roster: data?.homeClubRoster || null
+      },
+      awayClub: {
+        clubId: data?.awayClub?._id || data?.awayClub || '',
+        roster: data?.awayClubRoster || null
+      }
     };
 
     activeInnings.value = 0;
@@ -1390,6 +1484,120 @@ watch(() => form.innings.map(i => ({ bats: i.battingCard, bowls: i.bowlingCard }
     }
   } catch {}
 }, { deep: true });
+
+// Watch for changes in batting club and update player names if needed
+watch(() => form.innings.map((inn, idx) => ({
+  battingClub: inn.battingClub,
+  bowlingClub: inn.bowlingClub,
+  battingCard: inn.battingCard,
+  bowlingCard: inn.bowlingCard
+})), (newValues, oldValues) => {
+  newValues.forEach((inn, idx) => {
+    // Check if batting club changed
+    if (oldValues[idx] && inn.battingClub !== oldValues[idx].battingClub) {
+      // Clear player names that are not in the new roster
+      const battingPlayers = getBattingPlayerOptions(idx);
+      const battingPlayerNames = new Set(battingPlayers.map(p => p.playerName));
+      
+      inn.battingCard.forEach(batter => {
+        if (batter.playerName && !battingPlayerNames.has(batter.playerName)) {
+          batter.playerName = '';
+        }
+      });
+    }
+    
+    // Check if bowling club changed
+    if (oldValues[idx] && inn.bowlingClub !== oldValues[idx].bowlingClub) {
+      // Clear bowler names that are not in the new roster
+      const bowlingPlayers = getBowlingPlayerOptions(idx);
+      const bowlingPlayerNames = new Set(bowlingPlayers.map(p => p.playerName));
+      
+      inn.bowlingCard.forEach(bowler => {
+        if (bowler.bowlerName && !bowlingPlayerNames.has(bowler.bowlerName)) {
+          bowler.bowlerName = '';
+        }
+      });
+    }
+  });
+}, { deep: true });
+
+function resetOverWiseScores() {
+  overWiseScores.value = [0, 0, 0, 0, 0, 0];
+  overWiseExtras.value = ['none', 'none', 'none', 'none', 'none', 'none'];
+  overWiseWickets.value = [false, false, false, false, false, false];
+  overWiseWicketTypes.value = ['bowled', 'bowled', 'bowled', 'bowled', 'bowled', 'bowled'];
+}
+
+function addOverWiseScores(inningsIndex) {
+  const innings = form.innings[inningsIndex];
+  if (!innings) return;
+  
+  // Get current over and bowler info
+  const currentOverNumber = innings.currentOver;
+  const currentBowler = getCurrentBowler(inningsIndex);
+  const currentBatsman = getCurrentBatsman(inningsIndex);
+  
+  // Add each ball in the over
+  for (let i = 0; i < 6; i++) {
+    // Set the current ball number for this ball
+    innings.currentBall = i + 1;
+    
+    const runs = overWiseScores.value[i] || 0;
+    const extras = overWiseExtras.value[i] || 'none';
+    const isWicket = overWiseWickets.value[i] || false;
+    const wicketType = overWiseWicketTypes.value[i] || 'bowled';
+    
+    // Create wicket data if needed
+    let wicket = null;
+    if (isWicket) {
+      wicket = {
+        how: wicketType,
+        bowler: currentBowler,
+        batsman: currentBatsman
+      };
+    }
+    
+    // Create ball data
+    const ballData = {
+      runs: runs,
+      extras: extras,
+      wicket: wicket,
+      batsman: currentBatsman,
+      bowler: currentBowler
+    };
+    
+    // Add the ball to the innings
+    addBall(inningsIndex, ballData);
+  }
+  
+  // Reset the over-wise scores
+  resetOverWiseScores();
+  
+  // Move to next over and reset ball counter
+  innings.currentOver += 1;
+  innings.currentBall = 1;
+}
+
+function getCurrentBatsman(inningsIndex) {
+  const innings = form.innings[inningsIndex];
+  if (!innings || !innings.battingCard || innings.battingCard.length === 0) return '';
+  
+  // Find the batsman who is not out
+  const notOutBatsmen = innings.battingCard.filter(b => 
+    !b.dismissalHow || b.dismissalHow.toLowerCase() === 'not out' || b.dismissalHow === ''
+  );
+  
+  // Return the first not-out batsman or the first batsman if all are out
+  return notOutBatsmen.length > 0 ? notOutBatsmen[0].playerName : innings.battingCard[0].playerName;
+}
+
+function getCurrentBowler(inningsIndex) {
+  const innings = form.innings[inningsIndex];
+  if (!innings || !innings.bowlingCard || innings.bowlingCard.length === 0) return '';
+  
+  // Return the last bowler who bowled or the first bowler
+  return innings.bowlingCard[innings.bowlingCard.length - 1]?.bowlerName || innings.bowlingCard[0]?.bowlerName || '';
+}
 
 load();
 </script>
