@@ -281,6 +281,9 @@
                   <div v-if="rosters?.homeTeam?.roster" class="space-y-4">
                     <div class="text-sm text-gray-600 mb-4">
                       Submitted: {{ formatRosterDate(rosters.homeTeam.roster.submittedAt) }}
+                      <span v-if="rosters.homeTeam.roster.submittedBy" class="block">
+                        Submitted by: {{ rosters.homeTeam.roster.submittedBy.fullName || rosters.homeTeam.roster.submittedBy.name || 'Coach' }}
+                      </span>
                     </div>
                     <div class="space-y-3">
                       <div v-for="(player, index) in rosters.homeTeam.roster.players" :key="player.playerId" 
@@ -297,6 +300,25 @@
                         <div v-if="player.jerseyNumber" class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm font-medium">
                           #{{ player.jerseyNumber }}
                         </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Team Composition Summary -->
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                      <h4 class="font-semibold text-gray-900 mb-2">Team Composition</h4>
+                      <div class="flex flex-wrap gap-2">
+                        <span class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                          Batsmen: {{ getTeamComposition(rosters.homeTeam.roster.players, 'batsman') }}
+                        </span>
+                        <span class="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">
+                          Bowlers: {{ getTeamComposition(rosters.homeTeam.roster.players, 'bowler') }}
+                        </span>
+                        <span class="text-xs px-2 py-1 bg-purple-100 text-purple-800 rounded-full">
+                          All-rounders: {{ getTeamComposition(rosters.homeTeam.roster.players, 'all-rounder') }}
+                        </span>
+                        <span class="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full">
+                          Wicket-keepers: {{ getTeamComposition(rosters.homeTeam.roster.players, 'wicket-keeper') }}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -326,6 +348,9 @@
                   <div v-if="rosters?.awayTeam?.roster" class="space-y-4">
                     <div class="text-sm text-gray-600 mb-4">
                       Submitted: {{ formatRosterDate(rosters.awayTeam.roster.submittedAt) }}
+                      <span v-if="rosters.awayTeam.roster.submittedBy" class="block">
+                        Submitted by: {{ rosters.awayTeam.roster.submittedBy.fullName || rosters.awayTeam.roster.submittedBy.name || 'Coach' }}
+                      </span>
                     </div>
                     <div class="space-y-3">
                       <div v-for="(player, index) in rosters.awayTeam.roster.players" :key="player.playerId" 
@@ -342,6 +367,25 @@
                         <div v-if="player.jerseyNumber" class="px-2 py-1 bg-purple-100 text-purple-700 rounded text-sm font-medium">
                           #{{ player.jerseyNumber }}
                         </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Team Composition Summary -->
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                      <h4 class="font-semibold text-gray-900 mb-2">Team Composition</h4>
+                      <div class="flex flex-wrap gap-2">
+                        <span class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                          Batsmen: {{ getTeamComposition(rosters.awayTeam.roster.players, 'batsman') }}
+                        </span>
+                        <span class="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">
+                          Bowlers: {{ getTeamComposition(rosters.awayTeam.roster.players, 'bowler') }}
+                        </span>
+                        <span class="text-xs px-2 py-1 bg-purple-100 text-purple-800 rounded-full">
+                          All-rounders: {{ getTeamComposition(rosters.awayTeam.roster.players, 'all-rounder') }}
+                        </span>
+                        <span class="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full">
+                          Wicket-keepers: {{ getTeamComposition(rosters.awayTeam.roster.players, 'wicket-keeper') }}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -750,6 +794,16 @@ function getTotalExtras(match, type) {
       default: return total;
     }
   }, 0);
+}
+
+// Get team composition for display
+function getTeamComposition(players, positionType) {
+  if (!players || !Array.isArray(players)) return 0;
+  
+  const type = positionType.toLowerCase();
+  return players.filter(player => 
+    player.position && player.position.toLowerCase().includes(type)
+  ).length;
 }
 
 // Load roster data

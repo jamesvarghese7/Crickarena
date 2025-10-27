@@ -233,6 +233,8 @@ router.get('/:id/matches/:matchId', async (req, res) => {
       .populate('homeClub', 'clubName name logoUrl district')
       .populate('awayClub', 'clubName name logoUrl district')
       .populate('tournament', 'name bannerUrl district startDate endDate format status')
+      .populate('homeClubRoster.submittedBy', 'fullName')
+      .populate('awayClubRoster.submittedBy', 'fullName')
       .lean();
     
     if (!match) {

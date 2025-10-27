@@ -52,7 +52,7 @@
               <div class="flex items-center justify-between">
                 <div>
                   <h3 class="font-semibold text-slate-900">Players Selected</h3>
-                  <p class="text-sm text-slate-600">{{ selectedPlayers.length }} of 11 required</p>
+                  <p class="text-sm text-slate-600">Exactly 11 players required for lineup</p>
                 </div>
                 <div class="text-right">
                   <div :class="[
@@ -69,9 +69,33 @@
               </div>
             </div>
 
+            <!-- Search and Filter -->
+            <div class="bg-slate-50 rounded-2xl p-4">
+              <div class="flex flex-col sm:flex-row gap-3">
+                <div class="flex-1">
+                  <input 
+                    v-model="searchQuery" 
+                    type="text" 
+                    placeholder="Search players by name or position..." 
+                    class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <select 
+                  v-model="positionFilter" 
+                  class="px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                >
+                  <option value="">All Positions</option>
+                  <option value="Batsman">Batsman</option>
+                  <option value="Bowler">Bowler</option>
+                  <option value="All-rounder">All-rounder</option>
+                  <option value="Wicket-keeper">Wicket-keeper</option>
+                </select>
+              </div>
+            </div>
+
             <!-- Players Grid -->
             <div class="grid gap-4">
-              <div v-for="player in players" :key="player._id" 
+              <div v-for="player in filteredPlayers" :key="player._id" 
                    :class="[
                      'border-2 rounded-2xl p-4 transition-all duration-200 cursor-pointer',
                      isPlayerSelected(player._id) 
@@ -118,14 +142,14 @@
             </div>
 
             <!-- No Players State -->
-            <div v-if="players.length === 0" class="text-center py-12">
+            <div v-if="filteredPlayers.length === 0" class="text-center py-12">
               <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                 </svg>
               </div>
-              <h3 class="text-lg font-semibold text-slate-900 mb-2">No Players Available</h3>
-              <p class="text-slate-600">Your club doesn't have any active players to select from.</p>
+              <h3 class="text-lg font-semibold text-slate-900 mb-2">No Players Found</h3>
+              <p class="text-slate-600">No players match your search criteria.</p>
             </div>
           </div>
         </div>
@@ -183,11 +207,37 @@ const error = ref('');
 const players = ref([]);
 const selectedPlayers = ref([]);
 const submitting = ref(false);
+const searchQuery = ref('');
+const positionFilter = ref('');
 
 // Computed
 const isPlayerSelected = (playerId) => {
   return selectedPlayers.value.some(p => p._id === playerId);
 };
+
+// Filtered players based on search and position
+const filteredPlayers = computed(() => {
+  let filtered = players.value;
+  
+  // Apply search filter
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase();
+    filtered = filtered.filter(player => 
+      (player.fullName && player.fullName.toLowerCase().includes(query)) ||
+      (player.name && player.name.toLowerCase().includes(query)) ||
+      (player.position && player.position.toLowerCase().includes(query))
+    );
+  }
+  
+  // Apply position filter
+  if (positionFilter.value) {
+    filtered = filtered.filter(player => 
+      player.position && player.position.toLowerCase() === positionFilter.value.toLowerCase()
+    );
+  }
+  
+  return filtered;
+});
 
 // Methods
 async function loadPlayers() {
@@ -225,12 +275,22 @@ function togglePlayer(player) {
     // Add player (only if less than 11 selected)
     if (selectedPlayers.value.length < 11) {
       selectedPlayers.value.push(player);
+    } else {
+      // Show notification if trying to select more than 11 players
+      emit('show-notification', 'error', 'Maximum Players Selected', 'You can only select exactly 11 players for your lineup.');
     }
   }
 }
 
 async function submitRoster() {
+  // Strict validation: exactly 11 players must be selected
   if (selectedPlayers.value.length !== 11) {
+    const needed = 11 - selectedPlayers.value.length;
+    const message = needed > 0 
+      ? `Please select ${needed} more player${needed === 1 ? '' : 's'} to complete your lineup. Exactly 11 players must be selected.`
+      : `Please remove ${Math.abs(needed)} player${Math.abs(needed) === 1 ? '' : 's'}. Exactly 11 players must be selected.`;
+      
+    emit('show-notification', 'error', 'Invalid Selection', message);
     return;
   }
 
@@ -256,6 +316,9 @@ async function submitRoster() {
       matchId: props.matchInfo.matchId,
       roster: rosterData
     });
+    
+    // Show success notification with clear message about the 11-player rule
+    emit('show-notification', 'success', 'Lineup Submitted!', 'Your team lineup with exactly 11 players has been successfully submitted.');
     
     closeModal();
   } catch (err) {
@@ -283,6 +346,8 @@ async function submitRoster() {
 function closeModal() {
   selectedPlayers.value = [];
   error.value = '';
+  searchQuery.value = '';
+  positionFilter.value = '';
   emit('close');
 }
 
@@ -318,6 +383,8 @@ watch(() => props.isOpen, async (newValue) => {
   } else {
     selectedPlayers.value = [];
     error.value = '';
+    searchQuery.value = '';
+    positionFilter.value = '';
   }
 });
 </script>

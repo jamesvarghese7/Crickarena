@@ -10,7 +10,7 @@ const router = express.Router();
 // Validation middleware for roster submission
 const validateRoster = [
   param('matchId').isMongoId().withMessage('Valid match ID is required'),
-  body('players').isArray({ min: 11, max: 11 }).withMessage('Exactly 11 players must be selected'),
+  body('players').isArray({ min: 11, max: 11 }).withMessage('Exactly 11 players must be selected - no more, no less. This is a strict validation rule for team rosters.'),
   body('players.*.playerId').isMongoId().withMessage('Valid player ID is required'),
   body('players.*.playerName').trim().isLength({ min: 1 }).withMessage('Player name is required'),
   body('players.*.position').trim().isLength({ min: 1 }).withMessage('Player position is required'),
