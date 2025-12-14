@@ -8,9 +8,19 @@ import { verifyFirebaseToken } from '../middleware/auth.js';
 import { requireRole } from '../middleware/rbac.js';
 import { syncTournamentAndMatches } from '../utils/statusSync.js';
 import fixturesV2 from '../utils/fixturesV2.js';
+import fixturesV3 from '../utils/fixturesV3.js';
 
-const { calculateActualCapacity, validateFixtureGeneration, generateRoundRobinPairings, 
-        generateKnockoutBracketSeeded, scheduleMatchesAdvanced, generateGroupsWithKnockout } = fixturesV2;
+const { calculateActualCapacity, validateFixtureGeneration, generateRoundRobinPairings,
+  generateKnockoutBracketSeeded, scheduleMatchesAdvanced, generateGroupsWithKnockout } = fixturesV2;
+
+const {
+  generateSuperLeagueFormat,
+  generateGroupsSuperFormat,
+  calculateNRR,
+  updateStandingFromMatch,
+  sortStandingsWithTieBreakers,
+  scheduleWithReserveDays
+} = fixturesV3;
 
 const router = express.Router();
 
@@ -18,14 +28,14 @@ const router = express.Router();
 router.post('/tournaments', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
   try {
     const body = req.body || {};
-    
+
     // Normalize format
     const normalizeFormat = (v) => {
       const map = { 'knockout': 'knockout', 'league': 'league', 'round-robin': 'league', 'group': 'group' };
       const s = String(v).toLowerCase();
       return map[s] || 'knockout';
     };
-    
+
     // Normalize status
     const normalizeStatus = (v) => {
       const map = { open: 'open', ongoing: 'ongoing', completed: 'completed', cancelled: 'cancelled' };
@@ -45,13 +55,13 @@ router.post('/tournaments', verifyFirebaseToken, requireRole('admin'), async (re
     const end = new Date(body.endDate);
     if (isNaN(start.getTime()) || isNaN(end.getTime())) return res.status(400).json({ message: 'Invalid dates' });
     if (end < start) return res.status(400).json({ message: 'End date cannot be before start date' });
-    
+
     // Validate that dates are not in the past
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     if (start < today) return res.status(400).json({ message: 'Start date cannot be in the past' });
     if (end < today) return res.status(400).json({ message: 'End date cannot be in the past' });
-    
+
     const maxTeams = Number.isFinite(Number(body.maxTeams)) ? Number(body.maxTeams) : 16;
     if (maxTeams < 2 || maxTeams > 128) return res.status(400).json({ message: 'Max teams must be between 2 and 128' });
     if (body.registrationDeadline) {
@@ -66,19 +76,19 @@ router.post('/tournaments', verifyFirebaseToken, requireRole('admin'), async (re
     if (!body.rules || String(body.rules).trim() === '') return res.status(400).json({ message: 'Rules are required' });
     const entryFee = Number.isFinite(Number(body.entryFee)) ? Number(body.entryFee) : 0;
     if (entryFee < 0) return res.status(400).json({ message: 'Entry fee cannot be negative' });
-    
+
     // Validate prize pool
     const prizePool = Number.isFinite(Number(body.prizePool)) ? Number(body.prizePool) : 0;
     if (prizePool < 0) return res.status(400).json({ message: 'Prize pool cannot be negative' });
-    
+
     // Validate rest days
     const restDaysMin = Number.isFinite(Number(body.restDaysMin)) ? Number(body.restDaysMin) : 1;
     if (restDaysMin < 0) return res.status(400).json({ message: 'Minimum rest days cannot be negative' });
-    
+
     // Validate match format
     const validMatchFormats = ['T20', 'ODI', 'Test', 'T10', 'Custom'];
     const matchFormat = validMatchFormats.includes(body.matchFormat) ? body.matchFormat : 'T20';
-    
+
     // Set overs limit based on match format
     let oversLimit = 20; // default for T20
     if (body.oversLimit && Number.isFinite(Number(body.oversLimit)) && Number(body.oversLimit) > 0) {
@@ -147,40 +157,40 @@ router.get('/tournaments', verifyFirebaseToken, requireRole('admin'), async (req
 router.put('/tournaments/:id', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
   try {
     const updates = req.body || {};
-    
+
     // Validate dates if being updated
     if (updates.startDate || updates.endDate) {
       const t = await Tournament.findById(req.params.id);
       if (!t) return res.status(404).json({ message: 'Tournament not found' });
-      
+
       const newStart = updates.startDate ? new Date(updates.startDate) : new Date(t.startDate);
       const newEnd = updates.endDate ? new Date(updates.endDate) : new Date(t.endDate);
-      
+
       // Validate date formats
       if (isNaN(newStart.getTime())) return res.status(400).json({ message: 'Invalid start date' });
       if (isNaN(newEnd.getTime())) return res.status(400).json({ message: 'Invalid end date' });
-      
+
       // Validate end date is after start date
       if (newEnd < newStart) {
         return res.status(400).json({ message: 'End date cannot be before start date' });
       }
-      
+
       // Validate dates are not in the past (only for upcoming tournaments)
       if (t.status === 'open' || t.status === 'upcoming') {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
+
         if (newStart < today) {
-          return res.status(400).json({ 
+          return res.status(400).json({
             message: 'Start date cannot be in the past for upcoming tournaments',
             currentStartDate: t.startDate.toISOString().slice(0, 10),
             requestedStartDate: newStart.toISOString().slice(0, 10),
             today: today.toISOString().slice(0, 10)
           });
         }
-        
+
         if (newEnd < today) {
-          return res.status(400).json({ 
+          return res.status(400).json({
             message: 'End date cannot be in the past for upcoming tournaments',
             currentEndDate: t.endDate.toISOString().slice(0, 10),
             requestedEndDate: newEnd.toISOString().slice(0, 10),
@@ -188,45 +198,45 @@ router.put('/tournaments/:id', verifyFirebaseToken, requireRole('admin'), async 
           });
         }
       }
-      
+
       // Update the dates in the updates object
       updates.startDate = newStart;
       updates.endDate = newEnd;
     }
-    
+
     // Validate registration deadline if being updated
     if (updates.registrationDeadline) {
       const regDeadline = new Date(updates.registrationDeadline);
       if (isNaN(regDeadline.getTime())) {
         return res.status(400).json({ message: 'Invalid registration deadline' });
       }
-      
+
       const t = await Tournament.findById(req.params.id);
       if (!t) return res.status(404).json({ message: 'Tournament not found' });
-      
+
       const startDate = updates.startDate ? new Date(updates.startDate) : new Date(t.startDate);
-      
+
       if (regDeadline > startDate) {
-        return res.status(400).json({ 
-          message: 'Registration deadline must be on or before the start date' 
+        return res.status(400).json({
+          message: 'Registration deadline must be on or before the start date'
         });
       }
-      
+
       // Validate that registration deadline is not in the past for upcoming tournaments
       if (t.status === 'open' || t.status === 'upcoming') {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
+
         if (regDeadline < today) {
-          return res.status(400).json({ 
-            message: 'Registration deadline cannot be in the past for upcoming tournaments' 
+          return res.status(400).json({
+            message: 'Registration deadline cannot be in the past for upcoming tournaments'
           });
         }
       }
-      
+
       updates.registrationDeadline = regDeadline;
     }
-    
+
     const t = await Tournament.findByIdAndUpdate(req.params.id, updates, { new: true });
     if (!t) return res.status(404).json({ message: 'Tournament not found' });
     res.json(t);
@@ -240,28 +250,28 @@ router.put('/tournaments/:id', verifyFirebaseToken, requireRole('admin'), async 
 router.delete('/tournaments/:id', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
   try {
     console.log('Delete tournament request received for ID:', req.params.id);
-    
+
     // Validate the ID format
     if (!req.params.id) {
       console.log('Missing tournament ID in request');
       return res.status(400).json({ message: 'Tournament ID is required' });
     }
-    
+
     // First, delete all matches associated with this tournament
     console.log('Deleting matches for tournament:', req.params.id);
     const deleteMatchesResult = await Match.deleteMany({ tournament: req.params.id });
     console.log('Deleted matches count:', deleteMatchesResult.deletedCount);
-    
+
     // Then delete the tournament itself
     console.log('Deleting tournament:', req.params.id);
     const t = await Tournament.findByIdAndDelete(req.params.id);
     console.log('Tournament delete result:', t);
-    
+
     if (!t) {
       console.log('Tournament not found for ID:', req.params.id);
       return res.status(404).json({ message: 'Tournament not found' });
     }
-    
+
     console.log('Tournament deleted successfully:', t._id);
     res.json({ message: 'Tournament deleted successfully' });
   } catch (error) {
@@ -310,28 +320,28 @@ router.put('/tournaments/:id/registrations/:regId/:action', verifyFirebaseToken,
     if (!reg) return res.status(404).json({ message: 'Registration not found' });
     if (!['approve', 'reject'].includes(action)) return res.status(400).json({ message: 'Invalid action' });
 
-  // When approving, if entryFee > 0, set paymentStatus to pending and do not add to participants yet
-  if (action === 'approve') {
-    reg.status = 'approved';
-    reg.decisionAt = new Date();
-    if ((Number(t.entryFee) || 0) > 0) {
-      reg.paymentStatus = 'pending';
-      reg.paymentAmount = Number(t.entryFee) || 0;
-    } else {
-      reg.paymentStatus = 'not_required';
-      reg.paymentAmount = 0;
-      // Free tournaments: immediately add to participants
-      const exists = (t.participants || []).some(id => String(id) === String(reg.club));
-      if (!exists) t.participants.push(reg.club);
+    // When approving, if entryFee > 0, set paymentStatus to pending and do not add to participants yet
+    if (action === 'approve') {
+      reg.status = 'approved';
+      reg.decisionAt = new Date();
+      if ((Number(t.entryFee) || 0) > 0) {
+        reg.paymentStatus = 'pending';
+        reg.paymentAmount = Number(t.entryFee) || 0;
+      } else {
+        reg.paymentStatus = 'not_required';
+        reg.paymentAmount = 0;
+        // Free tournaments: immediately add to participants
+        const exists = (t.participants || []).some(id => String(id) === String(reg.club));
+        if (!exists) t.participants.push(reg.club);
+      }
+      await t.save();
+      return res.json(reg);
     }
-    await t.save();
-    return res.json(reg);
-  }
 
-  // Reject action
-  reg.status = 'rejected';
+    // Reject action
+    reg.status = 'rejected';
     reg.decisionAt = new Date();
-  await t.save();
+    await t.save();
 
     res.json(reg);
   } catch (error) {
@@ -378,11 +388,11 @@ router.post('/tournaments/:id/fixtures/generate-v2', verifyFirebaseToken, requir
   try {
     const tournamentId = req.params.id;
     const options = req.body || {};
-    
+
     // Get tournament with participants
     const tournament = await Tournament.findById(tournamentId)
       .populate('participants', 'clubName name district city');
-    
+
     if (!tournament) {
       return res.status(404).json({ message: 'Tournament not found' });
     }
@@ -407,17 +417,17 @@ router.post('/tournaments/:id/fixtures/generate-v2', verifyFirebaseToken, requir
     const configuredTimeSlots = tournament.matchTimeSlots && tournament.matchTimeSlots.length > 0
       ? tournament.matchTimeSlots
       : options.slotTimes && options.slotTimes.length > 0
-      ? options.slotTimes
-      : defaultTimeSlots;
-    
+        ? options.slotTimes
+        : defaultTimeSlots;
+
     const venueSlots = tournament.venueSlots && tournament.venueSlots.length > 0
       ? tournament.venueSlots
       : tournament.venues && tournament.venues.length > 0
-      ? tournament.venues.map(v => ({
+        ? tournament.venues.map(v => ({
           name: v,
           slotTimes: configuredTimeSlots
         }))
-      : [{ name: 'Main Ground', slotTimes: configuredTimeSlots }];
+        : [{ name: 'Main Ground', slotTimes: configuredTimeSlots }];
 
     // Step 1: Calculate actual capacity
     const capacity = calculateActualCapacity({
@@ -459,14 +469,14 @@ router.post('/tournaments/:id/fixtures/generate-v2', verifyFirebaseToken, requir
         const groupCount = options.groups || tournament.numGroups || 2;
         const qualifyPerGroup = options.qualifyPerGroup || tournament.qualifyPerGroup || 2;
         const seeds = options.seeds || null;
-        
+
         const result = generateGroupsWithKnockout(teamIds, {
           groupCount,
           qualifyPerGroup,
           doubleRoundRobin: useDoubleRR,
           seeds
         });
-        
+
         rounds = result.rounds;
         groups = result.groups;
         requiredMatches = rounds.reduce((sum, r) => sum + r.matches.length, 0);
@@ -537,7 +547,7 @@ router.post('/tournaments/:id/fixtures/generate-v2', verifyFirebaseToken, requir
         status: 'Scheduled',
         matchCode: `M${Date.now().toString().slice(-6)}${Math.random().toString(36).substr(2, 3).toUpperCase()}`
       });
-      
+
       matches.push(match);
     }
 
@@ -551,7 +561,7 @@ router.post('/tournaments/:id/fixtures/generate-v2', verifyFirebaseToken, requir
       clubs: g.teams
     }));
     tournament.status = 'upcoming';
-    
+
     // Initialize standings for group stages
     if (groups.length > 0) {
       tournament.standings = [];
@@ -570,7 +580,7 @@ router.post('/tournaments/:id/fixtures/generate-v2', verifyFirebaseToken, requir
         });
       });
     }
-    
+
     await tournament.save();
 
     res.json({
@@ -588,12 +598,339 @@ router.post('/tournaments/:id/fixtures/generate-v2', verifyFirebaseToken, requir
   } catch (error) {
     console.error('Error generating fixtures V2:', error);
     const errorMessage = error.message || 'Failed to generate fixtures';
-    const errorDetails = process.env.NODE_ENV === 'development' ? { 
-      message: errorMessage, 
+    const errorDetails = process.env.NODE_ENV === 'development' ? {
+      message: errorMessage,
       stack: error.stack,
       error: error.toString()
     } : { message: errorMessage };
-    
+
+    res.status(500).json(errorDetails);
+  }
+});
+
+// ===== V3: Enhanced fixture generation with new formats =====
+// Supports: super-league (IPL-style), groups+super8 (ICC-style), plus all V2 formats
+router.post('/tournaments/:id/fixtures/generate-v3', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
+  try {
+    const tournamentId = req.params.id;
+    const options = req.body || {};
+
+    // Get tournament with participants
+    const tournament = await Tournament.findById(tournamentId)
+      .populate('participants', 'clubName name district city');
+
+    if (!tournament) {
+      return res.status(404).json({ message: 'Tournament not found' });
+    }
+
+    // Check if fixtures already generated
+    if (tournament.fixturesGenerated) {
+      return res.status(400).json({ message: 'Fixtures already generated for this tournament' });
+    }
+
+    // Check if tournament has participants
+    const participants = tournament.participants || [];
+    if (participants.length < 2) {
+      return res.status(400).json({ message: 'At least 2 teams required to generate fixtures' });
+    }
+
+    // Delete existing fixtures if any
+    await Match.deleteMany({ tournament: tournamentId });
+
+    // Prepare venue slots from tournament configuration
+    const defaultTimeSlots = ['09:00', '14:00', '18:00'];
+    const configuredTimeSlots = tournament.matchTimeSlots && tournament.matchTimeSlots.length > 0
+      ? tournament.matchTimeSlots
+      : options.slotTimes && options.slotTimes.length > 0
+        ? options.slotTimes
+        : defaultTimeSlots;
+
+    const venueSlots = tournament.venueSlots && tournament.venueSlots.length > 0
+      ? tournament.venueSlots
+      : tournament.venues && tournament.venues.length > 0
+        ? tournament.venues.map(v => ({
+          name: v,
+          slotTimes: configuredTimeSlots
+        }))
+        : [{ name: 'Main Ground', slotTimes: configuredTimeSlots }];
+
+    // Calculate actual capacity
+    const capacity = calculateActualCapacity({
+      startDate: tournament.startDate,
+      endDate: tournament.endDate,
+      venueSlots,
+      teamBlackouts: tournament.teamBlackouts || new Map(),
+      venueBlackouts: tournament.venueBlackouts || new Map(),
+      restDaysMin: tournament.restDaysMin || 1,
+      teams: participants.map(p => p._id)
+    });
+
+    let rounds = [];
+    let groups = [];
+    let requiredMatches = 0;
+    let playoffStructure = null;
+    let superRoundStructure = null;
+
+    // Generate pairings based on format
+    const teamIds = participants.map(p => p._id);
+    const useDoubleRR = options.doubleRoundRobin ?? tournament.doubleRoundRobin ?? false;
+
+    switch (tournament.format) {
+      // === New V3 Formats ===
+      case 'super-league': {
+        // IPL-style: Double RR + Playoffs
+        const superLeagueOpts = {
+          doubleRoundRobin: useDoubleRR !== false, // Default to double RR
+          topTeamsQualify: tournament.playoffConfig?.topTeamsQualify || options.topTeamsQualify || 4,
+          hasQualifier1: tournament.playoffConfig?.hasQualifier1 ?? true,
+          hasEliminator: tournament.playoffConfig?.hasEliminator ?? true,
+          hasQualifier2: tournament.playoffConfig?.hasQualifier2 ?? true
+        };
+
+        if (participants.length < superLeagueOpts.topTeamsQualify) {
+          return res.status(400).json({
+            message: `Super League requires at least ${superLeagueOpts.topTeamsQualify} teams for playoffs`
+          });
+        }
+
+        const result = generateSuperLeagueFormat(teamIds, superLeagueOpts);
+        rounds = result.rounds;
+        playoffStructure = result.playoffStructure;
+        requiredMatches = result.stats.leagueMatches;
+        // Note: Playoff matches created after league completes
+        break;
+      }
+
+      case 'groups+super8': {
+        // ICC World Cup style: Groups → Super Round → Knockouts
+        const superOpts = {
+          groupCount: tournament.numGroups || options.groupCount || 4,
+          teamsQualifyPerGroup: tournament.superRoundConfig?.teamsQualifyPerGroup || options.teamsQualifyPerGroup || 2,
+          superGroupCount: tournament.superRoundConfig?.superGroupCount || options.superGroupCount || 2,
+          carryForwardPoints: tournament.superRoundConfig?.carryForwardPoints ?? true,
+          doubleRoundRobin: useDoubleRR,
+          seeds: options.seeds || null
+        };
+
+        if (participants.length < superOpts.groupCount * 2) {
+          return res.status(400).json({
+            message: `Need at least ${superOpts.groupCount * 2} teams for ${superOpts.groupCount} groups`
+          });
+        }
+
+        const result = generateGroupsSuperFormat(teamIds, superOpts);
+        rounds = result.rounds;
+        groups = result.groups;
+        superRoundStructure = result.superRoundStructure;
+        requiredMatches = result.stats.groupMatches;
+        // Note: Super round matches created after group stage completes
+        break;
+      }
+
+      // === Legacy V2 Formats ===
+      case 'league':
+      case 'round-robin': {
+        rounds = generateRoundRobinPairings(teamIds, { doubleRoundRobin: useDoubleRR });
+        requiredMatches = rounds.reduce((sum, r) => sum + r.matches.length, 0);
+        break;
+      }
+
+      case 'knockout': {
+        const seeds = options.seeds || null;
+        rounds = generateKnockoutBracketSeeded(teamIds, seeds);
+        requiredMatches = rounds.reduce((sum, r) => sum + r.matches.length, 0);
+        break;
+      }
+
+      case 'league+playoff':
+      case 'groups+knockouts': {
+        const groupCount = options.groups || tournament.numGroups || 2;
+        const qualifyPerGroup = options.qualifyPerGroup || tournament.qualifyPerGroup || 2;
+        const seeds = options.seeds || null;
+
+        const result = generateGroupsWithKnockout(teamIds, {
+          groupCount,
+          qualifyPerGroup,
+          doubleRoundRobin: useDoubleRR,
+          seeds
+        });
+
+        rounds = result.rounds;
+        groups = result.groups;
+        requiredMatches = rounds.reduce((sum, r) => sum + r.matches.length, 0);
+        break;
+      }
+
+      default:
+        return res.status(400).json({ message: `Unsupported tournament format: ${tournament.format}` });
+    }
+
+    // Validate feasibility
+    const validation = validateFixtureGeneration(requiredMatches, capacity, {
+      format: tournament.format,
+      teamCount: participants.length
+    });
+
+    if (!validation.valid) {
+      return res.status(400).json({
+        message: 'Cannot generate fixtures with current constraints',
+        issues: validation.issues,
+        warnings: validation.warnings,
+        capacity: validation.capacity,
+        requiredMatches
+      });
+    }
+
+    // Schedule matches with reserve day support
+    const scheduleOptions = {
+      startDate: tournament.startDate,
+      endDate: tournament.endDate,
+      venueSlots,
+      restDaysMin: tournament.restDaysMin || 1,
+      teamBlackouts: tournament.teamBlackouts || new Map(),
+      venueBlackouts: tournament.venueBlackouts || new Map(),
+      respectRoundOrder: options.respectRoundOrder !== false,
+      prioritizeWeekends: options.prioritizeWeekends || false,
+      matchTimeSlots: configuredTimeSlots,
+      allowParallelMatches: tournament.allowParallelMatches || false,
+      maxParallelMatches: tournament.maxParallelMatches || 1,
+      reserveDays: tournament.reserveDays || [],
+      reserveDayStrategy: options.reserveDayStrategy || 'knockouts-only'
+    };
+
+    const scheduleResult = scheduleWithReserveDays(rounds, scheduleOptions);
+
+    if (!scheduleResult.ok) {
+      return res.status(400).json({
+        message: scheduleResult.message || 'Failed to schedule matches',
+        failed: scheduleResult.failed,
+        scheduled: scheduleResult.scheduled?.length || 0,
+        required: requiredMatches
+      });
+    }
+
+    // Create match records with all V3 fields
+    const matches = [];
+    for (const matchData of scheduleResult.matches) {
+      const match = new Match({
+        tournament: tournamentId,
+        homeClub: matchData.home,
+        awayClub: matchData.away,
+        date: matchData.date,
+        time: matchData.time,
+        venue: matchData.venue,
+        round: matchData.round,
+        stage: matchData.stage || 'Group',
+        group: matchData.group || '',
+        matchFormat: tournament.matchFormat || 'T20',
+        oversLimit: tournament.oversLimit || 20,
+        status: 'Scheduled',
+        matchCode: `M${Date.now().toString().slice(-6)}${Math.random().toString(36).substr(2, 3).toUpperCase()}`,
+        // Reserve day info
+        hasReserveDay: matchData.hasReserveDay || false,
+        isReserveDay: false
+      });
+
+      matches.push(match);
+    }
+
+    // Save all matches
+    await Match.insertMany(matches);
+
+    // Update tournament with V3 fields
+    tournament.fixturesGenerated = true;
+    tournament.registrationLocked = true;
+    tournament.status = 'upcoming';
+
+    // Save groups if applicable
+    if (groups.length > 0) {
+      tournament.groups = groups.map(g => ({
+        name: g.name,
+        clubs: g.teams
+      }));
+    }
+
+    // Initialize standings with V3 NRR fields
+    const allTeams = tournament.format === 'super-league'
+      ? teamIds // Super League has no groups in league stage
+      : groups.flatMap(g => g.teams);
+
+    if (allTeams.length > 0 || tournament.format === 'super-league') {
+      tournament.standings = [];
+      const teamsToTrack = tournament.format === 'super-league' ? teamIds : allTeams;
+
+      teamsToTrack.forEach(teamId => {
+        const group = tournament.format === 'super-league'
+          ? 'League Stage'
+          : groups.find(g => g.teams.includes(teamId))?.name || '';
+
+        tournament.standings.push({
+          club: teamId,
+          group,
+          played: 0,
+          won: 0,
+          lost: 0,
+          drawn: 0,
+          noResult: 0,
+          points: 0,
+          nrr: 0,
+          runsScored: 0,
+          runsConceded: 0,
+          oversFaced: 0,
+          oversBowled: 0,
+          bonusPoints: 0
+        });
+      });
+    }
+
+    // Store playoff/super round structure metadata
+    if (playoffStructure) {
+      tournament.playoffConfig = {
+        topTeamsQualify: playoffStructure.topTeamsQualify,
+        hasQualifier1: true,
+        hasEliminator: true,
+        hasQualifier2: true,
+        playoffSlots: playoffStructure.slots
+      };
+    }
+
+    if (superRoundStructure) {
+      tournament.superRoundConfig = {
+        teamsQualifyPerGroup: superRoundStructure.teamsPerSuperGroup / 2,
+        carryForwardPoints: superRoundStructure.carryForwardPoints,
+        superGroupCount: superRoundStructure.superGroupCount
+      };
+    }
+
+    await tournament.save();
+
+    res.json({
+      success: true,
+      message: 'Fixtures generated successfully (V3)',
+      data: {
+        matchesCount: matches.length,
+        groupsCount: groups.length,
+        format: tournament.format,
+        capacity: validation.capacity,
+        stats: scheduleResult.stats,
+        warnings: validation.warnings,
+        playoffStructure: playoffStructure ? {
+          topTeamsQualify: playoffStructure.topTeamsQualify,
+          matchesToSchedule: playoffStructure.slots.length
+        } : null,
+        superRoundStructure: superRoundStructure || null
+      }
+    });
+
+  } catch (error) {
+    console.error('Error generating fixtures V3:', error);
+    const errorMessage = error.message || 'Failed to generate fixtures';
+    const errorDetails = process.env.NODE_ENV === 'development' ? {
+      message: errorMessage,
+      stack: error.stack,
+      error: error.toString()
+    } : { message: errorMessage };
+
     res.status(500).json(errorDetails);
   }
 });
@@ -603,10 +940,10 @@ router.post('/tournaments/:id/fixtures/preview', verifyFirebaseToken, requireRol
   try {
     const tournamentId = req.params.id;
     const options = req.body || {};
-    
+
     const tournament = await Tournament.findById(tournamentId)
       .populate('participants', 'clubName name');
-    
+
     if (!tournament) {
       return res.status(404).json({ message: 'Tournament not found' });
     }
@@ -619,11 +956,11 @@ router.post('/tournaments/:id/fixtures/preview', verifyFirebaseToken, requireRol
     const venueSlots = tournament.venueSlots && tournament.venueSlots.length > 0
       ? tournament.venueSlots
       : tournament.venues && tournament.venues.length > 0
-      ? tournament.venues.map(v => ({
+        ? tournament.venues.map(v => ({
           name: v,
           slotTimes: options.slotTimes || ['09:00', '14:00', '18:00']
         }))
-      : [{ name: 'Main Ground', slotTimes: ['09:00', '14:00'] }];
+        : [{ name: 'Main Ground', slotTimes: ['09:00', '14:00'] }];
 
     const capacity = calculateActualCapacity({
       startDate: tournament.startDate,
@@ -658,7 +995,7 @@ router.post('/tournaments/:id/fixtures/preview', verifyFirebaseToken, requireRol
       case 'groups+knockouts': {
         const groupCount = options.groups || tournament.numGroups || 2;
         const teamsPerGroup = Math.ceil(teamCount / groupCount);
-        const matchesPerGroup = teamsPerGroup % 2 === 0 
+        const matchesPerGroup = teamsPerGroup % 2 === 0
           ? (teamsPerGroup / 2) * (teamsPerGroup - 1)
           : ((teamsPerGroup - 1) / 2) * teamsPerGroup;
         requiredMatches = matchesPerGroup * groupCount;
@@ -700,11 +1037,11 @@ router.post('/tournaments/:id/fixtures/generate', verifyFirebaseToken, requireRo
   try {
     const tournamentId = req.params.id;
     const options = req.body || {};
-    
+
     // Get tournament with participants
     const tournament = await Tournament.findById(tournamentId)
       .populate('participants', 'clubName name district city');
-    
+
     if (!tournament) {
       return res.status(404).json({ message: 'Tournament not found' });
     }
@@ -727,11 +1064,11 @@ router.post('/tournaments/:id/fixtures/generate', verifyFirebaseToken, requireRo
     const venueSlots = tournament.venueSlots && tournament.venueSlots.length > 0
       ? tournament.venueSlots
       : tournament.venues && tournament.venues.length > 0
-      ? tournament.venues.map(v => ({
-          name: v,
-          slotTimes: options.slotTimes || ['09:00', '14:00', '18:00']
-        }))
-      : [{ name: 'Main Ground', slotTimes: ['09:00', '14:00'] }];
+    tournament.venues.map(v => ({
+      name: v,
+      slotTimes: options.slotTimes || ['09:00', '14:00', '18:00']
+    }))
+    [{ name: 'Main Ground', slotTimes: ['09:00', '14:00'] }];
 
     // Step 1: Calculate actual capacity
     const capacity = calculateActualCapacity({
@@ -772,14 +1109,14 @@ router.post('/tournaments/:id/fixtures/generate', verifyFirebaseToken, requireRo
         const groupCount = options.groups || tournament.numGroups || 2;
         const qualifyPerGroup = options.qualifyPerGroup || tournament.qualifyPerGroup || 2;
         const seeds = options.seeds || null;
-        
+
         const result = generateGroupsWithKnockout(teamIds, {
           groupCount,
           qualifyPerGroup,
           doubleRoundRobin: useDoubleRR,
           seeds
         });
-        
+
         rounds = result.rounds;
         groups = result.groups;
         requiredMatches = rounds.reduce((sum, r) => sum + r.matches.length, 0);
@@ -847,7 +1184,7 @@ router.post('/tournaments/:id/fixtures/generate', verifyFirebaseToken, requireRo
         status: 'Scheduled',
         matchCode: `M${Date.now().toString().slice(-6)}${Math.random().toString(36).substr(2, 3).toUpperCase()}`
       });
-      
+
       matches.push(match);
     }
 
@@ -861,7 +1198,7 @@ router.post('/tournaments/:id/fixtures/generate', verifyFirebaseToken, requireRo
       clubs: g.teams
     }));
     tournament.status = 'upcoming';
-    
+
     // Initialize standings for group stages
     if (groups.length > 0) {
       tournament.standings = [];
@@ -880,11 +1217,11 @@ router.post('/tournaments/:id/fixtures/generate', verifyFirebaseToken, requireRo
         });
       });
     }
-    
+
     await tournament.save();
 
     // Legacy response format for backward compatibility
-    res.json({ 
+    res.json({
       message: 'Fixtures generated successfully',
       matchesCount: matches.length,
       groups: groups.length
@@ -893,12 +1230,12 @@ router.post('/tournaments/:id/fixtures/generate', verifyFirebaseToken, requireRo
   } catch (error) {
     console.error('Error generating fixtures:', error);
     const errorMessage = error.message || 'Failed to generate fixtures';
-    const errorDetails = process.env.NODE_ENV === 'development' ? { 
-      message: errorMessage, 
+    const errorDetails = process.env.NODE_ENV === 'development' ? {
+      message: errorMessage,
       stack: error.stack,
       error: error.toString()
     } : { message: errorMessage };
-    
+
     res.status(500).json(errorDetails);
   }
 });
@@ -908,7 +1245,7 @@ router.post('/tournaments/:id/fixtures/seed-knockout', verifyFirebaseToken, requ
   try {
     const tournamentId = req.params.id;
     const { qualifyPerGroup = 2 } = req.body || {};
-    
+
     const tournament = await Tournament.findById(tournamentId);
     if (!tournament) {
       return res.status(404).json({ message: 'Tournament not found' });
@@ -922,7 +1259,7 @@ router.post('/tournaments/:id/fixtures/seed-knockout', verifyFirebaseToken, requ
     const groups = tournament.groups || [];
     const qualifiers = [];
     const seeds = {}; // Track seeding based on group position
-    
+
     for (const group of groups) {
       const groupStandings = tournament.standings
         .filter(s => s.group === group.name)
@@ -930,7 +1267,7 @@ router.post('/tournaments/:id/fixtures/seed-knockout', verifyFirebaseToken, requ
           if (b.points !== a.points) return b.points - a.points;
           return b.nrr - a.nrr;
         });
-      
+
       const groupQualifiers = groupStandings
         .slice(0, qualifyPerGroup)
         .map((s, idx) => {
@@ -940,7 +1277,7 @@ router.post('/tournaments/:id/fixtures/seed-knockout', verifyFirebaseToken, requ
           seeds[clubId] = (idx * groups.length) + groups.indexOf(group) + 1;
           return s.club;
         });
-      
+
       qualifiers.push(...groupQualifiers);
     }
 
@@ -950,16 +1287,16 @@ router.post('/tournaments/:id/fixtures/seed-knockout', verifyFirebaseToken, requ
 
     // Generate knockout bracket with seeding
     const knockoutRounds = generateKnockoutBracketSeeded(qualifiers, seeds);
-    
+
     // Prepare venue slots
     const venueSlots = tournament.venueSlots && tournament.venueSlots.length > 0
       ? tournament.venueSlots
       : tournament.venues && tournament.venues.length > 0
-      ? tournament.venues.map(venue => ({
-          name: venue,
-          slotTimes: ['09:00', '14:00', '18:00']
-        }))
-      : [{ name: 'Main Ground', slotTimes: ['09:00', '14:00'] }];
+    tournament.venues.map(venue => ({
+      name: venue,
+      slotTimes: ['09:00', '14:00', '18:00']
+    }))
+    [{ name: 'Main Ground', slotTimes: ['09:00', '14:00'] }];
 
     // Schedule knockout matches using V2 advanced scheduler
     const scheduleOptions = {
@@ -976,7 +1313,7 @@ router.post('/tournaments/:id/fixtures/seed-knockout', verifyFirebaseToken, requ
     const scheduleResult = scheduleMatchesAdvanced(knockoutRounds, scheduleOptions);
 
     if (!scheduleResult.ok) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: scheduleResult.message,
         failed: scheduleResult.failed,
         scheduled: scheduleResult.scheduled?.length || 0,
@@ -1001,14 +1338,14 @@ router.post('/tournaments/:id/fixtures/seed-knockout', verifyFirebaseToken, requ
         status: 'Scheduled',
         matchCode: `K${Date.now().toString().slice(-6)}${Math.random().toString(36).substr(2, 3).toUpperCase()}`
       });
-      
+
       matches.push(match);
     }
 
     // Save knockout matches
     await Match.insertMany(matches);
 
-    res.json({ 
+    res.json({
       message: 'Knockout bracket seeded successfully',
       matchesCount: matches.length,
       qualifiers: qualifiers.length,
@@ -1018,12 +1355,12 @@ router.post('/tournaments/:id/fixtures/seed-knockout', verifyFirebaseToken, requ
   } catch (error) {
     console.error('Error seeding knockout:', error);
     const errorMessage = error.message || 'Failed to seed knockout bracket';
-    const errorDetails = process.env.NODE_ENV === 'development' ? { 
-      message: errorMessage, 
+    const errorDetails = process.env.NODE_ENV === 'development' ? {
+      message: errorMessage,
       stack: error.stack,
       error: error.toString()
     } : { message: errorMessage };
-    
+
     res.status(500).json(errorDetails);
   }
 });
@@ -1035,7 +1372,7 @@ router.get('/tournaments/:id/matches', verifyFirebaseToken, requireRole('admin')
       .populate('homeClub', 'clubName name district')
       .populate('awayClub', 'clubName name district')
       .sort({ date: 1, time: 1 });
-    
+
     res.json(matches);
   } catch (error) {
     console.error('Error fetching tournament matches:', error);
@@ -1203,7 +1540,14 @@ router.put('/tournaments/:id/matches/:matchId/result', verifyFirebaseToken, requ
 // ===== Edit fixture (admin) =====
 router.put('/tournaments/:id/matches/:matchId', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
   try {
-    const { homeClub, awayClub, date, time, venue, teamBlackouts = {}, venueBlackouts = {}, allowedTimeSlots = [], maxPerVenuePerDay, avoidBackToBackVenue = false, homeAwayTolerance = 1, doubleRoundRobin = false } = req.body || {};
+    const {
+      homeClub, awayClub, date, time, venue,
+      teamBlackouts = {}, venueBlackouts = {}, allowedTimeSlots = [],
+      maxPerVenuePerDay, avoidBackToBackVenue = false, homeAwayTolerance = 1, doubleRoundRobin = false,
+      // New fields
+      round, stage, group, matchCode, matchFormat, oversLimit,
+      dlsEnabled, superOverEnabled, freeHitOnNoBall, hasReserveDay
+    } = req.body || {};
     const t = await Tournament.findById(req.params.id);
     if (!t) return res.status(404).json({ message: 'Tournament not found' });
 
@@ -1214,7 +1558,7 @@ router.put('/tournaments/:id/matches/:matchId', verifyFirebaseToken, requireRole
     // Parse date safely (YYYY-MM-DD -> UTC midnight)
     const parseDateSafe = (val) => {
       if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(val)) {
-        const [y,m,d] = val.split('-').map(Number);
+        const [y, m, d] = val.split('-').map(Number);
         return new Date(Date.UTC(y, m - 1, d));
       }
       return new Date(val);
@@ -1238,11 +1582,11 @@ router.put('/tournaments/:id/matches/:matchId', verifyFirebaseToken, requireRole
       tournamentEnd.setHours(23, 59, 59, 999);
       const matchDate = new Date(newDate);
       matchDate.setHours(0, 0, 0, 0);
-      
+
       if (matchDate < tournamentStart || matchDate > tournamentEnd) {
         const startStr = tournamentStart.toISOString().slice(0, 10);
         const endStr = tournamentEnd.toISOString().slice(0, 10);
-        return res.status(400).json({ 
+        return res.status(400).json({
           message: `Match date must be within tournament dates (${startStr} to ${endStr}).`,
           tournamentDateRange: { start: startStr, end: endStr },
           requestedDate: matchDate.toISOString().slice(0, 10)
@@ -1264,7 +1608,7 @@ router.put('/tournaments/:id/matches/:matchId', verifyFirebaseToken, requireRole
     }
 
     // Validation helpers
-    const isoDate = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString().slice(0,10);
+    const isoDate = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString().slice(0, 10);
     const dateKey = isoDate(newDate);
     const prevDate = new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate()); prevDate.setDate(prevDate.getDate() - 1);
     const nextDate = new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate()); nextDate.setDate(nextDate.getDate() + 1);
@@ -1285,7 +1629,7 @@ router.put('/tournaments/:id/matches/:matchId', verifyFirebaseToken, requireRole
     }
 
     // Rest day rule (no consecutive days) - only apply if date is being changed
-    
+
     if (isDateChanged) {
       const conflictPrevNext = others.find(m => m.date && ([prevKey, nextKey].includes(isoDate(new Date(m.date)))) && (String(m.homeClub) === newHome || String(m.awayClub) === newHome || String(m.homeClub) === newAway || String(m.awayClub) === newAway));
       if (conflictPrevNext) return res.status(400).json({ message: 'Rest day required: teams cannot play on consecutive days' });
@@ -1300,13 +1644,13 @@ router.put('/tournaments/:id/matches/:matchId', verifyFirebaseToken, requireRole
     if (newVenue && blockedVenue(newVenue)) return res.status(400).json({ message: 'Venue blackout date violation' });
 
     // Prevent double-booking: same venue+date+timeslot
-    const conflictSlot = others.find(m => m.date && isoDate(new Date(m.date)) === dateKey && String(m.venue||'') === String(newVenue||'') && String(m.time||'') === String(newTime||''));
+    const conflictSlot = others.find(m => m.date && isoDate(new Date(m.date)) === dateKey && String(m.venue || '') === String(newVenue || '') && String(m.time || '') === String(newTime || ''));
     if (conflictSlot) return res.status(400).json({ message: 'Time slot already booked at this venue' });
 
     // Max matches per venue per day
     const perVenueCap = Number(maxPerVenuePerDay);
     if (Number.isFinite(perVenueCap) && perVenueCap > 0) {
-      const countVenueDay = others.filter(m => m.date && isoDate(new Date(m.date)) === dateKey && String(m.venue||'') === String(newVenue||'')).length;
+      const countVenueDay = others.filter(m => m.date && isoDate(new Date(m.date)) === dateKey && String(m.venue || '') === String(newVenue || '')).length;
       if (countVenueDay >= perVenueCap) return res.status(400).json({ message: 'Venue-day capacity reached' });
     }
 
@@ -1330,11 +1674,11 @@ router.put('/tournaments/:id/matches/:matchId', verifyFirebaseToken, requireRole
     // Format-based frequency integrity (league/group RR)
     const format = t.format || 'league';
     const groups = Array.isArray(t.groups) ? t.groups : [];
-    const groupName = match.group || '';
+    const groupName = group || match.group || '';
     const participantsByGroup = new Map();
-    groups.forEach(g => participantsByGroup.set(g.name || g.group || g.label || '', (g.clubs || g.members || [] ).map(String)));
+    groups.forEach(g => participantsByGroup.set(g.name || g.group || g.label || '', (g.clubs || g.members || []).map(String)));
 
-    function expectedPerTeam(teamId){
+    function expectedPerTeam(teamId) {
       // Determine RR scope
       let pool = (participants || []).map(String);
       if ((format === 'league' || format === 'round-robin' || format === 'league+playoff') && groupName) {
@@ -1364,7 +1708,7 @@ router.put('/tournaments/:id/matches/:matchId', verifyFirebaseToken, requireRole
     }
 
     // Group integrity (non cross-group)
-    const isCross = (groupName && groupName.includes('-')) || (match.round || '').toLowerCase().includes('cross');
+    const isCross = (groupName && groupName.includes('-')) || ((round || match.round || '').toLowerCase().includes('cross'));
     if (!isCross && groupName && participantsByGroup.has(groupName)) {
       const clubs = participantsByGroup.get(groupName) || [];
       if ((!clubs.includes(newHome)) || (!clubs.includes(newAway))) {
@@ -1373,7 +1717,7 @@ router.put('/tournaments/:id/matches/:matchId', verifyFirebaseToken, requireRole
     }
 
     // Home/away balance tolerance (league-ish)
-    const isLeagueish = ['league','round-robin','league+playoff','groups+knockouts'].includes(format) && match.stage !== 'Knockout';
+    const isLeagueish = ['league', 'round-robin', 'league+playoff', 'groups+knockouts'].includes(format) && (stage || match.stage) !== 'Knockout';
     if (isLeagueish) {
       const newHomeHome = (homeCounts.get(newHome) || 0) + 1;
       const newHomeAway = (awayCounts.get(newHome) || 0);
@@ -1391,7 +1735,7 @@ router.put('/tournaments/:id/matches/:matchId', verifyFirebaseToken, requireRole
     if (avoidBackToBackVenue) {
       const dayKey = dateKey;
       const prevDay = prevKey; const nextDay = nextKey;
-      const teamPrevSameVenue = others.find(m => m.venue && String(m.venue) === String(newVenue) && m.date && [prevDay,nextDay].includes(isoDate(new Date(m.date))) && (String(m.homeClub)===newHome || String(m.awayClub)===newHome || String(m.homeClub)===newAway || String(m.awayClub)===newAway));
+      const teamPrevSameVenue = others.find(m => m.venue && String(m.venue) === String(newVenue) && m.date && [prevDay, nextDay].includes(isoDate(new Date(m.date))) && (String(m.homeClub) === newHome || String(m.awayClub) === newHome || String(m.homeClub) === newAway || String(m.awayClub) === newAway));
       if (teamPrevSameVenue) {
         return res.status(400).json({ message: 'Warning: back-to-back at same venue.' });
       }
@@ -1400,12 +1744,12 @@ router.put('/tournaments/:id/matches/:matchId', verifyFirebaseToken, requireRole
     // Dense schedule warning: 3 matches within 4 days for either team
     const withinWindow = (teamId) => {
       let count = 1; // include the edited match day
-      const start = new Date(newDate); start.setDate(start.getDate()-3);
-      const end = new Date(newDate); end.setDate(end.getDate()+0);
+      const start = new Date(newDate); start.setDate(start.getDate() - 3);
+      const end = new Date(newDate); end.setDate(end.getDate() + 0);
       for (const m of others) {
         if (!m.date) continue;
         const d = new Date(m.date);
-        if (d >= start && d <= end && (String(m.homeClub)===teamId || String(m.awayClub)===teamId)) count++;
+        if (d >= start && d <= end && (String(m.homeClub) === teamId || String(m.awayClub) === teamId)) count++;
       }
       return count >= 3;
     };
@@ -1414,14 +1758,14 @@ router.put('/tournaments/:id/matches/:matchId', verifyFirebaseToken, requireRole
     }
 
     // Keep consistency: for knockout with bracket slots, do not allow editing to same team already scheduled in same bracket round/slot
-    if ((t.format === 'knockout' || (t.format === 'league+playoff' && match.stage === 'Knockout')) && match.bracketRound >= 1) {
+    if ((t.format === 'knockout' || (t.format === 'league+playoff' && (stage || match.stage) === 'Knockout')) && match.bracketRound >= 1) {
       const sibling = await Match.findOne({ tournament: t._id, bracketRound: match.bracketRound, bracketSlot: match.bracketSlot, _id: { $ne: match._id } });
       if (sibling && (String(sibling.homeClub) === newHome || String(sibling.awayClub) === newHome || String(sibling.homeClub) === newAway || String(sibling.awayClub) === newAway)) {
         return res.status(400).json({ message: 'Knockout bracket conflict for selected team' });
       }
     }
 
-    // Apply changes
+    // Apply changes - basic fields
     const before = { homeClub: String(match.homeClub), awayClub: String(match.awayClub), date: match.date, time: match.time, venue: match.venue };
     match.homeClub = newHome;
     match.awayClub = newAway;
@@ -1429,9 +1773,21 @@ router.put('/tournaments/:id/matches/:matchId', verifyFirebaseToken, requireRole
     match.time = newTime;
     match.venue = newVenue;
 
+    // Apply new optional fields
+    if (round !== undefined) match.round = round;
+    if (stage !== undefined) match.stage = stage;
+    if (group !== undefined) match.group = group;
+    if (matchCode !== undefined) match.matchCode = matchCode;
+    if (matchFormat !== undefined) match.matchFormat = matchFormat;
+    if (oversLimit !== undefined) match.oversLimit = Number(oversLimit);
+    if (dlsEnabled !== undefined) match.dlsEnabled = Boolean(dlsEnabled);
+    if (superOverEnabled !== undefined) match.superOverEnabled = Boolean(superOverEnabled);
+    if (freeHitOnNoBall !== undefined) match.freeHitOnNoBall = Boolean(freeHitOnNoBall);
+    if (hasReserveDay !== undefined) match.hasReserveDay = Boolean(hasReserveDay);
+
     // Log edit history
     const userId = (req.user && (req.user.uid || req.user.id)) || 'admin';
-    const historyEntry = { at: new Date(), by: userId, changes: { before, after: { homeClub: newHome, awayClub: newAway, date: newDate, time: newTime, venue: newVenue } } };
+    const historyEntry = { at: new Date(), by: userId, changes: { before, after: { homeClub: newHome, awayClub: newAway, date: newDate, time: newTime, venue: newVenue, round, stage, group, matchCode, matchFormat, oversLimit, dlsEnabled, superOverEnabled, freeHitOnNoBall, hasReserveDay } } };
     const prevHistory = Array.isArray(match.editHistory) ? match.editHistory : [];
     match.editHistory = [...prevHistory, historyEntry];
 
@@ -1543,11 +1899,12 @@ async function recalcStandings(tournamentId) {
 function computeDerivedInnings(inn) {
   try {
     if (!inn) return inn;
-    
+
     // Sum batting runs and balls
     const bats = Array.isArray(inn.battingCard) ? inn.battingCard : [];
     const bowls = Array.isArray(inn.bowlingCard) ? inn.bowlingCard : [];
     const extras = inn.extras || {};
+    const overs = Array.isArray(inn.overs) ? inn.overs : [];
 
     let batRuns = 0; let batBalls = 0; let wickets = 0;
     for (const e of bats) {
@@ -1559,7 +1916,7 @@ function computeDerivedInnings(inn) {
         e.strikeRate = 0;
       }
       batRuns += r; batBalls += b;
-      
+
       // Handle dismissal data - frontend sends dismissalHow, backend expects dismissal.how
       let how = '';
       if (e.dismissal?.how) {
@@ -1573,7 +1930,7 @@ function computeDerivedInnings(inn) {
           bowler: e.dismissalBowler || ''
         };
       }
-      
+
       if (how && how !== 'not out' && how !== 'retired hurt' && how !== '') wickets += 1;
     }
 
@@ -1597,19 +1954,54 @@ function computeDerivedInnings(inn) {
     };
     ext.total = ext.wides + ext.noBalls + ext.byes + ext.legByes + ext.penalty;
 
+    // Calculate from overs data if available
+    let totalBallsFromOvers = 0;
+    let totalRunsFromOvers = 0;
+    let totalWicketsFromOvers = 0;
+
+    // Process overs data only if it's an array (not a string)
+    if (Array.isArray(overs)) {
+      for (const over of overs) {
+        if (Array.isArray(over.balls)) {
+          for (const ball of over.balls) {
+            // Count legal deliveries
+            if (ball.extras === 'none' || ball.extras === 'bye' || ball.extras === 'leg-bye') {
+              totalBallsFromOvers += 1;
+            }
+
+            // Add runs
+            totalRunsFromOvers += Number(ball.runs) || 0;
+
+            // Add extras
+            if (ball.extras !== 'none') {
+              totalRunsFromOvers += Number(ball.runs) || 0;
+            }
+
+            // Count wickets
+            if (ball.wicket && ball.wicket.how) {
+              totalWicketsFromOvers += 1;
+            }
+          }
+        }
+      }
+    }
+
     // Prefer bowling balls sum if present, fallback to batBalls or existing balls
     const bowlBalls = bowls.reduce((s, x) => s + (Number(x.balls) || 0), 0);
-    const totalBalls = bowlBalls > 0 ? bowlBalls : (batBalls > 0 ? batBalls : (Number(inn.balls) || 0));
-    
+    const totalBalls = totalBallsFromOvers > 0 ? totalBallsFromOvers : (bowlBalls > 0 ? bowlBalls : (batBalls > 0 ? batBalls : (Number(inn.balls) || 0)));
+
     // Calculate total runs (batting runs + extras)
-    const totalRuns = batRuns + ext.total;
-    
+    const totalRuns = totalRunsFromOvers > 0 ? totalRunsFromOvers : (batRuns + ext.total);
+
+    // Use wickets from overs if available
+    const totalWickets = totalWicketsFromOvers > 0 ? totalWicketsFromOvers : wickets;
+
     // Convert balls to overs format (e.g., 63 balls = 10.3 overs)
     const oversDecimal = totalBalls / 6;
     const completeOvers = Math.floor(oversDecimal);
     const remainingBalls = totalBalls % 6;
     const oversString = remainingBalls > 0 ? `${completeOvers}.${remainingBalls}` : `${completeOvers}.0`;
-    
+
     // Calculate run rate
     const runRate = totalBalls > 0 ? (totalRuns / (totalBalls / 6)) : 0;
 
@@ -1618,12 +2010,13 @@ function computeDerivedInnings(inn) {
       // Keep original fields for backward compatibility
       runs: totalRuns,
       balls: totalBalls,
-      wickets: wickets,
+      wickets: totalWickets,
       // Add standardized calculated fields
       totalRuns: totalRuns,
-      totalWickets: wickets,
+      totalWickets: totalWickets,
       totalBalls: totalBalls,
-      overs: oversString,
+      overs: Array.isArray(overs) ? overs : [], // Ensure overs is always an array
+      oversString: oversString, // Store the calculated overs string separately
       runRate: Number(runRate.toFixed(2)),
       extras: ext,
       battingCard: bats,
@@ -1668,15 +2061,7 @@ router.put('/tournaments/:id/matches/:matchId/details', verifyFirebaseToken, req
   console.log('Match ID:', req.params.matchId);
   console.log('User:', req.user?.uid);
   console.log('Request body keys:', Object.keys(req.body || {}));
-  
-  // Temporary simplified response to test if the endpoint is reachable
-  return res.json({ 
-    message: 'Match details endpoint reached successfully',
-    params: req.params,
-    bodyKeys: Object.keys(req.body || {}),
-    timestamp: new Date().toISOString()
-  });
-  
+
   try {
     console.log('Match details update request:', req.params.matchId);
     const match = await Match.findById(req.params.matchId);
@@ -1793,7 +2178,7 @@ router.put('/tournaments/:id/matches/:matchId/details', verifyFirebaseToken, req
     console.error('Error saving match details:', error);
     console.error('Error stack:', error.stack);
     console.error('Request body:', JSON.stringify(req.body, null, 2));
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Failed to save match details',
       error: error.message,
       details: process.env.NODE_ENV === 'development' ? error.stack : undefined
@@ -1868,18 +2253,18 @@ router.put('/tournaments/:id/matches/:matchId/finalize', verifyFirebaseToken, re
       const inns = Array.isArray(match.innings) ? match.innings : [];
       const allBats = inns.flatMap(i => Array.isArray(i.battingCard) ? i.battingCard : []);
       const allBowls = inns.flatMap(i => Array.isArray(i.bowlingCard) ? i.bowlingCard : []);
-      const topBat = allBats.sort((a,b) => (b.runs||0) - (a.runs||0))[0];
-      const topBowl = allBowls.sort((a,b) => (b.wickets||0) - (a.wickets||0) || (a.runs||0) - (b.runs||0))[0];
+      const topBat = allBats.sort((a, b) => (b.runs || 0) - (a.runs || 0))[0];
+      const topBowl = allBowls.sort((a, b) => (b.wickets || 0) - (a.wickets || 0) || (a.runs || 0) - (b.runs || 0))[0];
       match.summary = match.summary || {};
       if (!match.summary.topScorer && topBat) {
         match.summary.topScorer = `${topBat.playerName} ${topBat.runs} (${topBat.balls})`;
       }
       if (!match.summary.topWicketTaker && topBowl) {
-        const ov = (Number(topBowl.balls)||0)/6;
+        const ov = (Number(topBowl.balls) || 0) / 6;
         match.summary.topWicketTaker = `${topBowl.bowlerName} ${topBowl.wickets}/${topBowl.runs} (${ov.toFixed(1)} ov)`;
       }
       await match.save();
-    } catch (_) {}
+    } catch (_) { }
 
     // Recompute standings and NRR for league-style tournaments (points: win=2, tie/NR=1)
     const t = await Tournament.findById(req.params.id);
@@ -1910,7 +2295,7 @@ router.put('/tournaments/:id/matches/:matchId/unfinalize', verifyFirebaseToken, 
     match.finalized = false;
     const hadResult = !!match.result;
     match.result = undefined;
-    if (Array.isArray(match.innings) && match.innings.some(i => (Number(i.balls)||0) > 0)) {
+    if (Array.isArray(match.innings) && match.innings.some(i => (Number(i.balls) || 0) > 0)) {
       match.status = 'Live';
     } else {
       match.status = 'Scheduled';
@@ -1918,7 +2303,7 @@ router.put('/tournaments/:id/matches/:matchId/unfinalize', verifyFirebaseToken, 
     await match.save();
 
     // Recalculate standings to remove prior result effect
-    try { await recalcStandings(String(match.tournament)); } catch {}
+    try { await recalcStandings(String(match.tournament)); } catch { }
 
     res.json({ message: 'Match unlocked for editing', match, removedResult: hadResult });
   } catch (error) {
@@ -1932,16 +2317,16 @@ router.put('/tournaments/:id/matches/:matchId/unfinalize', verifyFirebaseToken, 
 router.get('/players', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
   try {
     const { status, club, district, search, page = 1, limit = 20 } = req.query;
-    
+
     let filter = { isActive: true }; // Only show active players by default
-    
+
     // Apply filters
     if (status === 'inactive') {
       filter.isActive = false;
     } else if (status === 'all') {
       delete filter.isActive; // Show both active and inactive
     }
-    
+
     if (club) {
       if (club === 'none') {
         filter.$and = filter.$and || [];
@@ -1955,11 +2340,11 @@ router.get('/players', verifyFirebaseToken, requireRole('admin'), async (req, re
         filter.currentClub = club;
       }
     }
-    
+
     if (district) {
       filter['address.district'] = new RegExp(district, 'i');
     }
-    
+
     // Add text search functionality
     if (search) {
       const searchRegex = new RegExp(search, 'i');
@@ -2026,7 +2411,7 @@ router.get('/players', verifyFirebaseToken, requireRole('admin'), async (req, re
       }
     }));
 
-    res.json({ 
+    res.json({
       players: transformedPlayers,
       pagination: {
         total,
@@ -2119,15 +2504,15 @@ router.get('/players/:id', verifyFirebaseToken, requireRole('admin'), async (req
 router.get('/players/:id/photo', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
   try {
     const player = await Player.findById(req.params.id);
-    
+
     if (!player) {
       return res.status(404).json({ message: 'Player not found' });
     }
-    
+
     if (!player.profilePhoto || !player.profilePhoto.data) {
       return res.status(404).json({ message: 'Profile photo not found' });
     }
-    
+
     // Set content type for image response
     res.set({
       'Content-Type': player.profilePhoto.contentType,
@@ -2152,7 +2537,7 @@ router.put('/players/:id/status', verifyFirebaseToken, requireRole('admin'), asy
 
     const player = await Player.findByIdAndUpdate(
       req.params.id,
-      { 
+      {
         isActive,
         updatedAt: new Date()
       },
@@ -2166,7 +2551,7 @@ router.put('/players/:id/status', verifyFirebaseToken, requireRole('admin'), asy
     // Log the status change
     console.log(`Admin ${req.user.email} ${isActive ? 'activated' : 'deactivated'} player ${player.fullName} (${player.user?.email}). Reason: ${reason || 'No reason provided'}`);
 
-    res.json({ 
+    res.json({
       message: `Player ${isActive ? 'activated' : 'deactivated'} successfully`,
       player: {
         id: player._id,
@@ -2196,8 +2581,8 @@ router.get('/players/stats', verifyFirebaseToken, requireRole('admin'), async (r
     // Recent registrations (last 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const recentRegistrations = await Player.countDocuments({ 
-      createdAt: { $gte: thirtyDaysAgo } 
+    const recentRegistrations = await Player.countDocuments({
+      createdAt: { $gte: thirtyDaysAgo }
     });
 
     res.json({
@@ -2232,18 +2617,18 @@ router.post('/tournaments/status-sync', verifyFirebaseToken, requireRole('admin'
 router.get('/clubs', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
   try {
     const { status, district, search } = req.query;
-    
+
     let filter = {};
-    
+
     // Apply filters
     if (status) {
       filter.status = status;
     }
-    
+
     if (district) {
       filter.district = district;
     }
-    
+
     if (search) {
       filter.$or = [
         { clubName: new RegExp(search, 'i') },
@@ -2282,7 +2667,7 @@ router.get('/clubs', verifyFirebaseToken, requireRole('admin'), async (req, res)
         logoUrl: club.logoUrl || `/api/clubs/${club._id}/logo`,
         proofUrl: club.proof ? `/api/clubs/${club._id}/proof` : null
       };
-      
+
       // Add base64 logo data if available
       if (club.logo && club.logo.data) {
         const base64Logo = club.logo.data.toString('base64');
@@ -2292,13 +2677,13 @@ router.get('/clubs', verifyFirebaseToken, requireRole('admin'), async (req, res)
       } else {
         console.log(`No logo data for club ${club.clubName || club.name}`);
       }
-      
+
       // Add base64 proof data if available
       if (club.proof && club.proof.data) {
         const base64Proof = club.proof.data.toString('base64');
         transformedClub.proofData = `data:${club.proof.contentType || 'application/pdf'};base64,${base64Proof}`;
       }
-      
+
       return transformedClub;
     });
 
@@ -2324,19 +2709,19 @@ router.get('/clubs', verifyFirebaseToken, requireRole('admin'), async (req, res)
 router.put('/clubs/:id/approve', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
   try {
     const club = await Club.findByIdAndUpdate(
-      req.params.id, 
-      { 
+      req.params.id,
+      {
         status: 'approved',
         processedAt: new Date(),
         processedBy: req.user._id
-      }, 
+      },
       { new: true }
     ).populate('manager', 'name email').select('+logo +proof');
-    
+
     if (!club) {
       return res.status(404).json({ message: 'Club not found' });
     }
-    
+
     // Transform the club data to match the frontend expectations
     const transformedClub = {
       id: club._id,
@@ -2359,19 +2744,19 @@ router.put('/clubs/:id/approve', verifyFirebaseToken, requireRole('admin'), asyn
       logoUrl: club.logoUrl || `/api/clubs/${club._id}/logo`,
       proofUrl: club.proof ? `/api/clubs/${club._id}/proof` : null
     };
-    
+
     // Add base64 logo data if available
     if (club.logo && club.logo.data) {
       const base64Logo = club.logo.data.toString('base64');
       transformedClub.logoData = `data:${club.logo.contentType || 'image/png'};base64,${base64Logo}`;
     }
-    
+
     // Add base64 proof data if available
     if (club.proof && club.proof.data) {
       const base64Proof = club.proof.data.toString('base64');
       transformedClub.proofData = `data:${club.proof.contentType || 'application/pdf'};base64,${base64Proof}`;
     }
-    
+
     res.json({ message: 'Club approved successfully', club: transformedClub });
   } catch (error) {
     console.error('Error approving club:', error);
@@ -2383,22 +2768,22 @@ router.put('/clubs/:id/approve', verifyFirebaseToken, requireRole('admin'), asyn
 router.put('/clubs/:id/reject', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
   try {
     const { reason } = req.body;
-    
+
     const club = await Club.findByIdAndUpdate(
-      req.params.id, 
-      { 
+      req.params.id,
+      {
         status: 'rejected',
         rejectionReason: reason,
         processedAt: new Date(),
         processedBy: req.user._id
-      }, 
+      },
       { new: true }
     ).populate('manager', 'name email').select('+logo +proof');
-    
+
     if (!club) {
       return res.status(404).json({ message: 'Club not found' });
     }
-    
+
     // Transform the club data to match the frontend expectations
     const transformedClub = {
       id: club._id,
@@ -2421,19 +2806,19 @@ router.put('/clubs/:id/reject', verifyFirebaseToken, requireRole('admin'), async
       logoUrl: club.logoUrl || `/api/clubs/${club._id}/logo`,
       proofUrl: club.proof ? `/api/clubs/${club._id}/proof` : null
     };
-    
+
     // Add base64 logo data if available
     if (club.logo && club.logo.data) {
       const base64Logo = club.logo.data.toString('base64');
       transformedClub.logoData = `data:${club.logo.contentType || 'image/png'};base64,${base64Logo}`;
     }
-    
+
     // Add base64 proof data if available
     if (club.proof && club.proof.data) {
       const base64Proof = club.proof.data.toString('base64');
       transformedClub.proofData = `data:${club.proof.contentType || 'application/pdf'};base64,${base64Proof}`;
     }
-    
+
     res.json({ message: 'Club rejected successfully', club: transformedClub });
   } catch (error) {
     console.error('Error rejecting club:', error);
@@ -2494,16 +2879,16 @@ router.get('/stats', verifyFirebaseToken, requireRole('admin'), async (req, res)
 router.get('/coaches', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
   try {
     const { status, club, district, search, page = 1, limit = 20 } = req.query;
-    
+
     let filter = { isActive: true }; // Only show active coaches by default
-    
+
     // Apply filters
     if (status === 'inactive') {
       filter.isActive = false;
     } else if (status === 'all') {
       delete filter.isActive; // Show both active and inactive
     }
-    
+
     if (club) {
       if (club === 'none') {
         filter.$and = filter.$and || [];
@@ -2517,11 +2902,11 @@ router.get('/coaches', verifyFirebaseToken, requireRole('admin'), async (req, re
         filter.currentClub = club;
       }
     }
-    
+
     if (district) {
       filter['address.district'] = new RegExp(district, 'i');
     }
-    
+
     // Add text search functionality
     if (search) {
       const searchRegex = new RegExp(search, 'i');
@@ -2588,7 +2973,7 @@ router.get('/coaches', verifyFirebaseToken, requireRole('admin'), async (req, re
       }
     }));
 
-    res.json({ 
+    res.json({
       coaches: transformedCoaches,
       pagination: {
         total,
@@ -2682,15 +3067,15 @@ router.get('/coaches/:id', verifyFirebaseToken, requireRole('admin'), async (req
 router.get('/coaches/:id/photo', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
   try {
     const coach = await Coach.findById(req.params.id);
-    
+
     if (!coach) {
       return res.status(404).json({ message: 'Coach not found' });
     }
-    
+
     if (!coach.profilePhoto || !coach.profilePhoto.data) {
       return res.status(404).json({ message: 'Profile photo not found' });
     }
-    
+
     // Set content type for image response
     res.set({
       'Content-Type': coach.profilePhoto.contentType,
@@ -2715,7 +3100,7 @@ router.put('/coaches/:id/status', verifyFirebaseToken, requireRole('admin'), asy
 
     const coach = await Coach.findByIdAndUpdate(
       req.params.id,
-      { 
+      {
         isActive,
         updatedAt: new Date()
       },
@@ -2729,7 +3114,7 @@ router.put('/coaches/:id/status', verifyFirebaseToken, requireRole('admin'), asy
     // Log the status change
     console.log(`Admin ${req.user.email} ${isActive ? 'activated' : 'deactivated'} coach ${coach.fullName} (${coach.user?.email}). Reason: ${reason || 'No reason provided'}`);
 
-    res.json({ 
+    res.json({
       message: `Coach ${isActive ? 'activated' : 'deactivated'} successfully`,
       coach: {
         id: coach._id,
@@ -2759,8 +3144,8 @@ router.get('/coaches/stats', verifyFirebaseToken, requireRole('admin'), async (r
     // Recent registrations (last 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const recentRegistrations = await Coach.countDocuments({ 
-      createdAt: { $gte: thirtyDaysAgo } 
+    const recentRegistrations = await Coach.countDocuments({
+      createdAt: { $gte: thirtyDaysAgo }
     });
 
     res.json({
@@ -2795,18 +3180,18 @@ router.post('/tournaments/status-sync', verifyFirebaseToken, requireRole('admin'
 router.get('/clubs', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
   try {
     const { status, district, search } = req.query;
-    
+
     let filter = {};
-    
+
     // Apply filters
     if (status) {
       filter.status = status;
     }
-    
+
     if (district) {
       filter.district = district;
     }
-    
+
     if (search) {
       filter.$or = [
         { clubName: new RegExp(search, 'i') },
@@ -2845,19 +3230,19 @@ router.get('/clubs', verifyFirebaseToken, requireRole('admin'), async (req, res)
         logoUrl: club.logoUrl || `/api/clubs/${club._id}/logo`,
         proofUrl: club.proof ? `/api/clubs/${club._id}/proof` : null
       };
-      
+
       // Add base64 logo data if available
       if (club.logo && club.logo.data) {
         const base64Logo = club.logo.data.toString('base64');
         transformedClub.logoData = `data:${club.logo.contentType || 'image/png'};base64,${base64Logo}`;
       }
-      
+
       // Add base64 proof data if available
       if (club.proof && club.proof.data) {
         const base64Proof = club.proof.data.toString('base64');
         transformedClub.proofData = `data:${club.proof.contentType || 'application/pdf'};base64,${base64Proof}`;
       }
-      
+
       return transformedClub;
     });
 

@@ -306,27 +306,14 @@
       </div>
     </div>
 
-    <!-- Generate Fixtures Modal -->
-    <div v-if="showGenerateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div class="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="p-4 border-b flex justify-between items-center">
-          <h3 class="text-lg font-semibold text-gray-900">Advanced Fixture Generation</h3>
-          <button @click="closeGenerateModal" class="text-gray-400 hover:text-gray-600">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-          </button>
-        </div>
-        <div class="p-6">
-          <AdvancedFixtureGenerator 
-            v-if="currentTournament"
-            :tournament="currentTournament"
-            @close="closeGenerateModal"
-            @success="handleFixtureSuccess"
-          />
-        </div>
-      </div>
-    </div>
+    <!-- V3 Fixture Wizard -->
+    <FixtureWizard
+      :show="showGenerateModal"
+      :tournament="currentTournament"
+      :teams="currentTournament?.participants || []"
+      @close="closeGenerateModal"
+      @generated="handleFixtureSuccess"
+    />
 
     <!-- Seed Knockout Modal -->
     <SeedKnockoutModal
@@ -505,7 +492,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import api from '../../utils/api.js'
-import AdvancedFixtureGenerator from './AdvancedFixtureGenerator.vue'
+import FixtureWizard from './FixtureWizard.vue'
 import SeedKnockoutModal from './SeedKnockoutModal.vue'
 
 const tournaments = ref([])
@@ -520,14 +507,10 @@ const selectedTournament = ref(null)
 const showDetailsModal = ref(false)
 const registrations = ref([])
 
-// Generate Fixtures state
+// V3 Fixture Wizard state (old modal removed)
 const showGenerateModal = ref(false)
 const showSeedKnockoutModal = ref(false)
 const currentTournament = ref(null)
-const gen = ref({ doubleRoundRobin: false, respectRoundOrder: true, groups: 2, qualifyPerGroup: 2 })
-const genLoading = ref(false)
-const genError = ref('')
-const genDiag = ref(null)
 const pendingGroupCount = ref(0)
 
 const newTournament = ref({
@@ -641,9 +624,6 @@ const createTournament = async () => {
 
 const openGenerateModal = (t) => {
   currentTournament.value = t
-  gen.value = { doubleRoundRobin: false, respectRoundOrder: true, groups: 2, qualifyPerGroup: 2 }
-  genError.value = ''
-  genDiag.value = null
   showGenerateModal.value = true
 }
 
@@ -661,23 +641,6 @@ const handleFixtureSuccess = async (result) => {
     // Refresh details if we're viewing the tournament
     const updated = tournaments.value.find(t => t._id === selectedTournament.value._id)
     if (updated) selectedTournament.value = updated
-  }
-}
-const generateNow = async () => {
-  if (!currentTournament.value) return
-  genLoading.value = true; genError.value = ''; genDiag.value = null
-  try {
-    const body = { ...gen.value }
-    // Use V2 endpoint with time slot support
-    const { data } = await api.post(`/admin/tournaments/${currentTournament.value._id}/fixtures/generate-v2`, body)
-    showGenerateModal.value = false
-    await fetchTournaments()
-  } catch (e) {
-    genError.value = e?.response?.data?.message || 'Failed to generate fixtures'
-    const diag = e?.response?.data?.diagnostics
-    if (diag) genDiag.value = diag
-  } finally {
-    genLoading.value = false
   }
 }
 

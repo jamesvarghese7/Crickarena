@@ -13,10 +13,27 @@
       </button>
     </div>
 
+    <!-- Filter Buttons -->
+    <div class="flex flex-wrap gap-2 mb-6">
+      <button
+        v-for="filter in filters"
+        :key="filter.key"
+        @click="activeFilter = filter.key"
+        :class="[
+          'px-4 py-2 text-sm font-medium rounded-full transition-colors',
+          activeFilter === filter.key
+            ? 'bg-blue-600 text-white shadow-sm'
+            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+        ]"
+      >
+        {{ filter.label }} ({{ filter.count }})
+      </button>
+    </div>
+
     <!-- Sessions List -->
-    <div v-if="sessions.length > 0" class="space-y-4">
+    <div v-if="filteredSessions.length > 0" class="space-y-4">
       <div 
-        v-for="session in sessions" 
+        v-for="session in filteredSessions" 
         :key="session._id"
         class="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow"
       >
@@ -28,10 +45,12 @@
           <span 
             :class="[
               'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-              isUpcoming(session.date) ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+              getSessionStatus(session.date) === 'today' ? 'bg-yellow-100 text-yellow-800' :
+              getSessionStatus(session.date) === 'upcoming' ? 'bg-blue-100 text-blue-800' :
+              'bg-gray-100 text-gray-800'
             ]"
           >
-            {{ isUpcoming(session.date) ? 'Upcoming' : 'Completed' }}
+            {{ getSessionStatusLabel(session.date) }}
           </span>
         </div>
 
@@ -99,9 +118,9 @@
       <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
       </svg>
-      <h3 class="mt-2 text-sm font-medium text-gray-900">No scheduled sessions</h3>
-      <p class="mt-1 text-sm text-gray-500">Get started by scheduling a new training session.</p>
-      <div class="mt-6">
+      <h3 class="mt-2 text-sm font-medium text-gray-900">No sessions found</h3>
+      <p class="mt-1 text-sm text-gray-500">No sessions match the selected filter.</p>
+      <div class="mt-6" v-if="activeFilter === 'all'">
         <button 
           @click="showCreateModal = true"
           class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -379,6 +398,7 @@ const editingSessionId = ref(null);
 const dateError = ref(null);
 const selectedSession = ref(null);
 const attendanceDetails = ref([]);
+const activeFilter = ref('today');
 
 const today = computed(() => {
   const now = new Date();
@@ -399,6 +419,33 @@ const attendanceForm = ref({
 });
 
 const clubPlayers = ref([]);
+
+// Filter definitions
+const filters = computed(() => {
+  const allCount = sessions.value.length;
+  const todayCount = sessions.value.filter(session => getSessionStatus(session.date) === 'today').length;
+  const upcomingCount = sessions.value.filter(session => getSessionStatus(session.date) === 'upcoming').length;
+  const completedCount = sessions.value.filter(session => getSessionStatus(session.date) === 'completed').length;
+  
+  return [
+    { key: 'all', label: 'All Sessions', count: allCount },
+    { key: 'today', label: 'Today', count: todayCount },
+    { key: 'upcoming', label: 'Upcoming', count: upcomingCount },
+    { key: 'completed', label: 'Completed', count: completedCount }
+  ];
+});
+
+// Filtered sessions based on active filter
+const filteredSessions = computed(() => {
+  if (activeFilter.value === 'all') {
+    return sessions.value;
+  }
+  
+  return sessions.value.filter(session => {
+    const status = getSessionStatus(session.date);
+    return status === activeFilter.value;
+  });
+});
 
 // Watch for date changes to validate
 watch(() => sessionForm.value.date, (newDate) => {
@@ -456,6 +503,37 @@ async function fetchSessions() {
         attendanceInfo: { count: 5 }
       }
     ];
+  }
+}
+
+// Get session status (today, upcoming, completed)
+function getSessionStatus(dateString) {
+  if (!dateString) return 'completed';
+  
+  const sessionDate = new Date(dateString);
+  const today = new Date();
+  
+  // Set time to 00:00:00 for comparison
+  sessionDate.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+  
+  if (sessionDate.getTime() === today.getTime()) {
+    return 'today';
+  } else if (sessionDate > today) {
+    return 'upcoming';
+  } else {
+    return 'completed';
+  }
+}
+
+// Get session status label for display
+function getSessionStatusLabel(dateString) {
+  const status = getSessionStatus(dateString);
+  switch (status) {
+    case 'today': return 'Today';
+    case 'upcoming': return 'Upcoming';
+    case 'completed': return 'Completed';
+    default: return 'Completed';
   }
 }
 
@@ -560,7 +638,12 @@ async function saveAttendance() {
       attendedPlayers: attendanceForm.value.attendedPlayers
     }, { withCredentials: true });
     
-    alert(`Attendance marked for ${attendanceForm.value.attendedPlayers.length} players`);
+    // Replace alert with notification
+    if (typeof window.$notify !== 'undefined') {
+      window.$notify.success('Attendance Saved', `Attendance marked for ${attendanceForm.value.attendedPlayers.length} players`);
+    } else {
+      alert(`Attendance marked for ${attendanceForm.value.attendedPlayers.length} players`);
+    }
     
     // Close the modal and reset the form
     closeAttendanceModal();
@@ -569,7 +652,12 @@ async function saveAttendance() {
     await fetchSessions();
   } catch (error) {
     console.error('Error saving attendance:', error);
-    alert('Failed to save attendance. Please try again.');
+    // Replace alert with notification
+    if (typeof window.$notify !== 'undefined') {
+      window.$notify.error('Error', 'Failed to save attendance. Please try again.');
+    } else {
+      alert('Failed to save attendance. Please try again.');
+    }
   } finally {
     isSavingAttendance.value = false;
   }
@@ -606,18 +694,33 @@ async function saveSession() {
     if (showEditModal.value) {
       // Update existing session
       await axios.put(`${API}/coaches/sessions/${editingSessionId.value}`, sessionForm.value, { withCredentials: true });
-      alert('Session updated successfully');
+      // Replace alert with notification
+      if (typeof window.$notify !== 'undefined') {
+        window.$notify.success('Session Updated', 'Session updated successfully');
+      } else {
+        alert('Session updated successfully');
+      }
     } else {
       // Create new session
       const response = await axios.post(`${API}/coaches/sessions`, sessionForm.value, { withCredentials: true });
-      alert('Session scheduled successfully');
+      // Replace alert with notification
+      if (typeof window.$notify !== 'undefined') {
+        window.$notify.success('Session Scheduled', 'Session scheduled successfully');
+      } else {
+        alert('Session scheduled successfully');
+      }
     }
     
     closeModal();
     await fetchSessions();
   } catch (error) {
     console.error('Error saving session:', error);
-    alert('Failed to save session. Please try again.');
+    // Replace alert with notification
+    if (typeof window.$notify !== 'undefined') {
+      window.$notify.error('Error', 'Failed to save session. Please try again.');
+    } else {
+      alert('Failed to save session. Please try again.');
+    }
   } finally {
     isSaving.value = false;
   }

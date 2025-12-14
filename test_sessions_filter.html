@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sessions Filter Test</title>
+</head>
+<body>
+    <h1>Sessions Filter Functionality Test</h1>
+    
+    <p>To test the sessions filtering functionality:</p>
+    <ol>
+        <li>Open <a href="http://localhost:5173" target="_blank">http://localhost:5173</a></li>
+        <li>Navigate to the Coach Panel > Sessions page</li>
+        <li>You should see the filter buttons: "All Sessions", "Upcoming", "Today", "Finished"</li>
+        <li>Each filter button shows a count of sessions in that category</li>
+        <li>Click each filter to see the sessions filtered accordingly:
+            <ul>
+                <li><strong>All Sessions</strong>: Shows all 6 sessions</li>
+                <li><strong>Upcoming</strong>: Shows future sessions (including today)</li>
+                <li><strong>Today</strong>: Shows only today's sessions</li>
+                <li><strong>Finished</strong>: Shows past sessions (excluding today)</li>
+            </ul>
+        </li>
+        <li>The status badges on each session show "Upcoming" or "Completed" based on the date</li>
+    </ol>
+    
+    <h2>Expected Results:</h2>
+    <ul>
+        <li>Filter buttons are visually distinct when active (blue background)</li>
+        <li>Session counts are displayed next to each filter</li>
+        <li>Sessions are properly filtered based on their dates</li>
+        <li>Empty state message changes based on the active filter</li>
+    </ul>
+    
+    <h2>Mock Data Included:</h2>
+    <ul>
+        <li>2 upcoming sessions (2-3 days from now)</li>
+        <li>1 today's session</li>
+        <li>2 finished sessions (1 and 3 days ago)</li>
+        <li>1 tomorrow's session</li>
+    </ul>
+</body>
+</html>

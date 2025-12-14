@@ -1,16 +1,16 @@
 <template>
-  <div class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-    <div class="bg-white rounded-3xl shadow-2xl max-w-5xl w-full max-h-[95vh] overflow-hidden transform transition-all duration-300 ease-out">
+  <div class="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
+    <div class="premium-card border-2 border-green-400/30 rounded-3xl shadow-2xl max-w-5xl w-full max-h-[95vh] overflow-hidden transform transition-all duration-300 ease-out">
       <!-- Modal Header -->
-      <div class="bg-gradient-to-r from-green-600 to-emerald-600 p-6">
+      <div class="bg-gradient-to-r from-green-400/20 to-emerald-400/20 backdrop-blur-md border-b border-white/10 p-6">
         <div class="flex items-center justify-between">
           <div>
             <h2 class="text-2xl font-black text-white">Clubs in {{ district }}</h2>
-            <p class="text-green-100 mt-1">Browse cricket clubs in {{ district }} district</p>
+            <p class="text-gray-300 mt-1">Browse cricket clubs in {{ district }} district</p>
           </div>
           <button
             @click="$emit('close')"
-            class="text-white hover:text-gray-200 transition-colors p-2 rounded-full hover:bg-white/10"
+            class="text-white hover:text-gray-200 transition-colors p-2 rounded-full bg-white/10 hover:bg-white/20"
           >
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -20,13 +20,13 @@
       </div>
 
       <!-- Search Bar -->
-      <div class="p-4 border-b border-gray-100 bg-gray-50">
+      <div class="p-4 border-b border-white/10 bg-gradient-to-b from-transparent to-black/10">
         <div class="relative max-w-md mx-auto">
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Search clubs in {{ district }}..."
-            class="w-full border border-gray-200 rounded-xl px-4 py-3 pl-10 focus:ring-2 focus:ring-green-500 focus:border-transparent shadow-sm"
+            placeholder="Search clubs in district ..."
+            class="w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-3 pl-10 text-white placeholder-gray-400 focus:outline-none focus:border-green-400/50 focus:bg-white/15 transition-all"
           />
           <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -48,7 +48,7 @@
             <div
               v-for="club in filteredClubs"
               :key="club._id"
-              class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer transform hover:-translate-y-1"
+              class="group premium-card rounded-2xl border border-white/20 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer transform hover:-translate-y-1"
               @click="viewClubDetails(club)"
             >
               <div class="p-5">
@@ -63,17 +63,17 @@
                         @error="e => (e.target.style.display='none')"
                       />
                     </div>
-                    <div v-else class="w-16 h-16 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white font-bold text-xl shadow-sm">
+                    <div v-else class="w-16 h-16 rounded-xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center text-white font-bold text-xl shadow-sm border-2 border-green-400/40">
                       {{ (club.name || club.clubName)?.charAt(0)?.toUpperCase() || 'C' }}
                     </div>
                   </div>
 
                   <!-- Club Info -->
                   <div class="flex-1 min-w-0">
-                    <h3 class="font-bold text-gray-900 group-hover:text-green-700 transition-colors truncate">
+                    <h3 class="font-bold text-white group-hover:text-green-400 transition-colors truncate">
                       {{ club.name || club.clubName }}
                     </h3>
-                    <div class="flex items-center gap-1 text-sm text-gray-500 mt-1">
+                    <div class="flex items-center gap-1 text-sm text-gray-300 mt-1">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -83,13 +83,13 @@
 
                     <!-- Club Stats -->
                     <div class="flex items-center gap-3 mt-3">
-                      <div v-if="club.memberCount" class="flex items-center gap-1 text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full">
+                      <div v-if="club.memberCount" class="flex items-center gap-1 text-xs bg-green-400/20 border border-green-400/30 text-green-400 px-2 py-1 rounded-full">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                         </svg>
                         <span>{{ club.memberCount }} members</span>
                       </div>
-                      <div v-if="club.groundName" class="flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full">
+                      <div v-if="club.groundName" class="badge-verified flex items-center gap-1 text-xs px-2 py-1 rounded-full">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                         </svg>
@@ -100,13 +100,13 @@
                 </div>
 
                 <!-- Club Description -->
-                <p v-if="club.description" class="text-sm text-gray-600 mt-4 line-clamp-2 leading-relaxed">
+                <p v-if="club.description" class="text-sm text-gray-300 mt-4 line-clamp-2 leading-relaxed">
                   {{ club.description }}
                 </p>
 
                 <!-- View Details Button -->
-                <div class="mt-4 pt-3 border-t border-gray-100 flex justify-end">
-                  <div class="flex items-center text-xs text-green-600 font-semibold group-hover:text-green-700 transition-colors">
+                <div class="mt-4 pt-3 border-t border-white/10 flex justify-end">
+                  <div class="flex items-center text-xs text-green-400 font-semibold group-hover:text-green-300 transition-colors">
                     <span>View details</span>
                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>

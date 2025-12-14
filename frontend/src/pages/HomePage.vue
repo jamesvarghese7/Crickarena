@@ -1,27 +1,26 @@
 <template>
-  <div class="relative min-h-screen">
-    <!-- Animated background -->
-    <div class="absolute inset-0 -z-10 overflow-hidden">
-      <div class="absolute -top-24 -left-24 w-96 h-96 bg-gradient-to-r from-green-200 to-emerald-200 rounded-full blur-3xl opacity-30 animate-pulse"></div>
-      <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-gradient-to-r from-emerald-200 to-green-200 rounded-full blur-3xl opacity-30 animate-pulse" style="animation-delay: 1s"></div>
-      <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-green-100 to-emerald-100 rounded-full blur-2xl opacity-20 animate-bounce" style="animation-duration: 3s"></div>
-    </div>
+  <div class="relative min-h-screen bg-transparent">
+    <!-- Animated Cricket Background -->
+    <AnimatedCricketBackground />
+
+    <!-- Content Container with z-index to ensure it's above background -->
+    <div class="relative z-10">
 
     <!-- Hero Section -->
     <section class="relative overflow-hidden">
-      <div class="max-w-7xl mx-auto px-4 py-20">
+      <div class="max-w-7xl mx-auto px-4 py-20 glass-panel-hero rounded-3xl my-8">
         <div class="grid lg:grid-cols-2 gap-12 items-center">
           <!-- Left Content -->
           <div class="space-y-8">
             <div class="space-y-4">
-              <div class="inline-flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-semibold">
-                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+              <div class="inline-flex items-center gap-2 bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-sm border border-green-400/30 text-white px-4 py-2 rounded-full text-sm font-semibold">
+                <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
                 Kerala's Premier Cricket Platform
               </div>
-              <h1 class="text-5xl lg:text-7xl font-black text-gray-900 leading-tight">
-                <span class="bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">Crick</span><span class="text-gray-900">Arena</span>
+              <h1 class="text-5xl lg:text-7xl font-black leading-tight">
+                <span class="neon-gradient">CrickArena</span>
               </h1>
-              <p class="text-xl text-gray-600 leading-relaxed max-w-2xl">
+              <p class="text-xl leading-relaxed max-w-2xl">
                 Empowering Kerala's grassroots cricket community. Discover local tournaments, join neighborhood clubs, and connect with cricket lovers across God's Own Country.
               </p>
             </div>
@@ -56,17 +55,17 @@
 
             <!-- Stats -->
             <div class="grid grid-cols-3 gap-6 pt-8">
-              <div class="text-center group cursor-pointer">
-                <div class="text-3xl font-black text-green-600 group-hover:scale-110 transition-transform duration-300">{{ clubs.length }}</div>
-                <div class="text-sm text-gray-500 font-medium">Kerala Clubs</div>
+              <div class="text-center stat-card rounded-2xl p-4 cursor-pointer">
+                <div class="text-3xl font-black text-white">{{ clubs.length }}</div>
+                <div class="text-sm text-gray-300 font-medium mt-1">Kerala Clubs</div>
               </div>
-              <div class="text-center group cursor-pointer">
-                <div class="text-3xl font-black text-emerald-600 group-hover:scale-110 transition-transform duration-300">{{ upcoming.length }}</div>
-                <div class="text-sm text-gray-500 font-medium">Active Tournaments</div>
+              <div class="text-center stat-card rounded-2xl p-4 cursor-pointer">
+                <div class="text-3xl font-black text-white">{{ upcoming.length }}</div>
+                <div class="text-sm text-gray-300 font-medium mt-1">Active Tournaments</div>
               </div>
-              <div class="text-center group cursor-pointer">
-                <div class="text-3xl font-black text-green-600 group-hover:scale-110 transition-transform duration-300">{{ history.length }}</div>
-                <div class="text-sm text-gray-500 font-medium">Completed Matches</div>
+              <div class="text-center stat-card rounded-2xl p-4 cursor-pointer">
+                <div class="text-3xl font-black text-white">{{ history.length }}</div>
+                <div class="text-sm text-gray-300 font-medium mt-1">Completed Matches</div>
               </div>
             </div>
           </div>
@@ -152,16 +151,16 @@
     </section>
 
     <!-- Upcoming Fixtures -->
-    <section class="py-20 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <section class="py-20 glass-panel rounded-3xl mx-4 my-8">
       <div class="max-w-7xl mx-auto px-4">
         <!-- Section Header -->
         <div class="text-center mb-12">
-          <div class="inline-flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-semibold mb-4">
-            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+          <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-4 badge-live">
+            <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
             Live Cricket Action
           </div>
-          <h2 class="text-4xl font-black text-gray-900 mb-4">Upcoming Fixtures</h2>
-          <p class="text-xl text-gray-600 max-w-3xl mx-auto">Don't miss the exciting cricket matches happening across Kerala. Follow your favorite teams and tournaments.</p>
+          <h2 class="text-4xl font-black mb-4">Upcoming Fixtures</h2>
+          <p class="text-xl max-w-3xl mx-auto">Don't miss the exciting cricket matches happening across Kerala. Follow your favorite teams and tournaments.</p>
         </div>
 
         <!-- Empty State -->
@@ -186,23 +185,21 @@
           <div
             v-for="fx in fixtures.slice(0, 6)"
             :key="fx._id"
-            class="group relative bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-2 transition-all duration-300 cursor-pointer"
+            class="group premium-card rounded-3xl overflow-hidden hover:shadow-xl hover:-translate-y-2 transition-all duration-500 cursor-pointer"
             @click="router.push({ name: 'match-details', params: { id: fx.tournament?._id, matchId: fx._id } })"
           >
-            <!-- Background Pattern -->
-            <div class="absolute inset-0 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             
             <!-- Match Status Badge -->
             <div class="absolute top-4 right-4 z-10">
-              <div class="inline-flex items-center gap-1 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-semibold text-green-700 border border-green-200">
-                <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <div class="badge-status inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold">
+                <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                 Upcoming
               </div>
             </div>
 
             <!-- Tournament Info -->
             <div class="absolute top-4 left-4 z-10">
-              <div class="bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-medium text-gray-700 border border-gray-200">
+              <div class="bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-medium text-white border border-white/30">
                 {{ fx.tournament?.name || 'Tournament' }}
               </div>
             </div>
@@ -214,75 +211,75 @@
                 <div class="flex items-center justify-center gap-6 mb-4">
                   <!-- Home Team -->
                   <div class="flex flex-col items-center">
-                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center mb-3 border border-green-200 group-hover:scale-105 transition-transform duration-300">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-green-400/20 to-emerald-400/20 backdrop-blur-sm flex items-center justify-center mb-3 border-2 border-green-400/40 group-hover:scale-105 transition-transform duration-300">
                       <img v-if="fx.homeClub?.logoUrl" 
                            :src="fx.homeClub.logoUrl" 
                            class="w-10 h-10 rounded-lg object-cover object-center"
                            :alt="fx.homeClub?.clubName || fx.homeClub?.name || 'Home Team'"
                            @error="$event.target.style.display='none'" />
-                      <div v-if="!fx.homeClub?.logoUrl" class="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                      <div v-if="!fx.homeClub?.logoUrl" class="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">
                         {{ (fx.homeClub?.clubName || fx.homeClub?.name || 'H').charAt(0) }}
                       </div>
                     </div>
                     <div class="text-center">
-                      <div class="font-semibold text-gray-900 text-xs">{{ fx.homeClub?.clubName || fx.homeClub?.name || 'Home Team' }}</div>
+                      <div class="font-semibold text-white text-xs">{{ fx.homeClub?.clubName || fx.homeClub?.name || 'Home Team' }}</div>
                     </div>
                   </div>
 
                   <!-- VS Section -->
                   <div class="flex flex-col items-center">
-                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mb-1">
-                      <span class="text-sm font-bold text-gray-600">VS</span>
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center mb-1" style="box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);">
+                      <span class="text-sm font-bold text-gray-900">VS</span>
                     </div>
-                    <div class="text-xs text-gray-500 font-medium">{{ fx.round || 'League' }}</div>
+                    <div class="text-xs text-gray-300 font-medium">{{ fx.round || 'League' }}</div>
                   </div>
 
                   <!-- Away Team -->
-                  <div class="flex flex-col items-center">
-                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center mb-3 border border-blue-200 group-hover:scale-105 transition-transform duration-300">
+                 <div class="flex flex-col items-center">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400/20 to-indigo-400/20 backdrop-blur-sm flex items-center justify-center mb-3 border-2 border-blue-400/40 group-hover:scale-105 transition-transform duration-300">
                       <img v-if="fx.awayClub?.logoUrl" 
                            :src="fx.awayClub.logoUrl" 
                            class="w-10 h-10 rounded-lg object-cover object-center"
                            :alt="fx.awayClub?.clubName || fx.awayClub?.name || 'Away Team'"
                            @error="$event.target.style.display='none'" />
-                      <div v-if="!fx.awayClub?.logoUrl" class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                      <div v-if="!fx.awayClub?.logoUrl" class="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">
                         {{ (fx.awayClub?.clubName || fx.awayClub?.name || 'A').charAt(0) }}
                       </div>
                     </div>
                     <div class="text-center">
-                      <div class="font-semibold text-gray-900 text-xs">{{ fx.awayClub?.clubName || fx.awayClub?.name || 'Away Team' }}</div>
+                      <div class="font-semibold text-white text-xs">{{ fx.awayClub?.clubName || fx.awayClub?.name || 'Away Team' }}</div>
                     </div>
                   </div>
                 </div>
               </div>
 
               <!-- Match Details -->
-              <div class="space-y-3 mb-4">
+              <div class="space-y-3 mb-4 pt-4 border-t border-white/10">
                 <!-- Date & Time -->
-                <div class="flex items-center justify-center gap-2 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
+                <div class="flex items-center justify-center gap-2 p-3 bg-blue-400/10 backdrop-blur-sm rounded-xl border border-blue-400/30">
                   <div class="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
                     <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
                   </div>
                   <div class="text-center">
-                    <div class="font-semibold text-gray-900 text-sm">
+                    <div class="font-semibold text-white text-sm">
                       <span v-if="fx.date">{{ new Date(fx.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) }}</span>
                     </div>
-                    <div v-if="fx.time" class="text-xs text-gray-600">{{ fx.time }}</div>
+                    <div v-if="fx.time" class="text-xs text-gray-300">{{ fx.time }}</div>
                   </div>
                 </div>
                 
                 <!-- Venue -->
-                <div v-if="fx.venue" class="flex items-center justify-center gap-2 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-100">
+                <div v-if="fx.venue" class="flex items-center justify-center gap-2 p-3 bg-green-400/10 backdrop-blur-sm rounded-xl border border-green-400/30">
                   <div class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
                     <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                     </svg>
                   </div>
                   <div class="text-center">
-                    <div class="font-semibold text-gray-900 text-sm">{{ fx.venue }}</div>
-                    <div class="text-xs text-gray-600">Match Venue</div>
+                    <div class="font-semibold text-white text-sm">{{ fx.venue }}</div>
+                    <div class="text-xs text-gray-300">Match Venue</div>
                   </div>
                 </div>
               </div>
@@ -291,13 +288,13 @@
               <div class="flex gap-2">
                 <button
                   @click.stop="router.push({ name: 'tournament-details', params: { id: fx.tournament?._id } })"
-                  class="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200 transition-all duration-300"
+                  class="btn-secondary flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-300"
                 >
                   Tournament
                 </button>
                 <button
                   @click.stop="router.push({ name: 'match-details', params: { id: fx.tournament?._id, matchId: fx._id } })"
-                  class="flex-1 px-3 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg text-xs font-semibold hover:from-green-700 hover:to-emerald-700 transition-all duration-300"
+                  class="btn-primary flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-300"
                 >
                   View Match
                 </button>
@@ -310,7 +307,7 @@
         <div v-if="fixtures.length > 0" class="text-center mt-12">
           <button 
             @click="navigateToFixtures"
-            class="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-2xl font-bold text-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+            class="btn-primary inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:-translate-y-1"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -322,38 +319,47 @@
     </section>
 
     <!-- Ongoing Tournaments -->
-    <section class="py-16 bg-gray-50">
+    <section class="py-16 glass-panel rounded-3xl mx-4 my-8">
       <div class="max-w-7xl mx-auto px-4">
         <div class="flex items-center justify-between mb-6">
-          <h2 class="text-2xl font-bold text-gray-900">Ongoing Tournaments</h2>
-          <span v-if="ongoingTournaments.length" class="text-sm text-gray-500">{{ ongoingTournaments.length }} live</span>
+          <h2 class="text-2xl font-bold">Ongoing Tournaments</h2>
+          <span v-if="ongoingTournaments.length" class="text-sm text-green-400 font-semibold">{{ ongoingTournaments.length }} live</span>
         </div>
-        <div v-if="ongoingTournaments.length === 0" class="text-gray-500 text-sm">No tournaments currently in progress.</div>
+        <div v-if="ongoingTournaments.length === 0" class="text-gray-300 text-sm">No tournaments currently in progress.</div>
         <div v-else class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div
             v-for="t in ongoingTournaments"
             :key="t._id"
-            class="bg-white rounded-xl shadow border overflow-hidden hover:shadow-md transition"
+            class="premium-card rounded-3xl overflow-hidden hover:shadow-md transition-all duration-500 transform hover:-translate-y-2 cursor-pointer group"
           >
-            <div class="h-32 bg-gray-100 relative">
-              <img v-if="t.bannerUrl" :src="t.bannerUrl" class="w-full h-full object-cover" />
-              <div class="absolute top-3 left-3 inline-flex items-center gap-1 text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full font-semibold">Live</div>
+            <div class="h-32 bg-gradient-to-br from-green-400/20 to-emerald-400/20 backdrop-blur-sm relative">
+              <img v-if="t.bannerUrl" :src="t.bannerUrl" class="w-full h-full object-cover opacity-80 group-hover:scale-110 transition-transform duration-500" />
+              <div class="absolute top-3 left-3 badge-live inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full font-semibold">
+                <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                Live
+              </div>
             </div>
             <div class="p-4">
               <div class="flex items-start justify-between">
-                <h3 class="font-bold text-gray-900 line-clamp-1">{{ t.name }}</h3>
-                <span class="text-xs text-gray-500">{{ t.format }}</span>
+                <h3 class="font-bold text-white line-clamp-1 group-hover:text-green-400 transition-colors">{{ t.name }}</h3>
+                <span class="text-xs text-gray-300">{{ t.format }}</span>
               </div>
-              <div class="mt-1 text-xs text-gray-600 flex items-center gap-2">
-                <span v-if="t.district">📍 {{ t.district }}</span>
-                <span v-else-if="t.location">📍 {{ t.location }}</span>
+              <div class="mt-1 text-xs text-gray-300 flex items-center gap-2">
+                <svg class="w-3 h-3 text-green-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                </svg>
+                <span v-if="t.district">{{ t.district }}</span>
+                <span v-else-if="t.location">{{ t.location }}</span>
               </div>
-              <div class="mt-2 text-xs text-gray-600">
+              <div class="mt-2 text-xs text-gray-300 flex items-center gap-2">
+                <svg class="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
                 <span v-if="t.startDate || t.endDate">{{ formatDateRange(t.startDate, t.endDate) }}</span>
               </div>
-              <div class="mt-3 flex items-center justify-between">
-                <RouterLink :to="{ name: 'tournament-details', params: { id: t._id } }" class="text-sm text-emerald-700 hover:underline font-semibold">View details</RouterLink>
-                <button class="text-xs text-gray-500 hover:text-gray-700" @click="router.push({ name: 'tournament-details', params: { id: t._id } })">Open</button>
+              <div class="mt-3 flex items-center justify-between pt-3 border-t border-white/10">
+                <RouterLink :to="{ name: 'tournament-details', params: { id: t._id } }" class="text-sm text-green-400 hover:text-green-300 font-semibold transition-colors">View details</RouterLink>
+                <button class="text-xs text-green-400 hover:text-green-300 font-semibold" @click="router.push({ name: 'tournament-details', params: { id: t._id } })">Open</button>
               </div>
             </div>
           </div>
@@ -362,27 +368,27 @@
     </section>
 
     <!-- Features Section -->
-    <section class="py-20 bg-gradient-to-b from-white to-gray-50">
+    <section class="py-20 glass-panel rounded-3xl mx-4 my-8">
       <div class="max-w-7xl mx-auto px-4">
         <div class="text-center mb-16">
-          <h2 class="text-4xl font-black text-gray-900 mb-4">Kerala's Grassroots Cricket Hub</h2>
-          <p class="text-xl text-gray-600 max-w-3xl mx-auto">From Thiruvananthapuram to Kasaragod, connecting cricket enthusiasts across Kerala's villages, towns, and cities.</p>
+          <h2 class="text-4xl font-black mb-4">Kerala's Grassroots Cricket Hub</h2>
+          <p class="text-xl max-w-3xl mx-auto">From Thiruvananthapuram to Kasaragod, connecting cricket enthusiasts across Kerala's villages, towns, and cities.</p>
         </div>
 
-        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <!-- Feature Cards -->
-          <div class="group relative bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 cursor-pointer" @click="goToTournaments">
-            <div class="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl opacity-0 group-hover:opacity-10 transition-opacity duration-500"></div>
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <!-- Feature Card 1: Local Tournaments -->
+          <div class="group premium-card rounded-3xl p-8 transition-all duration-500 transform hover:-translate-y-2 cursor-pointer" @click="goToTournaments">
             <div class="relative z-10">
-              <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <!-- Icon with Neon Gradient -->
+              <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 icon-glow">
+                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <rect x="3" y="4" width="18" height="18" rx="2"/>
                   <path d="M16 2v4M8 2v4M3 10h18"/>
                 </svg>
               </div>
-              <h3 class="text-xl font-bold text-gray-900 mb-4">Local Tournaments</h3>
-              <p class="text-gray-600 text-sm leading-relaxed">Join district-level tournaments and village championships across Kerala.</p>
-              <button type="button" @click="goToTournaments" class="mt-4 flex items-center text-blue-600 font-semibold text-sm group-hover:translate-x-2 transition-transform duration-300">
+              <h3 class="text-xl font-bold text-white mb-4">Local Tournaments</h3>
+              <p class="text-gray-300 text-sm leading-relaxed mb-6">Join district-level tournaments and village championships across Kerala.</p>
+              <button type="button" @click="goToTournaments" class="flex items-center text-blue-400 font-semibold text-sm group-hover:translate-x-2 transition-transform duration-300">
                 <span>Find tournaments</span>
                 <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path d="M9 18l6-6-6-6"/>
@@ -391,17 +397,17 @@
             </div>
           </div>
 
-          <div class="group relative bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 cursor-pointer" @click="goToClubs">
-            <div class="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl opacity-0 group-hover:opacity-10 transition-opacity duration-500"></div>
+          <!-- Feature Card 2: Club Management -->
+          <div class="group premium-card rounded-3xl p-8 transition-all duration-500 transform hover:-translate-y-2 cursor-pointer" @click="goToClubs">
             <div class="relative z-10">
-              <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 icon-glow">
+                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path d="M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m9-4.13a4 4 0 1 0-8 0 4 4 0 0 0 8 0z"/>
                 </svg>
               </div>
-              <h3 class="text-xl font-bold text-gray-900 mb-4">Club Management</h3>
-              <p class="text-gray-600 text-sm leading-relaxed">Register your club, manage players, and organize practice sessions.</p>
-              <RouterLink to="/clubs" class="mt-4 flex items-center text-green-600 font-semibold text-sm group-hover:translate-x-2 transition-transform duration-300">
+              <h3 class="text-xl font-bold text-white mb-4">Club Management</h3>
+              <p class="text-gray-300 text-sm leading-relaxed mb-6">Register your club, manage players, and organize practice sessions.</p>
+              <RouterLink to="/clubs" class="flex items-center text-green-400 font-semibold text-sm group-hover:translate-x-2 transition-transform duration-300">
                 <span>Manage club</span>
                 <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path d="M9 18l6-6-6-6"/>
@@ -410,17 +416,17 @@
             </div>
           </div>
 
-          <div class="group relative bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 cursor-pointer">
-            <div class="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-600 rounded-3xl opacity-0 group-hover:opacity-10 transition-opacity duration-500"></div>
+          <!-- Feature Card 3: Live Scoring -->
+          <div class="group premium-card rounded-3xl p-8 transition-all duration-500 transform hover:-translate-y-2 cursor-pointer">
             <div class="relative z-10">
-              <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <div class="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 icon-glow">
+                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path d="M15 10l4.5-4.5L21 7l-6 6-4.5-4.5L9 10l6 6 6-6z"/>
                 </svg>
               </div>
-              <h3 class="text-xl font-bold text-gray-900 mb-4">Live Scoring</h3>
-              <p class="text-gray-600 text-sm leading-relaxed">Real-time match updates from grounds across Kerala districts.</p>
-              <div class="mt-4 flex items-center text-purple-600 font-semibold text-sm group-hover:translate-x-2 transition-transform duration-300">
+              <h3 class="text-xl font-bold text-white mb-4">Live Scoring</h3>
+              <p class="text-gray-300 text-sm leading-relaxed mb-6">Real-time match updates from grounds across Kerala districts.</p>
+              <div class="flex items-center text-purple-400 font-semibold text-sm group-hover:translate-x-2 transition-transform duration-300">
                 <span>Follow live</span>
                 <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path d="M9 18l6-6-6-6"/>
@@ -429,17 +435,17 @@
             </div>
           </div>
 
-          <div class="group relative bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 cursor-pointer" @click="goToClubs">
-            <div class="absolute inset-0 bg-gradient-to-br from-orange-500 to-red-600 rounded-3xl opacity-0 group-hover:opacity-10 transition-opacity duration-500"></div>
+          <!-- Feature Card 4: Player Network -->
+          <div class="group premium-card rounded-3xl p-8 transition-all duration-500 transform hover:-translate-y-2 cursor-pointer" @click="goToClubs">
             <div class="relative z-10">
-              <div class="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <div class="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 icon-glow">
+                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                 </svg>
               </div>
-              <h3 class="text-xl font-bold text-gray-900 mb-4">Player Network</h3>
-              <p class="text-gray-600 text-sm leading-relaxed">Connect with players, track statistics, and build your cricket profile.</p>
-              <button type="button" @click="goToClubs" class="mt-4 flex items-center text-orange-600 font-semibold text-sm group-hover:translate-x-2 transition-transform duration-300">
+              <h3 class="text-xl font-bold text-white mb-4">Player Network</h3>
+              <p class="text-gray-300 text-sm leading-relaxed mb-6">Connect with players, track statistics, and build your cricket profile.</p>
+              <button type="button" @click="goToClubs" class="flex items-center text-orange-400 font-semibold text-sm group-hover:translate-x-2 transition-transform duration-300">
                 <span>Join network</span>
                 <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path d="M9 18l6-6-6-6"/>
@@ -452,7 +458,7 @@
     </section>
 
     <!-- For Players Section -->
-    <section class="py-20 bg-gradient-to-r from-orange-50 to-red-50">
+    <section class="py-20 glass-panel rounded-3xl mx-4 my-8">
       <div class="max-w-7xl mx-auto px-4">
         <div class="text-center mb-12">
           <h2 class="text-4xl font-black text-gray-900 mb-4">For Cricket Players</h2>
@@ -521,34 +527,42 @@
     </section>
 
     <!-- Kerala Districts Section -->
-    <section class="py-20 bg-gradient-to-br from-green-50 to-emerald-50">
+    <section class="py-20 glass-panel rounded-3xl mx-4 my-8">
       <div class="max-w-7xl mx-auto px-4">
         <div class="text-center mb-16">
-          <div class="inline-flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-semibold mb-4">
-            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+          <div class="inline-flex items-center gap-2 bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-sm border border-green-400/30 text-white px-4 py-2 rounded-full text-sm font-semibold mb-4">
+            <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
             God's Own Country
           </div>
-          <h2 class="text-4xl font-black text-gray-900 mb-4">Cricket Across Kerala</h2>
-          <p class="text-xl text-gray-600 max-w-3xl mx-auto">Discover the vibrant cricket culture spanning all 14 districts of Kerala, from Thiruvananthapuram to Kasaragod</p>
+          <h2 class="text-4xl font-black mb-4">Cricket Across Kerala</h2>
+          <p class="text-xl max-w-3xl mx-auto">Discover the vibrant cricket culture spanning all 14 districts of Kerala, from Thiruvananthapuram to Kasaragod</p>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
           <div 
             v-for="(district, index) in keralaDistricts" 
             :key="district" 
-            class="group relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 cursor-pointer text-center border border-green-100 hover:border-green-300"
+            class="group relative premium-card rounded-2xl p-6 transition-all duration-500 transform hover:-translate-y-2 cursor-pointer text-center"
             :style="{ transitionDelay: (index * 50) + 'ms' }"
             @click="goToDistrictClubs(district)"
           >
-            <div class="absolute -top-3 -right-3 w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">
+            <!-- Number Badge with Neon Glow -->
+            <div class="absolute -top-3 -right-3 w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center text-gray-900 text-xs font-bold shadow-lg group-hover:scale-110 transition-transform duration-300"
+                 style="box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);">
               {{ index + 1 }}
             </div>
-            <div class="w-16 h-16 bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 border-2 border-green-200">
-              <span class="text-green-700 font-bold text-xl">{{ district.charAt(0) }}</span>
+            
+            <!-- Letter Icon with Glass Effect -->
+            <div class="w-16 h-16 bg-gradient-to-br from-green-400/20 to-emerald-400/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 border-2 border-green-400/40 group-hover:border-green-400 group-hover:shadow-[0_0_20px_rgba(0,255,136,0.3)]">
+              <span class="text-white font-bold text-2xl">{{ district.charAt(0) }}</span>
             </div>
-            <h3 class="font-bold text-gray-900 mb-2 group-hover:text-green-700 transition-colors">{{ district }}</h3>
-            <div class="flex items-center justify-center gap-1 text-xs text-gray-500 mt-2">
-              <span class="w-2 h-2 bg-green-400 rounded-full"></span>
+            
+            <!-- District Name -->
+            <h3 class="font-bold text-white mb-2 group-hover:text-green-400 transition-colors">{{ district }}</h3>
+            
+            <!-- Active Clubs Indicator -->
+            <div class="flex items-center justify-center gap-1 text-xs text-gray-300 mt-2">
+              <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
               <span>Active Clubs</span>
             </div>
           </div>
@@ -557,7 +571,7 @@
         <div class="text-center mt-12">
           <button 
             @click="goToClubs" 
-            class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-bold text-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+            class="btn-primary inline-flex items-center px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:-translate-y-1"
           >
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -569,40 +583,63 @@
     </section>
 
     <!-- Accepted Clubs Section -->
-    <section class="py-20">
+    <section class="py-20 glass-panel rounded-3xl mx-4 my-8">
       <div class="max-w-7xl mx-auto px-4">
         <div class="flex items-center justify-between mb-8">
-          <h2 class="text-4xl font-black text-gray-900"> Clubs</h2>
-          <span class="text-sm text-gray-500" v-if="clubs.length">{{ clubs.length }} clubs</span>
+          <h2 class="text-4xl font-black">Clubs</h2>
+          <span class="text-sm text-green-400 font-semibold" v-if="clubs.length">{{ clubs.length }} clubs</span>
         </div>
 
-        <div v-if="loading" class="text-center text-gray-500">Loading clubs...</div>
+        <div v-if="loading" class="text-center text-gray-300">Loading clubs...</div>
         <div v-else>
           <div v-if="clubs.length" class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            <div v-for="club in clubs" :key="club.id || club._id" class="bg-white rounded-2xl overflow-hidden shadow hover:shadow-lg transition">
-              <div class="h-28 bg-gray-50 flex items-center justify-center">
-                <img v-if="club.logoUrl" :src="club.logoUrl" alt="Club Logo" class="h-20 w-20 rounded-full object-cover shadow" />
-                <div v-else class="h-20 w-20 rounded-full bg-green-100 text-green-700 flex items-center justify-center font-bold text-2xl">
+            <div v-for="club in clubs" :key="club.id || club._id" class="premium-card rounded-3xl overflow-hidden transition-all duration-500 transform hover:-translate-y-2 cursor-pointer group">
+              <!-- Club Logo Section -->
+              <div class="h-28 bg-gradient-to-br from-green-400/10 to-emerald-400/10 backdrop-blur-sm flex items-center justify-center border-b border-white/10">
+                <img v-if="club.logoUrl" :src="club.logoUrl" alt="Club Logo" class="h-20 w-20 rounded-full object-cover shadow-lg ring-2 ring-green-400/40 group-hover:ring-green-400 transition-all" />
+                <div v-else class="h-20 w-20 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center font-bold text-3xl text-white shadow-lg">
                   {{ (club.clubName || club.name || 'C').charAt(0) }}
                 </div>
               </div>
+              
+              <!-- Club Info Section -->
               <div class="p-5">
-                <div class="mb-2">
-                  <h3 class="font-bold text-gray-900 leading-tight">{{ club.clubName || club.name }}</h3>
-                  <p class="text-xs text-gray-500">
+                <div class="mb-3">
+                  <h3 class="font-bold text-white leading-tight group-hover:text-green-400 transition-colors line-clamp-2">{{ club.clubName || club.name }}</h3>
+                  <p class="text-xs text-gray-300 mt-1">
                     <span v-if="club.city">{{ club.city }}, </span>{{ club.district }}
                   </p>
                 </div>
-                <p v-if="club.description" class="text-sm text-gray-600 line-clamp-2 mb-3">{{ club.description }}</p>
-                <div class="flex items-center justify-between text-xs text-gray-500">
-                  <span v-if="club.memberCount">👥 {{ club.memberCount }}</span>
-                  <span v-if="club.groundName">🏟️ {{ club.groundName }}</span>
-                  <span class="ml-auto inline-flex items-center gap-1 text-green-700 bg-green-100 px-2 py-0.5 rounded-full">● Verified</span>
+                
+                <p v-if="club.description" class="text-sm text-gray-300 line-clamp-2 mb-3">{{ club.description }}</p>
+                
+                <!-- Stats & Badge -->
+                <div class="flex items-center justify-between text-xs">
+                  <div class="flex items-center gap-3 text-gray-300">
+                    <span v-if="club.memberCount" class="flex items-center gap-1">
+                      <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m4-6.13a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/>
+                      </svg>
+                      {{ club.memberCount }}
+                    </span>
+                    <span v-if="club.groundName" class="flex items-center gap-1 truncate">
+                      <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                      </svg>
+                      <span class="truncate">{{ club.groundName }}</span>
+                    </span>
+                  </div>
+                  <span class="badge-verified inline-flex items-center gap-1 px-2 py-0.5 rounded-full flex-shrink-0">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    Verified
+                  </span>
                 </div>
               </div>
             </div>
           </div>
-          <div v-else class="text-center text-gray-500">No approved clubs yet.</div>
+          <div v-else class="text-center text-gray-300">No approved clubs yet.</div>
         </div>
       </div>
     </section>
@@ -675,10 +712,10 @@
     />
 
     <!-- CTA Section -->
-    <section class="py-20 bg-gradient-to-r from-green-600 to-emerald-600">
-      <div class="max-w-4xl mx-auto px-4 text-center text-white">
-        <h2 class="text-4xl font-black mb-6">Ready to Join Kerala's Cricket Community?</h2>
-        <p class="text-xl mb-8 opacity-90">Whether you're a player, club manager, or cricket enthusiast, CrickArena is your gateway to Kerala's vibrant cricket ecosystem.</p>
+    <section class="py-20 glass-panel-strong rounded-3xl mx-4 my-8">
+      <div class="max-w-4xl mx-auto px-4 text-center">
+        <h2 class="text-4xl font-black mb-6 text-gray-900">Ready to Join Kerala's Cricket Community?</h2>
+        <p class="text-xl mb-8 text-gray-700">Whether you're a player, club manager, or cricket enthusiast, CrickArena is your gateway to Kerala's vibrant cricket ecosystem.</p>
         
         <div class="flex flex-wrap justify-center gap-4">
           <template v-if="!auth.user">
@@ -723,7 +760,7 @@
     </section>
 
     <!-- Footer -->
-    <footer class="py-12 bg-gray-900 text-white">
+    <footer class="py-12 glass-panel-dark text-white rounded-t-3xl mx-4 mt-8">
       <div class="max-w-7xl mx-auto px-4">
         <div class="grid md:grid-cols-5 gap-8 mb-8">
           <div>
@@ -779,7 +816,9 @@
         </div>
       </div>
     </footer>
-  </div>
+
+    </div><!-- Close content container z-10 -->
+  </div><!-- Close main container -->
 </template>
 
 <script setup>
@@ -789,6 +828,7 @@ import { useAuthStore } from '../store/auth';
 import TournamentList from '../components/TournamentList.vue';
 import TournamentHistory from '../components/TournamentHistory.vue';
 import DistrictClubsModal from '../components/DistrictClubsModal.vue';
+import AnimatedCricketBackground from '../components/AnimatedCricketBackground.vue';
 import { useRouter } from 'vue-router';
 
 const auth = useAuthStore();
@@ -929,13 +969,295 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-/* Custom animations */
+/* Premium Stadium Theme - Custom Animations */
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-10px); }
 }
 
+@keyframes neonPulse {
+  0%, 100% { 
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+  }
+  50% { 
+    box-shadow: 0 0 40px rgba(0, 255, 136, 0.6);
+  }
+}
+
+@keyframes borderPulse {
+  0%, 100% {
+    border-color: rgba(0, 255, 136, 0.3);
+  }
+  50% {
+    border-color: rgba(0, 255, 136, 0.8);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.3),
+                 0 0 20px rgba(0, 255, 136, 0.2),
+                 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(0, 255, 136, 0.5),
+                 0 0 30px rgba(0, 255, 136, 0.3),
+                 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+}
+
 .animate-float {
   animation: float 3s ease-in-out infinite;
+}
+
+/* Enhanced Glassmorphism Panel Styles */
+:deep(.glass-panel) {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(15px) saturate(200%);
+  -webkit-backdrop-filter: blur(15px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-top: 2px solid rgba(0, 255, 136, 0.3);
+  box-shadow: 
+    0 10px 40px rgba(0, 0, 0, 0.2),
+    0 0 1px rgba(0, 255, 136, 0.5);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:deep(.glass-panel-strong) {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px) saturate(200%);
+  -webkit-backdrop-filter: blur(20px) saturate(200%);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 3px solid rgba(0, 255, 136, 0.5);
+  box-shadow: 
+    0 12px 50px rgba(0, 0, 0, 0.25),
+    0 0 2px rgba(0, 255, 136, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+:deep(.glass-panel-dark) {
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+:deep(.glass-panel-hero) {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 0 2px rgba(0, 212, 255, 0.3);
+}
+
+/* Enhanced hover effects */
+:deep(.glass-panel:hover) {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(0, 255, 136, 0.6);
+  transform: translateY(-4px);
+  box-shadow: 
+    0 15px 50px rgba(0, 0, 0, 0.25),
+    0 0 20px rgba(0, 255, 136, 0.3);
+}
+
+/* Premium Typography */
+:deep(h1) {
+  color: white;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  text-shadow: 
+    0 0 20px rgba(0, 255, 136, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.5);
+  line-height: 1.1;
+}
+
+:deep(h2) {
+  color: white;
+  font-weight: 800;
+  text-shadow: 
+    0 0 15px rgba(255, 255, 255, 0.2),
+    0 2px 6px rgba(0, 0, 0, 0.4);
+  line-height: 1.2;
+}
+
+:deep(h3) {
+  color: white;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+:deep(p) {
+  color: #e5e7eb;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  line-height: 1.7;
+}
+
+/* Neon gradient text */
+:deep(.neon-gradient) {
+  background: linear-gradient(135deg, #00ff88 0%, #00d4ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: glow 3s ease-in-out infinite;
+}
+
+/* Premium Buttons */
+:deep(.btn-primary) {
+  background: linear-gradient(135deg, #00ff88, #00d4ff);
+  color: #0f172a;
+  font-weight: 700;
+  border: none;
+  box-shadow: 
+    0 4px 20px rgba(0, 255, 136, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+:deep(.btn-primary:hover) {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 30px rgba(0, 255, 136, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+:deep(.btn-secondary) {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(0, 255, 136, 0.5);
+  color: white;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+:deep(.btn-secondary:hover) {
+  border-color: #00ff88;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+}
+
+/* Neon Badges */
+:deep(.badge-live) {
+  background: linear-gradient(135deg, #ff0000, #ff6b00);
+  animation: neonPulse 1.5s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
+}
+
+:deep(.badge-verified) {
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid #10b981;
+  color: #00ff88;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+:deep(.badge-status) {
+  background: rgba(0, 212, 255, 0.2);
+  border: 1px solid #00d4ff;
+  color: #00d4ff;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+}
+
+/* Enhanced Card Styles */
+:deep(.premium-card) {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:deep(.premium-card:hover) {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(0, 255, 136, 0.6);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.3),
+    0 0 20px rgba(0, 255, 136, 0.3);
+}
+
+/* Icon glow effects */
+:deep(.icon-glow) {
+  filter: drop-shadow(0 0 8px rgba(0, 255, 136, 0.4));
+  transition: filter 0.3s ease;
+}
+
+:deep(.icon-glow:hover) {
+  filter: drop-shadow(0 0 15px rgba(0, 255, 136, 0.7));
+}
+
+/* Stats cards */
+:deep(.stat-card) {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+:deep(.stat-card:hover) {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(0, 255, 136, 0.7);
+  box-shadow: 
+    0 8px 30px rgba(0, 0, 0, 0.3),
+    0 0 15px rgba(0, 255, 136, 0.3);
+  transform: scale(1.05);
+}
+
+/* Browser fallback */
+@supports not (backdrop-filter: blur(10px)) {
+  :deep(.glass-panel) {
+    background: rgba(255, 255, 255, 0.9);
+  }
+  
+  :deep(.glass-panel-strong) {
+    background: rgba(255, 255, 255, 0.95);
+  }
+  
+  :deep(.glass-panel-dark) {
+    background: rgba(0, 0, 0, 0.8);
+  }
+  
+  :deep(.glass-panel-hero) {
+    background: rgba(255, 255, 255, 0.85);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  :deep(.glass-panel) {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  
+  :deep(h1) {
+    font-size: 2.5rem;
+  }
+  
+  :deep(h2) {
+    font-size: 2rem;
+  }
 }
 </style>

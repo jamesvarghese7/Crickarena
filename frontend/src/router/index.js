@@ -83,9 +83,9 @@ const routes = [
   { path: '/clubs/:id', name: 'club-details', component: ClubDetails, props: true },
   { path: '/club-registration', name: 'club-registration', component: ClubRegistration, meta: { requiresAuth: true, requiresClubManager: true } },
   // Club Manager panel layout with nested routes
-  { 
-    path: '/club-manager', 
-    component: ClubManagerPanel, 
+  {
+    path: '/club-manager',
+    component: ClubManagerPanel,
     meta: { requiresAuth: true, requiresClubManager: true },
     children: [
       { path: '', name: 'club-manager', component: ClubManagerOverview },
@@ -99,9 +99,9 @@ const routes = [
     ]
   },
   // Admin panel layout with nested routes
-  { 
-    path: '/admin', 
-    component: AdminPanel, 
+  {
+    path: '/admin',
+    component: AdminPanel,
     meta: { requiresAuth: true, requiresAdmin: true },
     children: [
       { path: '', name: 'admin', component: AdminOverview },
@@ -129,16 +129,16 @@ const routes = [
   { path: '/tournaments/:id/matches/:matchId', name: 'match-details', component: MatchDetails, props: true },
   // Admin match editor
   { path: '/admin/tournaments/:id/matches/:matchId', name: 'admin-match-editor', component: AdminMatchEditor, meta: { requiresAuth: true, requiresAdmin: true }, props: true },
-  
+
   // Player routes
   { path: '/player/register', name: 'player-registration', component: PlayerRegistration, meta: { requiresAuth: true } },
   // Alias to support older links/components pointing to '/player/registration'
   { path: '/player/registration', redirect: { name: 'player-registration' } },
   { path: '/player/dashboard', name: 'player-dashboard', component: PlayerDashboard, meta: { requiresAuth: true, requiresPlayer: true } },
   // Player panel layout with nested routes
-  { 
-    path: '/player-panel', 
-    component: PlayerPanel, 
+  {
+    path: '/player-panel',
+    component: PlayerPanel,
     meta: { requiresAuth: true, requiresPlayer: true },
     children: [
       { path: '', name: 'player-panel', component: PlayerPanelDashboard },
@@ -151,16 +151,16 @@ const routes = [
       { path: 'profile', name: 'player-panel-profile', component: PlayerProfile }
     ]
   },
-  
+
   // Coach routes
   { path: '/coach/register', name: 'coach-registration', component: CoachRegistration, meta: { requiresAuth: true } },
   // Alias to support older links/components pointing to '/coach/registration'
   { path: '/coach/registration', redirect: { name: 'coach-registration' } },
   { path: '/coach/dashboard', name: 'coach-dashboard', component: CoachDashboard, meta: { requiresAuth: true, requiresCoach: true } },
   // Coach panel layout with nested routes
-  { 
-    path: '/coach-panel', 
-    component: CoachPanel, 
+  {
+    path: '/coach-panel',
+    component: CoachPanel,
     meta: { requiresAuth: true, requiresCoach: true },
     children: [
       { path: '', name: 'coach-panel', component: CoachOverview },
@@ -177,7 +177,7 @@ const routes = [
       { path: 'profile/edit', name: 'coach-panel-edit-profile', component: CoachEditProfile }
     ]
   },
-  
+
   { path: '/login', name: 'login', component: Login },
   { path: '/register', name: 'register', component: Register }
 ];
@@ -191,7 +191,7 @@ router.beforeEach(async (to, from, next) => {
   if (!auth.initialized) {
     try {
       await auth.init?.();
-    } catch {}
+    } catch { }
   }
   const isAuthed = !!auth.user;
 
@@ -201,7 +201,7 @@ router.beforeEach(async (to, from, next) => {
   if (to.meta.requiresAuth && !isAuthed) {
     return next({ name: 'login' });
   }
-  
+
   // Check admin access
   if (to.meta.requiresAdmin && isAuthed) {
     if (!isAdmin) {
@@ -232,13 +232,13 @@ router.beforeEach(async (to, from, next) => {
       }
       return next({ name: 'crickhub' });
     }
-    
+
     // Check if club manager has registered and approved club
     if (to.path.startsWith('/club-manager')) {
       try {
         const response = await axios.get(`${API}/clubs/my-club`, { withCredentials: true });
         const club = response.data.club;
-        
+
         // If club exists but is not approved, redirect to club registration
         if (club && club.status !== 'approved') {
           // Show notification instead of alert
@@ -249,7 +249,7 @@ router.beforeEach(async (to, from, next) => {
           }
           return next({ name: 'club-registration' });
         }
-        
+
         // If no club exists, redirect to club registration
         if (!club) {
           // Show notification instead of alert
@@ -415,7 +415,7 @@ router.beforeEach(async (to, from, next) => {
       }
     }
   }
-  
+
   if ((to.name === 'login' || to.name === 'register') && isAuthed) {
     // Send admins to admin panel; others to CrickHub
     return next({ name: isAdmin ? 'admin' : 'crickhub' });

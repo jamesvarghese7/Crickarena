@@ -47,10 +47,10 @@ const ballSchema = new mongoose.Schema({
   overNumber: { type: Number, min: 1, required: true },
   ballNumber: { type: Number, min: 1, max: 6, required: true },
   runs: { type: Number, min: 0, max: 6, default: 0 },
-  extras: { 
-    type: String, 
-    enum: ['none', 'wide', 'no-ball', 'bye', 'leg-bye'], 
-    default: 'none' 
+  extras: {
+    type: String,
+    enum: ['none', 'wide', 'no-ball', 'bye', 'leg-bye'],
+    default: 'none'
   },
   wicket: {
     batsman: { type: String, default: '' },
@@ -84,6 +84,7 @@ const inningsSchema = new mongoose.Schema({
   fallOfWickets: [fowSchema],
   // Ball-by-ball data
   overs: [overSchema],
+  oversString: { type: String, default: '0.0' }, // Calculated overs format (e.g., "15.3")
   currentOver: { type: Number, min: 1, default: 1 },
   currentBall: { type: Number, min: 1, max: 6, default: 1 }
 }, { _id: false });
@@ -114,15 +115,23 @@ const matchSchema = new mongoose.Schema({
   date: Date, // Calendar date
   time: String, // e.g., '09:00'
   venue: String,
+  // Reserve day for rain-affected matches
+  originalDate: Date, // Original scheduled date if rescheduled
+  isReserveDay: { type: Boolean, default: false },
   // Meta
   matchCode: { type: String, default: '' }, // human-friendly ID within a tournament (e.g., T-001)
   round: { type: String, default: '' }, // e.g., 'Group', 'Quarterfinal', 'Semifinal', 'Final'
-  stage: { type: String, enum: ['Group', 'Knockout', 'Playoff', 'Final', ''], default: '' },
+  stage: { type: String, enum: ['Group', 'Knockout', 'Playoff', 'Final', 'SuperRound', 'Qualifier1', 'Qualifier2', 'Eliminator', ''], default: '' },
   group: { type: String, default: '' },
   matchType: { type: String, enum: ['League', 'Knockout', 'Final', ''], default: '' },
-  matchFormat: { type: String, enum: ['T20', 'T10', 'ODI', 'Test'], default: 'T20' },
-  oversLimit: { type: Number, default: 20, min: 5, max: 50 },
-  status: { type: String, enum: ['Scheduled', 'Live', 'Completed', 'Cancelled'], default: 'Scheduled' },
+  matchFormat: { type: String, enum: ['T20', 'T10', 'ODI', 'Test', 'Custom'], default: 'T20' },
+  oversLimit: { type: Number, default: 20, min: 1, max: 100 },
+  // Cricket rule toggles (per-match configuration)
+  dlsEnabled: { type: Boolean, default: true },       // DLS method applicable
+  superOverEnabled: { type: Boolean, default: true }, // Super over for ties
+  freeHitOnNoBall: { type: Boolean, default: true },  // Free hit after no-ball
+  hasReserveDay: { type: Boolean, default: false },   // Has reserve day scheduled
+  status: { type: String, enum: ['Scheduled', 'Live', 'Completed', 'Cancelled', 'Abandoned', 'Interrupted'], default: 'Scheduled' },
   finalized: { type: Boolean, default: false },
   // Toss and innings
   toss: {
@@ -131,6 +140,26 @@ const matchSchema = new mongoose.Schema({
   },
   inningsOrder: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Club' }],
   innings: [inningsSchema], // usually 2 entries
+
+  // === DLS (Duckworth-Lewis-Stern) ===
+  dlsApplied: { type: Boolean, default: false },
+  dlsTarget: { type: Number }, // Revised target after rain
+  dlsOvers: { type: Number },  // Revised overs after rain
+  dlsParScore: { type: Number }, // Par score at the point of interruption
+
+  // === Super Over ===
+  superOver: {
+    played: { type: Boolean, default: false },
+    // Each team bats one over
+    homeClubRuns: { type: Number, default: 0 },
+    homeClubWickets: { type: Number, default: 0, max: 2 },
+    awayClubRuns: { type: Number, default: 0 },
+    awayClubWickets: { type: Number, default: 0, max: 2 },
+    winner: { type: mongoose.Schema.Types.ObjectId, ref: 'Club' },
+    // For multiple super overs (rare case like 2019 WC final)
+    count: { type: Number, default: 0 }
+  },
+
   // Summary/Highlights
   summary: {
     topScorer: { type: String, default: '' },
@@ -143,6 +172,8 @@ const matchSchema = new mongoose.Schema({
     winner: { type: mongoose.Schema.Types.ObjectId, ref: 'Club' },
     isTie: { type: Boolean, default: false },
     isNoResult: { type: Boolean, default: false },
+    isSuperOverWin: { type: Boolean, default: false }, // Win via super over
+    isDLSWin: { type: Boolean, default: false }, // Win via DLS
     margin: {
       runs: { type: Number, default: 0 },
       wickets: { type: Number, default: 0 }

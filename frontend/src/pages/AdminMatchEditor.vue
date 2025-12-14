@@ -1,1620 +1,1405 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
     <!-- Header -->
-    <div class="bg-white border-b border-gray-200 shadow-sm">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <header class="bg-white/10 backdrop-blur-lg border-b border-white/10 sticky top-0 z-40">
+      <div class="max-w-7xl mx-auto px-4 py-3">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-4">
-            <button @click="goBack" 
-                    class="inline-flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 18l-6-6 6-6"/>
+            <button @click="goBack" class="p-2 hover:bg-white/10 rounded-lg transition-colors">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
               </svg>
-              Back
             </button>
-        <div>
-              <h1 class="text-2xl font-bold text-gray-900">Match Editor</h1>
-              <p v-if="match" class="text-sm text-gray-600 mt-1">
-                <span class="font-medium text-blue-600">{{ displayTeamName(form.homeClub) }}</span>
-                <span class="mx-2 text-gray-400">vs</span>
-                <span class="font-medium text-purple-600">{{ displayTeamName(form.awayClub) }}</span>
-                <span v-if="form.round || match.round" class="ml-3 px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
-                  {{ form.round || match.round }}
-                </span>
-          </p>
-        </div>
-      </div>
-          <div class="flex items-center gap-3">
-            <button @click="load" 
-                    :disabled="loading"
-                    class="inline-flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div>
+              <h1 class="text-xl font-bold text-white">Match Scorer</h1>
+              <p class="text-sm text-blue-200">{{ tournament?.name }} • {{ form.round || 'League Match' }}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span :class="statusBadgeClass">{{ matchStatus }}</span>
+            <button @click="load" :disabled="loading" class="btn-icon">
+              <svg class="w-5 h-5" :class="{ 'animate-spin': loading }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
               </svg>
-              Reload
-            </button>
-            <button @click="openReschedule" 
-                    :disabled="saving || finalized"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 rounded-lg transition-colors disabled:opacity-50">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-              </svg>
-              Reschedule
-            </button>
-            <button v-if="!finalized" @click="confirmFinalize" 
-                    :disabled="saving"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white hover:bg-green-700 rounded-lg transition-colors disabled:opacity-50">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-              Finalize Match
-            </button>
-            <button v-else @click="unlockForEdit" 
-                    :disabled="saving"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 text-white hover:bg-orange-700 rounded-lg transition-colors disabled:opacity-50">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11V3m0 8l-3-3m3 3l3-3M5 21h14a2 2 0 002-2v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7a2 2 0 002 2z"/>
-              </svg>
-              Unlock for Edit
             </button>
           </div>
         </div>
       </div>
-    </div>
+    </header>
 
     <!-- Loading State -->
-    <div v-if="loading" class="flex items-center justify-center py-16">
+    <div v-if="loading" class="flex items-center justify-center py-32">
       <div class="text-center">
-        <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mb-4"></div>
-        <p class="text-gray-600 font-medium">Loading match details...</p>
+        <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p class="text-white/70">Loading match data...</p>
       </div>
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div class="bg-red-50 border border-red-200 rounded-xl p-6">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-          </div>
-          <div>
-            <h3 class="text-lg font-semibold text-red-900">Error Loading Match</h3>
-            <p class="text-red-700">{{ error }}</p>
-          </div>
-        </div>
-          </div>
-        </div>
+    <div v-else-if="error" class="max-w-lg mx-auto mt-16 p-6 bg-red-500/20 border border-red-500/50 rounded-xl text-center">
+      <svg class="w-12 h-12 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <h3 class="text-lg font-semibold text-white mb-2">Error Loading Match</h3>
+      <p class="text-red-200">{{ error }}</p>
+      <button @click="load" class="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">Retry</button>
+    </div>
 
     <!-- Main Content -->
-    <div v-else class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div class="space-y-8">
-        <!-- Roster Warning -->
-        <div v-if="hasRosters" class="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-          <div class="flex items-center gap-3">
-            <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-            </svg>
-            <div>
-              <h3 class="text-yellow-800 font-semibold">Lineup Available</h3>
-              <p class="text-yellow-700 text-sm">Player dropdowns are populated from coach-submitted lineups. Select players from the dropdowns for easier data entry.</p>
+    <main v-else class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+      <!-- Scoreboard -->
+      <section class="scoreboard-card">
+        <!-- Toss Info Banner -->
+        <div v-if="tossInfo" class="text-center py-1.5 mb-3 bg-white/10 rounded-lg border border-white/20">
+          <span class="text-sm text-blue-100">🪙 {{ tossInfo }}</span>
+        </div>
+        
+        <div class="flex items-center justify-between mb-4">
+          <div class="text-center flex-1">
+            <div class="text-lg font-bold text-white">{{ homeTeamName }}</div>
+            <div class="text-3xl font-black text-white mt-1">
+              {{ getInningsScore(0) }}
+            </div>
+            <div class="text-sm text-blue-200">{{ getInningsOvers(0) }}</div>
+          </div>
+          <div class="px-6">
+            <div class="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
+              <span class="text-2xl font-bold text-white">VS</span>
             </div>
           </div>
-        </div>
-        <!-- Match Status Banner -->
-        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-          <div class="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                  </svg>
-          </div>
-          <div>
-                  <h2 class="text-xl font-bold text-white">Match Information</h2>
-                  <p class="text-blue-100">{{ displayTeamName(form.homeClub) }} vs {{ displayTeamName(form.awayClub) }}</p>
-                </div>
-              </div>
-              <div class="text-right">
-                <div class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white font-semibold">
-                  <div class="w-2 h-2 rounded-full"
-                       :class="{
-                         'bg-yellow-400': currentStatus === 'Live',
-                         'bg-blue-400': currentStatus === 'Scheduled',
-                         'bg-green-400': currentStatus === 'Completed',
-                         'bg-gray-400': currentStatus === 'Cancelled'
-                       }"></div>
-                  {{ currentStatus }}
-                </div>
-              </div>
+          <div class="text-center flex-1">
+            <div class="text-lg font-bold text-white">{{ awayTeamName }}</div>
+            <div class="text-3xl font-black text-white mt-1">
+              {{ getInningsScore(1) }}
             </div>
-          </div>
-          
-          <!-- Match Details -->
-          <div class="p-6">
-            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div class="text-center">
-                <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mx-auto mb-3">
-                  <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                  </svg>
-                </div>
-                <div class="text-sm text-gray-600 font-medium">Date</div>
-                <div class="text-lg font-semibold text-gray-900">{{ form.date || 'TBD' }}</div>
-              </div>
-              
-              <div class="text-center">
-                <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center mx-auto mb-3">
-                  <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
-                </div>
-                <div class="text-sm text-gray-600 font-medium">Time</div>
-                <div class="text-lg font-semibold text-gray-900">{{ form.time || 'TBD' }}</div>
-              </div>
-              
-              <div class="text-center">
-                <div class="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center mx-auto mb-3">
-                  <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                  </svg>
-                </div>
-                <div class="text-sm text-gray-600 font-medium">Venue</div>
-                <div class="text-lg font-semibold text-gray-900">{{ form.venue || 'TBD' }}</div>
-              </div>
-              
-              <div class="text-center">
-                <div class="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center mx-auto mb-3">
-                  <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-                  </svg>
-          </div>
-                <div class="text-sm text-gray-600 font-medium">Round</div>
-                <div class="text-lg font-semibold text-gray-900">{{ form.round || 'League' }}</div>
-          </div>
+            <div class="text-sm text-blue-200">{{ getInningsOvers(1) }}</div>
           </div>
         </div>
+        
+        <!-- Target Info with Required Run Rate -->
+        <div v-if="targetInfo" class="text-center py-2 bg-yellow-500/20 rounded-lg">
+          <p class="text-yellow-200 font-medium">{{ targetInfo }}</p>
+        </div>
+        <div v-if="requiredRunRate" class="mt-2 flex justify-center gap-6 text-sm">
+          <div class="text-center">
+            <div class="text-white/60">Current RR</div>
+            <div class="text-lg font-bold text-green-400">{{ currentRunRate }}</div>
+          </div>
+          <div class="text-center">
+            <div class="text-white/60">Required RR</div>
+            <div class="text-lg font-bold text-yellow-400">{{ requiredRunRate }}</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Mode Toggle -->
+      <div class="flex justify-center gap-2">
+        <button @click="scoringMode = 'ball'" :class="['mode-btn', scoringMode === 'ball' && 'mode-btn-active']">
+          🏏 Ball-by-Ball
+        </button>
+        <button @click="scoringMode = 'scorecard'" :class="['mode-btn', scoringMode === 'scorecard' && 'mode-btn-active']">
+          📊 Scorecard Entry
+        </button>
       </div>
 
-        <!-- Toss Section -->
-        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-          <div class="bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-4">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                </svg>
-              </div>
-              <h2 class="text-xl font-bold text-white">Toss Information</h2>
-            </div>
-          </div>
-          
-          <div class="p-6">
-            <div class="grid md:grid-cols-2 gap-6">
+      <!-- Toss Section -->
+      <section v-if="!form.toss.wonBy" class="glass-card p-6">
+        <h2 class="text-lg font-bold text-white mb-4">🪙 Toss</h2>
+        <div class="grid md:grid-cols-2 gap-4">
           <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Toss Won By</label>
-                <select v-model="form.toss.wonBy" 
-                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
-                        :disabled="finalized">
-              <option value="">Select team</option>
-              <option v-for="t in tossTeamOptions" :key="t.id" :value="t.id">{{ t.name }}</option>
+            <label class="label">Toss Won By</label>
+            <select v-model="form.toss.wonBy" class="input-field" :disabled="finalized">
+              <option value="">Select Team</option>
+              <option :value="form.homeClub">{{ homeTeamName }}</option>
+              <option :value="form.awayClub">{{ awayTeamName }}</option>
             </select>
           </div>
           <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Decision</label>
-                <select v-model="form.toss.decision" 
-                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
-                        :disabled="finalized">
-                  <option value="bat">Bat First</option>
-                  <option value="bowl">Bowl First</option>
+            <label class="label">Decision</label>
+            <select v-model="form.toss.decision" class="input-field" :disabled="finalized">
+              <option value="bat">Bat First</option>
+              <option value="bowl">Bowl First</option>
             </select>
           </div>
         </div>
-            
-            <div v-if="tossHint" class="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-              <div class="flex items-center gap-2">
-                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <span class="text-amber-800 font-medium">{{ tossHint }}</span>
-              </div>
-            </div>
-            
-            <div v-if="tossHint && form.toss.wonBy && form.toss.decision" class="mt-3 p-3 bg-green-50 border border-green-200 rounded-xl">
-              <div class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <span class="text-green-800 text-sm font-medium">Innings will be automatically set based on toss decision</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Innings Section -->
-        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-          <div class="bg-gradient-to-r from-green-500 to-teal-600 px-6 py-4">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                  </svg>
-                </div>
-                <h2 class="text-xl font-bold text-white">Innings Details</h2>
-              </div>
-              <button @click="addInnings" 
-                      :disabled="finalized || form.innings.length >= 2"
-                      class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-lg hover:bg-white/30 transition-colors disabled:opacity-50">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                </svg>
-                Add Innings
-              </button>
-            </div>
-      </div>
+        <p v-if="tossInfo" class="mt-3 text-green-300 text-sm">{{ tossInfo }}</p>
+      </section>
 
       <!-- Innings Tabs -->
-          <div class="border-b border-gray-200">
-            <nav class="flex">
-              <button v-for="(inn, idx) in form.innings" :key="idx" 
-                      @click="activeInnings = idx"
-                      :class="[
-                        'px-6 py-4 text-sm font-medium transition-all duration-200',
-                        activeInnings === idx 
-                          ? 'text-green-600 bg-white border-b-2 border-green-600' 
-                          : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                      ]">
-                <div class="flex items-center gap-2">
-                  <span>Innings {{ idx + 1 }}</span>
-                  <div v-if="totals(idx).runs > 0" class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
-                    {{ totals(idx).runs }}/{{ totals(idx).wickets }}
+      <div class="flex gap-2 overflow-x-auto pb-2">
+        <button v-for="(inn, idx) in form.innings" :key="idx" 
+                @click="activeInnings = idx"
+                :class="['innings-tab', activeInnings === idx && 'innings-tab-active']">
+          <span>Innings {{ idx + 1 }}</span>
+          <span class="ml-2 text-xs opacity-70">{{ getInningsScore(idx) }}</span>
+        </button>
+      </div>
+
+      <!-- Ball-by-Ball Mode -->
+      <section v-if="scoringMode === 'ball'" class="grid lg:grid-cols-3 gap-6">
+        <!-- Current Players Panel -->
+        <div class="glass-card p-5 space-y-4">
+          <h3 class="font-bold text-white flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+            Current Players
+          </h3>
+          
+          <!-- Batsmen -->
+          <div class="space-y-2">
+            <label class="label">Striker</label>
+            <select v-model="currentStriker" class="input-field" :disabled="finalized">
+              <option value="">Select Striker</option>
+              <option v-for="p in availableStrikers" :key="p.playerId" :value="p.playerName"
+                      :disabled="p.isOut" :class="{ 'text-red-400 line-through': p.isOut }">
+                {{ p.playerName }}{{ p.isOut ? ' (Out)' : '' }}
+              </option>
+            </select>
+            <div v-if="strikerStats" class="text-sm text-blue-200 mt-1">
+              {{ strikerStats.runs }} ({{ strikerStats.balls }}) • SR: {{ strikerStats.sr }}
+            </div>
+          </div>
+          
+          <div class="space-y-2">
+            <label class="label">Non-Striker</label>
+            <select v-model="currentNonStriker" class="input-field" :disabled="finalized">
+              <option value="">Select Non-Striker</option>
+              <option v-for="p in availableNonStrikers" :key="p.playerId" :value="p.playerName"
+                      :disabled="p.isOut" :class="{ 'text-red-400 line-through': p.isOut }">
+                {{ p.playerName }}{{ p.isOut ? ' (Out)' : '' }}
+              </option>
+            </select>
+            <div v-if="nonStrikerStats" class="text-sm text-blue-200 mt-1">
+              {{ nonStrikerStats.runs }} ({{ nonStrikerStats.balls }}) • SR: {{ nonStrikerStats.sr }}
+            </div>
+          </div>
+
+          <!-- Bowler -->
+          <div class="space-y-2 pt-3 border-t border-white/10">
+            <label class="label">Bowler</label>
+            <select v-model="currentBowler" class="input-field" :disabled="finalized">
+              <option value="">Select Bowler</option>
+              <option v-for="p in bowlingRoster" :key="p.playerId" :value="p.playerName">{{ p.playerName }}</option>
+            </select>
+            <div v-if="bowlerStats" class="text-sm text-blue-200 mt-1">
+              {{ bowlerStats.overs }}-{{ bowlerStats.maidens }}-{{ bowlerStats.runs }}-{{ bowlerStats.wickets }} • Econ: {{ bowlerStats.econ }}
+            </div>
+          </div>
+
+          <!-- Partnership -->
+          <div class="pt-3 border-t border-white/10">
+            <div class="text-sm text-white/60">Partnership</div>
+            <div class="text-lg font-bold text-white">{{ partnership.runs }} ({{ partnership.balls }})</div>
           </div>
         </div>
-          </button>
-            </nav>
-        </div>
 
-        <!-- Innings Content -->
-          <div v-for="(inn, idx) in form.innings" :key="idx" v-show="activeInnings === idx" class="p-6">
-            <!-- Team Selection -->
-            <div class="bg-gray-50 rounded-xl p-6 mb-6">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Team Selection</h3>
-                <button v-if="form.innings.length > 1" 
-                        @click="removeInnings(idx)" 
-                        :disabled="finalized"
-                        class="inline-flex items-center gap-2 px-3 py-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                  </svg>
-                  Remove Innings
-                </button>
-              </div>
-              <div class="grid md:grid-cols-2 gap-6">
-              <div>
-                  <label class="block text-sm font-semibold text-gray-700 mb-2">Batting Club</label>
-                  <select v-model="inn.battingClub" 
-                          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                          :disabled="finalized">
-                    <option value="">Select batting team</option>
-                    <option v-for="t in matchTeamOptions" :key="t.id" :value="t.id">{{ t.name }}</option>
-                </select>
-              </div>
-              <div>
-                  <label class="block text-sm font-semibold text-gray-700 mb-2">Bowling Club</label>
-                  <select v-model="inn.bowlingClub" 
-                          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                          :disabled="finalized">
-                    <option value="">Select bowling team</option>
-                    <option v-for="t in matchTeamOptions" :key="t.id" :value="t.id">{{ t.name }}</option>
-                </select>
-              </div>
-            </div>
-            </div>
-
-            <!-- Innings Summary -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <div class="text-sm text-blue-600 font-medium">Runs</div>
-                    <div class="text-2xl font-bold text-blue-900">{{ totals(idx).runs }}</div>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4 border border-red-200">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-lg bg-red-500 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <div class="text-sm text-red-600 font-medium">Wickets</div>
-                    <div class="text-2xl font-bold text-red-900">{{ totals(idx).wickets }}</div>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-lg bg-green-500 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <div class="text-sm text-green-600 font-medium">Balls</div>
-                    <div class="text-2xl font-bold text-green-900">{{ totals(idx).balls }}</div>
-                  </div>
-                </div>
+        <!-- Ball Entry Panel -->
+        <div class="lg:col-span-2 glass-card p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-white">Over {{ currentOver }}.{{ currentBallInOver }}</h3>
+            <button @click="undoLastBall" :disabled="!canUndo || finalized" class="btn-sm btn-outline">
+              ↩ Undo
+            </button>
           </div>
 
-              <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-lg bg-purple-500 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4"/>
-                    </svg>
+          <!-- Current Over Display -->
+          <div class="flex gap-2 mb-6 p-3 bg-white/5 rounded-lg overflow-x-auto">
+            <div v-for="(ball, i) in currentOverBalls" :key="i" :class="['ball-indicator', getBallClass(ball)]">
+              {{ getBallDisplay(ball) }}
             </div>
-                  <div>
-                    <div class="text-sm text-purple-600 font-medium">Run Rate</div>
-                    <div class="text-2xl font-bold text-purple-900">{{ totals(idx).rr }}</div>
-            </div>
-            </div>
-            </div>
+            <div v-for="i in (6 - currentOverBalls.length)" :key="'empty-'+i" class="ball-indicator ball-empty">•</div>
           </div>
 
-          <!-- Batting Table -->
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <h3 class="font-semibold">Batting</h3>
-              <button class="btn" @click="addBatter(idx)" :disabled="finalized">+ Batter</button>
-            </div>
-            <div class="overflow-x-auto">
-              <table class="min-w-full text-sm">
-                <thead>
-                  <tr class="text-left text-gray-600 border-b">
-                    <th class="py-2 pr-2">Player</th>
-                    <th class="py-2 pr-2 w-16">R</th>
-                    <th class="py-2 pr-2 w-16">B</th>
-                    <th class="py-2 pr-2 w-16">4s</th>
-                    <th class="py-2 pr-2 w-16">6s</th>
-                    <th class="py-2 pr-2">Dismissal</th>
-                    <th class="py-2 pr-2 w-20 text-right">SR</th>
-                    <th class="py-2 pr-2 w-24"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(b, bi) in inn.battingCard" :key="bi" class="border-b">
-                    <td>
-                      <select v-if="getBattingPlayerOptions(idx).length > 0" v-model="b.playerName" class="input" :disabled="finalized">
-                        <option value="">Select Player</option>
-                        <option v-for="player in getBattingPlayerOptions(idx)" :key="player.playerId" :value="player.playerName">
-                          {{ player.playerName }}
-                        </option>
-                      </select>
-                      <input v-else v-model="b.playerName" class="input" placeholder="Name" :disabled="finalized" />
-                    </td>
-                    <td><input v-model.number="b.runs" type="number" class="input" min="0" :disabled="finalized" /></td>
-                    <td><input v-model.number="b.balls" type="number" class="input" min="0" :disabled="finalized" /></td>
-                    <td><input v-model.number="b.fours" type="number" class="input" min="0" :disabled="finalized" /></td>
-                    <td><input v-model.number="b.sixes" type="number" class="input" min="0" :disabled="finalized" /></td>
-                    <td>
-                      <select v-model="b.dismissalHow" class="input" :disabled="finalized">
-                        <option value="">Not out</option>
-                        <option>Bowled</option>
-                        <option>LBW</option>
-                        <option>Caught</option>
-                        <option>Run out</option>
-                        <option>Stumped</option>
-                        <option>Hit wicket</option>
-                        <option>Retired hurt</option>
-                      </select>
-                      <div class="grid grid-cols-2 gap-2 mt-1">
-                        <input v-model="b.dismissalFielder" class="input" placeholder="Fielder" :disabled="finalized" />
-                        <input v-model="b.dismissalBowler" class="input" placeholder="Bowler" :disabled="finalized" />
-                      </div>
-                    </td>
-                    <td class="text-right text-gray-700">{{ strikeRate(b.runs, b.balls) }}</td>
-                    <td class="text-right">
-                      <button class="text-red-600 hover:underline" @click="inn.battingCard.splice(bi,1)" :disabled="finalized">Remove</button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Bowling Table -->
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <h3 class="font-semibold">Bowling</h3>
-              <div class="flex items-center gap-2">
-                <button class="btn" @click="addBowler(idx)" :disabled="finalized">+ Bowler</button>
-              </div>
-            </div>
-            <div class="overflow-x-auto">
-              <table class="min-w-full text-sm">
-                <thead>
-                  <tr class="text-left text-gray-600 border-b">
-                    <th class="py-2 pr-2">Bowler</th>
-                    <th class="py-2 pr-2 w-20">Balls</th>
-                    <th class="py-2 pr-2 w-16">M</th>
-                    <th class="py-2 pr-2 w-16">R</th>
-                    <th class="py-2 pr-2 w-16">W</th>
-                    <th class="py-2 pr-2 w-20 text-right">Econ</th>
-                    <th class="py-2 pr-2 w-24"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(bw, wi) in inn.bowlingCard" :key="wi" class="border-b">
-                    <td>
-                      <select v-if="getBowlingPlayerOptions(idx).length > 0" v-model="bw.bowlerName" class="input" :disabled="finalized">
-                        <option value="">Select Bowler</option>
-                        <option v-for="player in getBowlingPlayerOptions(idx)" :key="player.playerId" :value="player.playerName">
-                          {{ player.playerName }}
-                        </option>
-                      </select>
-                      <input v-else v-model="bw.bowlerName" class="input" placeholder="Name" :disabled="finalized" />
-                    </td>
-                    <td>
-                      <input v-model.number="bw.balls" type="number" class="input" min="0" :disabled="finalized" />
-                      <p class="text-xs text-gray-500 mt-1">{{ toOvers(bw.balls).toFixed(1) }} ov</p>
-                    </td>
-                    <td><input v-model.number="bw.maidens" type="number" class="input" min="0" :disabled="finalized" /></td>
-                    <td><input v-model.number="bw.runs" type="number" class="input" min="0" :disabled="finalized" /></td>
-                    <td><input v-model.number="bw.wickets" type="number" class="input" min="0" :disabled="finalized" /></td>
-                    <td class="text-right text-gray-700">{{ economy(bw.runs, bw.balls) }}</td>
-                    <td class="text-right">
-                      <button class="text-red-600 hover:underline" @click="inn.bowlingCard.splice(wi,1)" :disabled="finalized">Remove</button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+          <!-- Run Buttons -->
+          <div class="mb-4">
+            <div class="text-sm text-white/60 mb-2">Runs</div>
+            <div class="flex flex-wrap gap-2">
+              <button v-for="r in [0,1,2,3,4,5,6]" :key="r" @click="addBall(r, 'none')" 
+                      :disabled="finalized"
+                      :class="['run-btn', r === 4 && 'run-btn-four', r === 6 && 'run-btn-six']">
+                {{ r }}
+              </button>
             </div>
           </div>
 
           <!-- Extras -->
-          <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
-            <div>
-              <label class="label">Wides</label>
-              <input v-model.number="inn.extras.wides" type="number" min="0" class="input" :disabled="finalized" />
-            </div>
-            <div>
-              <label class="label">No Balls</label>
-              <input v-model.number="inn.extras.noBalls" type="number" min="0" class="input" :disabled="finalized" />
-            </div>
-            <div>
-              <label class="label">Byes</label>
-              <input v-model.number="inn.extras.byes" type="number" min="0" class="input" :disabled="finalized" />
-            </div>
-            <div>
-              <label class="label">Leg Byes</label>
-              <input v-model.number="inn.extras.legByes" type="number" min="0" class="input" :disabled="finalized" />
-            </div>
-            <div>
-              <label class="label">Penalty</label>
-              <input v-model.number="inn.extras.penalty" type="number" min="0" class="input" :disabled="finalized" />
+          <div class="mb-4">
+            <div class="text-sm text-white/60 mb-2">Extras</div>
+            <div class="flex flex-wrap gap-2">
+              <button @click="showExtrasModal = true" :disabled="finalized" class="extra-btn">Wide</button>
+              <button @click="showNoBallModal = true" :disabled="finalized" class="extra-btn">No Ball</button>
+              <button @click="addBall(1, 'bye')" :disabled="finalized" class="extra-btn">Bye</button>
+              <button @click="addBall(1, 'legbye')" :disabled="finalized" class="extra-btn">Leg Bye</button>
             </div>
           </div>
 
-          <!-- Ball-by-Ball Tracking -->
-          <div class="mt-8">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-lg font-semibold text-gray-900">Ball-by-Ball Tracking</h3>
-              <div class="text-sm text-gray-600">
-                Over {{ inn.currentOver }}.{{ inn.currentBall }}
-              </div>
-            </div>
-
-            <!-- Over-wise Score Entry -->
-            <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-              <h4 class="font-semibold text-blue-900 mb-3">Over-wise Score Entry</h4>
-              <div class="grid grid-cols-7 gap-2 mb-3">
-                <div class="text-center font-medium text-gray-700">Ball</div>
-                <div class="text-center font-medium text-gray-700">1</div>
-                <div class="text-center font-medium text-gray-700">2</div>
-                <div class="text-center font-medium text-gray-700">3</div>
-                <div class="text-center font-medium text-gray-700">4</div>
-                <div class="text-center font-medium text-gray-700">5</div>
-                <div class="text-center font-medium text-gray-700">6</div>
-              </div>
-              <div class="grid grid-cols-7 gap-2 mb-3">
-                <div class="text-center font-medium text-gray-700">Runs</div>
-                <div v-for="ballNum in 6" :key="ballNum">
-                  <input 
-                    v-model.number="overWiseScores[ballNum - 1]" 
-                    type="number" 
-                    min="0" 
-                    max="6" 
-                    class="w-full px-2 py-1 text-center border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-                    :disabled="finalized"
-                  />
-                </div>
-              </div>
-              <div class="grid grid-cols-7 gap-2 mb-3">
-                <div class="text-center font-medium text-gray-700">Extras</div>
-                <div v-for="ballNum in 6" :key="ballNum">
-                  <select 
-                    v-model="overWiseExtras[ballNum - 1]" 
-                    class="w-full px-1 py-1 text-center border border-gray-300 rounded text-xs"
-                    :disabled="finalized"
-                  >
-                    <option value="none">-</option>
-                    <option value="wide">W</option>
-                    <option value="no-ball">NB</option>
-                    <option value="bye">B</option>
-                    <option value="leg-bye">LB</option>
-                  </select>
-                </div>
-              </div>
-              <div class="grid grid-cols-7 gap-2 mb-3">
-                <div class="text-center font-medium text-gray-700">Wicket</div>
-                <div v-for="ballNum in 6" :key="ballNum" class="flex justify-center">
-                  <input 
-                    type="checkbox" 
-                    v-model="overWiseWickets[ballNum - 1]" 
-                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    :disabled="finalized"
-                  />
-                </div>
-              </div>
-              <div class="grid grid-cols-7 gap-2 mb-3">
-                <div class="text-center font-medium text-gray-700">Wicket Type</div>
-                <div v-for="ballNum in 6" :key="ballNum">
-                  <select 
-                    v-model="overWiseWicketTypes[ballNum - 1]" 
-                    class="w-full px-1 py-1 text-center border border-gray-300 rounded text-xs"
-                    :disabled="!overWiseWickets[ballNum - 1] || finalized"
-                  >
-                    <option value="bowled">B</option>
-                    <option value="lbw">LBW</option>
-                    <option value="caught">C</option>
-                    <option value="run out">RO</option>
-                    <option value="stumped">S</option>
-                    <option value="hit wicket">HW</option>
-                  </select>
-                </div>
-              </div>
-              <div class="flex items-center gap-3 mt-3">
-                <button @click="addOverWiseScores(idx)" 
-                          :disabled="finalized"
-                          class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm">
-                    Add Over
-                  </button>
-                  <button @click="resetOverWiseScores" 
-                          class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm">
-                    Reset
-                  </button>
-                  <div class="text-sm text-gray-600 ml-2">
-                    Current Over: {{ inn.currentOver }}
-                  </div>
-                </div>
-              </div>
-
-              <!-- Overs Display -->
-              <div class="space-y-4">
-                <div v-for="over in inn.overs" :key="over.overNumber" class="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                  <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                    <div class="flex items-center justify-between">
-                      <h5 class="font-semibold text-gray-900">Over {{ over.overNumber }}</h5>
-                      <div class="text-sm text-gray-600">
-                        Bowler: {{ over.bowler }} | Runs: {{ over.totalRuns }} | Wickets: {{ over.totalWickets }}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="p-4">
-                    <div class="grid grid-cols-6 gap-2">
-                      <div v-for="ball in over.balls" :key="`${over.overNumber}-${ball.ballNumber}`" 
-                           class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
-                        <div class="text-sm font-medium text-gray-900">{{ ball.ballNumber }}</div>
-                        <div class="text-lg font-bold" :class="{
-                          'text-green-600': ball.runs === 4,
-                          'text-purple-600': ball.runs === 6,
-                          'text-red-600': ball.wicket && ball.wicket.how,
-                          'text-blue-600': ball.extras !== 'none'
-                        }">
-                          {{ ball.runs }}{{ ball.extras !== 'none' ? '*' : '' }}
-                        </div>
-                        <div v-if="ball.extras !== 'none'" class="text-xs text-orange-600">
-                          {{ ball.extras }}
-                        </div>
-                        <div v-if="ball.wicket && ball.wicket.how" class="text-xs text-red-600">
-                          W
-                        </div>
-                        <div class="flex items-center justify-center gap-1 mt-1">
-                          <button @click="toggleLikeBall(idx, over.overNumber, ball.ballNumber)" 
-                                  class="text-gray-400 hover:text-red-500 transition-colors">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                              <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
-                            </svg>
-                          </button>
-                          <span class="text-xs text-gray-500">{{ ball.likes }}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <!-- Wicket -->
+          <div>
+            <div class="text-sm text-white/60 mb-2">Wicket</div>
+            <div class="flex flex-wrap gap-2">
+              <button v-for="w in wicketTypes" :key="w" @click="openWicketModal(w)" 
+                      :disabled="finalized" class="wicket-btn">
+                {{ w }}
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <!-- Highlights / Summary -->
-      <div class="card">
-        <h2 class="card-title mb-3">Highlights</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div>
-            <label class="label">Top Scorer</label>
-            <input v-model="form.summary.topScorer" class="input" :disabled="finalized" />
+      <!-- Scorecard Entry Mode -->
+      <section v-if="scoringMode === 'scorecard'" class="space-y-6">
+        <!-- Batting Card -->
+        <div class="glass-card p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-white">🏏 Batting - {{ getBattingTeamName(activeInnings) }}</h3>
+            <button @click="addBatter" :disabled="finalized" class="btn-sm btn-primary">+ Add Batter</button>
           </div>
-          <div>
-            <label class="label">Top Wicket-taker</label>
-            <input v-model="form.summary.topWicketTaker" class="input" :disabled="finalized" />
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="text-white/60 border-b border-white/10">
+                  <th class="text-left py-2 px-2">Batter</th>
+                  <th class="text-center py-2 px-2 w-16">R</th>
+                  <th class="text-center py-2 px-2 w-16">B</th>
+                  <th class="text-center py-2 px-2 w-12">4s</th>
+                  <th class="text-center py-2 px-2 w-12">6s</th>
+                  <th class="text-left py-2 px-2">Dismissal</th>
+                  <th class="text-center py-2 px-2 w-16">SR</th>
+                  <th class="w-10"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(bat, i) in currentInnings.battingCard" :key="i" class="border-b border-white/5">
+                  <td class="py-2 px-2">
+                    <select v-model="bat.playerName" class="input-sm" :disabled="finalized">
+                      <option value="">Select</option>
+                      <option v-for="p in battingRoster" :key="p.playerId" :value="p.playerName">{{ p.playerName }}</option>
+                    </select>
+                  </td>
+                  <td class="py-2 px-2"><input v-model.number="bat.runs" type="number" min="0" class="input-num" :disabled="finalized"/></td>
+                  <td class="py-2 px-2"><input v-model.number="bat.balls" type="number" min="0" class="input-num" :disabled="finalized"/></td>
+                  <td class="py-2 px-2"><input v-model.number="bat.fours" type="number" min="0" class="input-num" :disabled="finalized"/></td>
+                  <td class="py-2 px-2"><input v-model.number="bat.sixes" type="number" min="0" class="input-num" :disabled="finalized"/></td>
+                  <td class="py-2 px-2">
+                    <select v-model="bat.dismissalHow" class="input-sm" :disabled="finalized">
+                      <option value="">Not Out</option>
+                      <option v-for="d in dismissalTypes" :key="d" :value="d">{{ d }}</option>
+                    </select>
+                  </td>
+                  <td class="py-2 px-2 text-center text-white/70">{{ calcSR(bat.runs, bat.balls) }}</td>
+                  <td class="py-2 px-2">
+                    <button @click="removeBatter(i)" :disabled="finalized" class="text-red-400 hover:text-red-300">✕</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-          <div>
-            <label class="label">Best Contribution</label>
-            <input v-model="form.summary.bestContribution" class="input" :disabled="finalized" />
+          <!-- Extras Row -->
+          <div class="mt-4 pt-4 border-t border-white/10">
+            <div class="text-sm text-white/60 mb-2">Extras</div>
+            <div class="flex flex-wrap gap-4">
+              <div><label class="text-xs text-white/50">Wides</label><input v-model.number="currentInnings.extras.wides" type="number" min="0" class="input-num ml-2" :disabled="finalized"/></div>
+              <div><label class="text-xs text-white/50">No Balls</label><input v-model.number="currentInnings.extras.noBalls" type="number" min="0" class="input-num ml-2" :disabled="finalized"/></div>
+              <div><label class="text-xs text-white/50">Byes</label><input v-model.number="currentInnings.extras.byes" type="number" min="0" class="input-num ml-2" :disabled="finalized"/></div>
+              <div><label class="text-xs text-white/50">Leg Byes</label><input v-model.number="currentInnings.extras.legByes" type="number" min="0" class="input-num ml-2" :disabled="finalized"/></div>
+            </div>
           </div>
+        </div>
+
+        <!-- Bowling Card -->
+        <div class="glass-card p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-white">🎯 Bowling - {{ getBowlingTeamName(activeInnings) }}</h3>
+            <button @click="addBowler" :disabled="finalized" class="btn-sm btn-primary">+ Add Bowler</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="text-white/60 border-b border-white/10">
+                  <th class="text-left py-2 px-2">Bowler</th>
+                  <th class="text-center py-2 px-2 w-16">O</th>
+                  <th class="text-center py-2 px-2 w-12">M</th>
+                  <th class="text-center py-2 px-2 w-16">R</th>
+                  <th class="text-center py-2 px-2 w-12">W</th>
+                  <th class="text-center py-2 px-2 w-16">Econ</th>
+                  <th class="w-10"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(bowl, i) in currentInnings.bowlingCard" :key="i" class="border-b border-white/5">
+                  <td class="py-2 px-2">
+                    <select v-model="bowl.bowlerName" class="input-sm" :disabled="finalized">
+                      <option value="">Select</option>
+                      <option v-for="p in bowlingRoster" :key="p.playerId" :value="p.playerName">{{ p.playerName }}</option>
+                    </select>
+                  </td>
+                  <td class="py-2 px-2"><input v-model.number="bowl.overs" type="number" min="0" step="0.1" class="input-num" :disabled="finalized"/></td>
+                  <td class="py-2 px-2"><input v-model.number="bowl.maidens" type="number" min="0" class="input-num" :disabled="finalized"/></td>
+                  <td class="py-2 px-2"><input v-model.number="bowl.runs" type="number" min="0" class="input-num" :disabled="finalized"/></td>
+                  <td class="py-2 px-2"><input v-model.number="bowl.wickets" type="number" min="0" class="input-num" :disabled="finalized"/></td>
+                  <td class="py-2 px-2 text-center text-white/70">{{ calcEcon(bowl.runs, bowl.overs) }}</td>
+                  <td class="py-2 px-2">
+                    <button @click="removeBowler(i)" :disabled="finalized" class="text-red-400 hover:text-red-300">✕</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Summary Section -->
+      <section class="glass-card p-5">
+        <h3 class="font-bold text-white mb-4">🏆 Match Summary</h3>
+        <div class="grid md:grid-cols-2 gap-4">
           <div>
             <label class="label">Player of the Match</label>
-            <input v-model="form.summary.playerOfTheMatch" class="input" :disabled="finalized" />
+            <input v-model="form.summary.playerOfTheMatch" class="input-field" placeholder="Enter name" :disabled="finalized"/>
+          </div>
+          <div>
+            <label class="label">Top Scorer</label>
+            <input v-model="form.summary.topScorer" class="input-field" :placeholder="autoTopScorer" :disabled="finalized"/>
+          </div>
+        </div>
+      </section>
+
+      <!-- Action Bar -->
+      <div class="sticky bottom-0 bg-slate-900/95 backdrop-blur border-t border-white/10 -mx-4 px-4 py-4">
+        <div class="flex items-center justify-between max-w-7xl mx-auto">
+          <div class="text-sm text-white/60">
+            <span v-if="saving" class="text-yellow-400">Saving...</span>
+            <span v-else-if="lastSaved">Last saved: {{ lastSaved }}</span>
+          </div>
+          <div class="flex gap-3">
+            <button @click="save" :disabled="saving || finalized" class="btn btn-primary">
+              💾 Save
+            </button>
+            <button v-if="!finalized" @click="showFinalizeModal = true" :disabled="saving" class="btn btn-success">
+              ✓ Finalize
+            </button>
+            <button v-else @click="unlockMatch" :disabled="saving" class="btn btn-warning">
+              🔓 Unlock
+            </button>
           </div>
         </div>
       </div>
-    </div>
+    </main>
 
-    <!-- Sticky Footer Actions -->
-    <div class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur border-t p-3 flex items-center justify-end gap-2" v-if="!loading">
-      <div class="mr-auto text-xs text-gray-500" v-if="validationMessage">{{ validationMessage }}</div>
-      
-      
-      <button class="btn" @click="load" :disabled="loading">Reload</button>
-      <button class="btn-primary" @click="save" :disabled="saving || finalized">Save</button>
-      <button class="btn-success" @click="confirmFinalize" :disabled="saving || finalized">Finalize</button>
-    </div>
-
-    <!-- Confirm Finalize -->
-    <div v-if="showFinalizeConfirm" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg shadow-xl p-5 w-full max-w-md">
-        <h3 class="text-lg font-semibold mb-2">Finalize match?</h3>
-        <p class="text-sm text-gray-600 mb-4">This will compute the winner and lock further editing. You can optionally mark as No Result or Cancelled, and provide a reason.</p>
-        <div class="space-y-2 mb-4">
-          <label class="flex items-center gap-2 text-sm">
-            <input type="checkbox" v-model="finalizeOptions.noResult" />
-            Mark as No Result
-          </label>
-          <label class="flex items-center gap-2 text-sm">
-            <input type="checkbox" v-model="finalizeOptions.cancelled" />
-            Mark as Cancelled
-          </label>
-          <div class="mt-2">
-            <label class="block text-sm text-gray-600 mb-1">Reason (optional)</label>
-            <select v-model="finalizeOptions.reasonPreset" class="input mb-2">
-              <option value="">Select common reason</option>
-              <option value="Rain/Weather">Rain/Weather</option>
-              <option value="Ground unplayable">Ground unplayable</option>
-              <option value="Team no-show">Team no-show</option>
-              <option value="Injury/Medical emergency">Injury/Medical emergency</option>
-              <option value="Light failure">Light failure</option>
-            </select>
-            <input v-model="finalizeOptions.reasonCustom" class="input" placeholder="Or enter specific reason" />
+    <!-- Wicket Modal -->
+    <Teleport to="body">
+      <div v-if="showWicketModal" class="modal-overlay" @click.self="showWicketModal = false">
+        <div class="modal-content">
+          <h3 class="text-lg font-bold text-white mb-4">Wicket Details</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="label">Batsman Out</label>
+              <select v-model="wicketForm.batsman" class="input-field">
+                <option :value="currentStriker">{{ currentStriker }} (Striker)</option>
+                <option :value="currentNonStriker">{{ currentNonStriker }} (Non-Striker)</option>
+              </select>
+            </div>
+            <div>
+              <label class="label">How Out</label>
+              <input :value="wicketForm.how" class="input-field bg-white/5" disabled/>
+            </div>
+            <div v-if="needsFielder">
+              <label class="label">Fielder</label>
+              <select v-model="wicketForm.fielder" class="input-field">
+                <option value="">Select Fielder</option>
+                <option v-for="p in bowlingRoster" :key="p.playerId" :value="p.playerName">{{ p.playerName }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="label">Runs on this ball</label>
+              <input v-model.number="wicketForm.runs" type="number" min="0" max="6" class="input-field"/>
+            </div>
+            <label class="flex items-center gap-2 text-white/80">
+              <input type="checkbox" v-model="wicketForm.crossed" class="rounded"/>
+              Batsmen crossed before wicket
+            </label>
           </div>
-        </div>
-        <div class="flex items-center justify-end gap-2">
-          <button class="btn" @click="showFinalizeConfirm = false">Cancel</button>
-          <button class="btn-success" @click="finalize">Confirm</button>
+          <div class="flex justify-end gap-3 mt-6">
+            <button @click="showWicketModal = false" class="btn btn-outline">Cancel</button>
+            <button @click="confirmWicket" class="btn btn-danger">Confirm Wicket</button>
+          </div>
         </div>
       </div>
-    </div>
+    </Teleport>
 
-    <!-- Reschedule Modal -->
-    <div v-if="reschedOpen" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg shadow-xl p-5 w-full max-w-md">
-        <h3 class="text-lg font-semibold mb-3">Reschedule Match</h3>
-        <div class="space-y-3">
-          <div>
-            <label class="label">Date</label>
-            <input v-model="resched.date" type="date" class="input" />
+    <!-- Finalize Modal -->
+    <Teleport to="body">
+      <div v-if="showFinalizeModal" class="modal-overlay" @click.self="showFinalizeModal = false">
+        <div class="modal-content">
+          <h3 class="text-lg font-bold text-white mb-4">Finalize Match</h3>
+          <p class="text-white/70 mb-4">This will compute the winner and lock the match. Are you sure?</p>
+          <div class="space-y-3 mb-4">
+            <label class="flex items-center gap-2 text-white/80">
+              <input type="checkbox" v-model="finalizeForm.noResult" class="rounded"/>
+              Mark as No Result
+            </label>
+            <label class="flex items-center gap-2 text-white/80">
+              <input type="checkbox" v-model="finalizeForm.cancelled" class="rounded"/>
+              Mark as Cancelled
+            </label>
+            <div v-if="finalizeForm.noResult || finalizeForm.cancelled">
+              <label class="label">Reason</label>
+              <input v-model="finalizeForm.reason" class="input-field" placeholder="e.g., Rain, Ground unplayable"/>
+            </div>
           </div>
-          <div>
-            <label class="label">Time</label>
-            <select v-model="resched.time" class="input">
-              <option v-for="t in timeSlotOptions" :key="t" :value="t">{{ t }}</option>
-            </select>
+          <div class="flex justify-end gap-3">
+            <button @click="showFinalizeModal = false" class="btn btn-outline">Cancel</button>
+            <button @click="finalize" class="btn btn-success">Finalize Match</button>
           </div>
-          <div>
-            <label class="label">Venue</label>
-            <select v-model="resched.venue" class="input">
-              <option v-for="v in venueOptions" :key="v" :value="v">{{ v }}</option>
-            </select>
-          </div>
-          <div>
-            <label class="label">Reason</label>
-            <textarea v-model="resched.reason" rows="3" class="input"></textarea>
-          </div>
-          <div v-if="reschedError" class="text-sm text-red-600">{{ reschedError }}</div>
-        </div>
-        <div class="mt-4 flex items-center justify-end gap-2">
-          <button class="btn" @click="reschedOpen=false">Cancel</button>
-          <button class="btn-primary" :disabled="rescheduling" @click="submitReschedule">{{ rescheduling ? 'Saving...' : 'Save' }}</button>
-        </div>
         </div>
       </div>
-    </div>
+    </Teleport>
+
+    <!-- Extras Modal -->
+    <Teleport to="body">
+      <div v-if="showExtrasModal" class="modal-overlay" @click.self="showExtrasModal = false">
+        <div class="modal-content">
+          <h3 class="text-lg font-bold text-white mb-4">Wide Ball</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="label">Extra Runs (in addition to 1 wide)</label>
+              <div class="flex gap-2">
+                <button v-for="r in [0,1,2,3,4]" :key="r" @click="addBall(1 + r, 'wide'); showExtrasModal = false" class="run-btn">+{{ r }}</button>
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-end mt-6">
+            <button @click="showExtrasModal = false" class="btn btn-outline">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- No Ball Modal -->
+    <Teleport to="body">
+      <div v-if="showNoBallModal" class="modal-overlay" @click.self="showNoBallModal = false">
+        <div class="modal-content">
+          <h3 class="text-lg font-bold text-white mb-4">No Ball</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="label">Runs off the bat (in addition to 1 no ball)</label>
+              <div class="flex gap-2">
+                <button v-for="r in [0,1,2,3,4,6]" :key="r" @click="addBall(1 + r, 'noball'); showNoBallModal = false" class="run-btn">+{{ r }}</button>
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-end mt-6">
+            <button @click="showNoBallModal = false" class="btn btn-outline">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+  </div>
 </template>
 
-
-
 <script setup>
-import { reactive, ref, computed, watch } from 'vue';
+import { ref, reactive, computed, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '../utils/api';
 import { notify } from '../utils/notifications';
 
+// Route params
 const route = useRoute();
 const router = useRouter();
 const tournamentId = route.params.id;
 const matchId = route.params.matchId;
 
-function goBack(){
-  if (window.history.length > 1) router.back();
-  else router.push({ name: 'tournament-details', params: { id: tournamentId } });
-}
-
-const loading = ref(false);
+// State
+const loading = ref(true);
 const saving = ref(false);
 const error = ref('');
 const finalized = ref(false);
 const match = ref(null);
 const tournament = ref(null);
+const scoringMode = ref('ball');
 const activeInnings = ref(0);
-const showFinalizeConfirm = ref(false);
-const finalizeOptions = reactive({ noResult: false, cancelled: false, reasonPreset: '', reasonCustom: '' });
+const lastSaved = ref('');
 
-// Add over-wise scores data
-const overWiseScores = ref([0, 0, 0, 0, 0, 0]);
-const overWiseExtras = ref(['none', 'none', 'none', 'none', 'none', 'none']);
-const overWiseWickets = ref([false, false, false, false, false, false]);
-const overWiseWicketTypes = ref(['bowled', 'bowled', 'bowled', 'bowled', 'bowled', 'bowled']);
+// Modals
+const showWicketModal = ref(false);
+const showFinalizeModal = ref(false);
+const showExtrasModal = ref(false);
+const showNoBallModal = ref(false);
 
-const participantsOptions = ref([]);
-const venueOptions = ref([]);
-const timeSlotOptions = ref(['09:00', '13:00', '17:00']);
-const reschedOpen = ref(false);
-const rescheduling = ref(false);
-const reschedError = ref('');
-const resched = ref({ date: '', time: '09:00', venue: '', reason: '' });
-const rosterData = ref({ homeClub: { clubId: '', roster: null }, awayClub: { clubId: '', roster: null } });
+// Current players for ball-by-ball mode
+const currentStriker = ref('');
+const currentNonStriker = ref('');
+const currentBowler = ref('');
 
-// Ball-by-ball form data
-const newBall = reactive({
-  runs: 0,
-  extras: 'none',
-  wicket: false,
-  batsman: '',
-  bowler: '',
-  wicketDetails: {
-    how: '',
-    fielder: '',
-    bowler: ''
-  }
-});
+// Ball history for undo
+const ballHistory = ref([]);
 
-function displayTeamName(id) {
-  // Prefer names captured from the match payload for this specific fixture
-  if (String(id) === String(form.homeClub) && form.homeName) return form.homeName;
-  if (String(id) === String(form.awayClub) && form.awayName) return form.awayName;
-  const t = participantsOptions.value.find(x => String(x.id) === String(id));
-  return t?.name || 'Team';
-}
-
-const emptyInnings = () => ({
-  battingClub: '',
-  bowlingClub: '',
-  battingCard: [],
-  bowlingCard: [],
-  extras: { wides: 0, noBalls: 0, byes: 0, legByes: 0, penalty: 0 },
-  // Ball-by-ball data
-  overs: [],
-  currentOver: 1,
-  currentBall: 1
-});
-
+// Form data
 const form = reactive({
-  homeClub: '', awayClub: '',
-  date: '', time: '', venue: '', matchType: 'League', round: '',
-  toss: { wonBy: '', decision: 'bat' },
-  innings: [emptyInnings(), emptyInnings()],
-  summary: { topScorer: '', topWicketTaker: '', bestContribution: '', playerOfTheMatch: '' },
-  // display-only names from match payload
+  homeClub: '',
+  awayClub: '',
   homeName: '',
-  awayName: ''
+  awayName: '',
+  date: '',
+  time: '',
+  venue: '',
+  round: '',
+  toss: { wonBy: '', decision: 'bat' },
+  innings: [createEmptyInnings(), createEmptyInnings()],
+  summary: { playerOfTheMatch: '', topScorer: '', topWicketTaker: '' }
 });
 
-// Only show toss options for the two fixture teams
-const tossTeamOptions = computed(() => {
-  const opts = [];
-  if (form.homeClub) opts.push({ id: form.homeClub, name: displayTeamName(form.homeClub) });
-  if (form.awayClub) opts.push({ id: form.awayClub, name: displayTeamName(form.awayClub) });
-  // Remove duplicates by id
-  const seen = new Set();
-  return opts.filter(o => (seen.has(String(o.id)) ? false : (seen.add(String(o.id)), true)));
+const wicketForm = reactive({
+  batsman: '',
+  how: '',
+  fielder: '',
+  bowler: '',
+  runs: 0,
+  crossed: false
 });
 
-// Only show teams that are actually playing in this match
-const matchTeamOptions = computed(() => {
-  const opts = [];
-  if (form.homeClub) opts.push({ id: form.homeClub, name: displayTeamName(form.homeClub) });
-  if (form.awayClub) opts.push({ id: form.awayClub, name: displayTeamName(form.awayClub) });
-  // Remove duplicates by id
-  const seen = new Set();
-  return opts.filter(o => (seen.has(String(o.id)) ? false : (seen.add(String(o.id)), true)));
+const finalizeForm = reactive({
+  noResult: false,
+  cancelled: false,
+  reason: ''
 });
 
-// Get player options for a specific team
-const getPlayerOptions = (teamId) => {
-  if (!teamId) return [];
-  
-  // Check if this is the home team
-  if (String(teamId) === String(rosterData.value.homeClub.clubId) && rosterData.value.homeClub.roster) {
-    return rosterData.value.homeClub.roster.players || [];
-  }
-  
-  // Check if this is the away team
-  if (String(teamId) === String(rosterData.value.awayClub.clubId) && rosterData.value.awayClub.roster) {
-    return rosterData.value.awayClub.roster.players || [];
-  }
-  
-  return [];
-};
-
-// Get player options for a specific innings based on batting team
-const getBattingPlayerOptions = (inningsIndex) => {
-  const innings = form.innings[inningsIndex];
-  if (!innings || !innings.battingClub) return [];
-  return getPlayerOptions(innings.battingClub);
-};
-
-// Get player options for a specific innings based on bowling team
-const getBowlingPlayerOptions = (inningsIndex) => {
-  const innings = form.innings[inningsIndex];
-  if (!innings || !innings.bowlingClub) return [];
-  return getPlayerOptions(innings.bowlingClub);
-};
-
-const currentStatus = computed(() => match.value?.status || 'Scheduled');
-
-// Check if roster data is available for either team
-const hasRosters = computed(() => {
-  return (rosterData.value.homeClub.roster !== null && rosterData.value.homeClub.roster !== undefined) || 
-         (rosterData.value.awayClub.roster !== null && rosterData.value.awayClub.roster !== undefined);
+const rosterData = ref({
+  homeClub: { players: [] },
+  awayClub: { players: [] }
 });
 
-const tossHint = computed(() => {
-  if (!form.toss.wonBy) return '';
-  const name = displayTeamName(form.toss.wonBy);
-  if (form.toss.decision === 'bat') return `${name} bats first`;
-  if (form.toss.decision === 'bowl') return `${name} bowls first`;
-  return '';
-});
+// Constants
+const wicketTypes = ['Bowled', 'Caught', 'LBW', 'Run Out', 'Stumped', 'Hit Wicket'];
+const dismissalTypes = ['Bowled', 'Caught', 'LBW', 'Run Out', 'Stumped', 'Hit Wicket', 'Retired Out'];
 
-// Derived helpers
-function toNum(v) { const n = Number(v); return Number.isFinite(n) ? n : 0; }
-function toOvers(balls) { const b = Math.max(0, Number(balls) || 0); return Math.floor(b / 6) + (b % 6) / 10; }
-function strikeRate(r, b) { r = Number(r)||0; b = Number(b)||0; return b > 0 ? ((r / b) * 100).toFixed(2) : '0.00'; }
-function economy(r, b) { r = Number(r)||0; b = Number(b)||0; const ov = b/6; return ov > 0 ? (r / ov).toFixed(2) : '0.00'; }
-
-function totals(idx) {
-  const inn = form.innings[idx];
-  if (!inn) return { runs: 0, wickets: 0, balls: 0, rr: '0.00' };
-  
-  // Use pre-calculated totals if available
-  if (inn.totalRuns !== undefined && inn.totalWickets !== undefined && inn.totalBalls !== undefined) {
-    const rr = inn.runRate ? inn.runRate.toFixed(2) : (inn.totalBalls > 0 ? (inn.totalRuns / (inn.totalBalls / 6)).toFixed(2) : '0.00');
-    return {
-      runs: inn.totalRuns,
-      wickets: inn.totalWickets,
-      balls: inn.totalBalls,
-      rr
-    };
-  }
-  
-  // Fallback: calculate from individual entries
-  let runs = 0, balls = 0, wickets = 0;
-  for (const b of inn.battingCard) {
-    runs += toNum(b.runs);
-    balls += toNum(b.balls);
-    const how = (b.dismissalHow || '').toLowerCase();
-    if (how && how !== 'not out' && how !== 'retired hurt') wickets += 1;
-  }
-  const ex = inn.extras || {};
-  runs += toNum(ex.wides) + toNum(ex.noBalls) + toNum(ex.byes) + toNum(ex.legByes) + toNum(ex.penalty);
-  const rr = balls > 0 ? (runs / (balls / 6)).toFixed(2) : '0.00';
-  
-  // Update the innings with calculated values for consistency
-  inn.totalRuns = runs;
-  inn.totalWickets = wickets;
-  inn.totalBalls = balls;
-  inn.runRate = parseFloat(rr);
-  
-  return { runs, wickets, balls, rr };
-}
-
-function parseDismissalFromFields(b) {
-  const how = (b.dismissalHow || '').trim();
-  const f = (b.dismissalFielder || '').trim();
-  const w = (b.dismissalBowler || '').trim();
-  if (!how || how.toLowerCase() === 'not out') return null;
-  const out = { how };
-  if (f) out.fielder = f;
-  if (w) out.bowler = w;
-  return out;
-}
-
-function mapInningsFromAPI(inn) {
+// Helper Functions
+function createEmptyInnings() {
   return {
-    battingClub: inn?.battingClub?._id || inn?.battingClub || '',
-    bowlingClub: inn?.bowlingClub?._id || inn?.bowlingClub || '',
-    battingCard: (inn?.battingCard || []).map(e => ({
-      playerName: e.playerName || '',
-      runs: e.runs ?? 0,
-      balls: e.balls ?? 0,
-      fours: e.fours ?? 0,
-      sixes: e.sixes ?? 0,
-      dismissalHow: (e.dismissal?.how || '').replace(/^\s+|\s+$/g, ''),
-      dismissalFielder: e.dismissal?.fielder || '',
-      dismissalBowler: e.dismissal?.bowler || '',
-    })),
-    bowlingCard: (inn?.bowlingCard || []).map(w => ({
-      bowlerName: w.bowlerName || '',
-      balls: w.balls ?? 0,
-      maidens: w.maidens ?? 0,
-      runs: w.runs ?? 0,
-      wickets: w.wickets ?? 0,
-    })),
-    extras: {
-      wides: inn?.extras?.wides || 0,
-      noBalls: inn?.extras?.noBalls || 0,
-      byes: inn?.extras?.byes || 0,
-      legByes: inn?.extras?.legByes || 0,
-      penalty: inn?.extras?.penalty || 0,
-    },
-    // Preserve calculated totals from backend
-    totalRuns: inn?.totalRuns,
-    totalWickets: inn?.totalWickets,
-    totalBalls: inn?.totalBalls,
-    oversString: typeof inn?.overs === 'string' ? inn.overs : undefined, // Cricket format overs (e.g., "15.3")
-    runRate: inn?.runRate,
-    // Legacy fields for backward compatibility
-    runs: inn?.runs,
-    wickets: inn?.wickets,
-    balls: inn?.balls,
-    // Ball-by-ball data
-    overs: Array.isArray(inn?.overs) ? inn.overs : [], // Array of over objects
-    currentOver: inn?.currentOver || 1,
-    currentBall: inn?.currentBall || 1
+    battingClub: '',
+    bowlingClub: '',
+    battingCard: [],
+    bowlingCard: [],
+    extras: { wides: 0, noBalls: 0, byes: 0, legByes: 0, penalty: 0 },
+    overs: [],
+    totalRuns: 0,
+    totalWickets: 0,
+    totalBalls: 0
   };
 }
 
-async function load() {
-  loading.value = true; error.value = '';
-  try {
-    // Load tournament for participants for toss dropdown
-    const tResp = await api.get(`/tournaments/${tournamentId}`);
-    tournament.value = tResp.data || {};
-    const regs = Array.isArray(tournament.value.registrations) ? tournament.value.registrations : [];
-    const approvedClubs = regs.filter(r => r.status === 'approved').map(r => r.club).filter(Boolean);
-    const baseParticipants = approvedClubs.length ? approvedClubs : (tournament.value.participants || []);
-    participantsOptions.value = baseParticipants.map(p => ({ id: p._id || p, name: p.clubName || p.name || String(p) }));
+function goBack() {
+  router.back();
+}
 
-    const { data } = await api.get(`/tournaments/${tournamentId}/matches/${matchId}`);
-    match.value = data || {};
-    finalized.value = !!data?.finalized || data?.status === 'Completed';
+// Computed Properties
+const homeTeamName = computed(() => form.homeName || 'Home Team');
+const awayTeamName = computed(() => form.awayName || 'Away Team');
 
-    // Populate read-only fixture fields
-    form.homeClub = (data?.teams?.home?.id || data?.homeClub?._id || data?.homeClub) || '';
-    form.awayClub = (data?.teams?.away?.id || data?.awayClub?._id || data?.awayClub) || '';
-    form.homeName = data?.teams?.home?.name || data?.homeClub?.clubName || data?.homeClub?.name || '';
-    form.awayName = data?.teams?.away?.name || data?.awayClub?.clubName || data?.awayClub?.name || '';
-    form.date = data?.date ? String(data.date).slice(0, 10) : '';
-    form.time = data?.time || '';
-    form.venue = data?.venue || '';
-    // Reschedule defaults
-    resched.value = { date: form.date || '', time: form.time || timeSlotOptions.value[0], venue: form.venue || (venueOptions.value[0]||''), reason: '' };
-    form.matchType = data?.matchType || (data?.stage === 'Knockout' && data?.round === 'Final' ? 'Final' : (data?.stage === 'Knockout' ? 'Knockout' : 'League'));
-    form.round = data?.round || data?.stage || '';
+const matchStatus = computed(() => {
+  if (finalized.value) return 'Completed';
+  if (form.innings.some(i => i.totalBalls > 0)) return 'Live';
+  return 'Scheduled';
+});
 
-    form.toss = {
-      wonBy: (data?.toss?.wonBy && (data.toss.wonBy._id || data.toss.wonBy)) || '',
-      decision: data?.toss?.decision || 'bat'
-    };
+const statusBadgeClass = computed(() => {
+  const base = 'px-3 py-1 rounded-full text-xs font-bold';
+  switch (matchStatus.value) {
+    case 'Live': return `${base} bg-red-500 text-white animate-pulse`;
+    case 'Completed': return `${base} bg-green-500 text-white`;
+    default: return `${base} bg-blue-500 text-white`;
+  }
+});
 
-    form.innings = (Array.isArray(data?.innings) && data.innings.length ? data.innings : [emptyInnings(), emptyInnings()])
-      .slice(0, 2)
-      .map(mapInningsFromAPI);
+const currentInnings = computed(() => form.innings[activeInnings.value] || createEmptyInnings());
 
-    form.summary = {
-      topScorer: data?.summary?.topScorer || '',
-      topWicketTaker: data?.summary?.topWicketTaker || '',
-      bestContribution: data?.summary?.bestContribution || '',
-      playerOfTheMatch: data?.summary?.playerOfTheMatch || '',
-    };
+const battingRoster = computed(() => {
+  const battingClub = currentInnings.value.battingClub;
+  if (battingClub === form.homeClub) return rosterData.value.homeClub.players || [];
+  if (battingClub === form.awayClub) return rosterData.value.awayClub.players || [];
+  return [];
+});
 
-    // Extract roster data for dropdowns
-    rosterData.value = {
-      homeClub: {
-        clubId: data?.homeClub?._id || data?.homeClub || '',
-        roster: data?.homeClubRoster || null
-      },
-      awayClub: {
-        clubId: data?.awayClub?._id || data?.awayClub || '',
-        roster: data?.awayClubRoster || null
+// Get list of dismissed batsmen names
+const dismissedBatsmen = computed(() => {
+  const battingCard = currentInnings.value.battingCard || [];
+  return battingCard
+    .filter(b => b.dismissalHow && b.dismissalHow !== '' && b.dismissalHow !== 'Not Out')
+    .map(b => b.playerName);
+});
+
+// Available batsmen for striker (excludes out players and current non-striker)
+const availableStrikers = computed(() => {
+  return battingRoster.value.map(p => ({
+    ...p,
+    isOut: dismissedBatsmen.value.includes(p.playerName),
+    isOther: p.playerName === currentNonStriker.value
+  })).filter(p => !p.isOther); // Don't show currently selected non-striker
+});
+
+// Available batsmen for non-striker (excludes out players and current striker)
+const availableNonStrikers = computed(() => {
+  return battingRoster.value.map(p => ({
+    ...p,
+    isOut: dismissedBatsmen.value.includes(p.playerName),
+    isOther: p.playerName === currentStriker.value
+  })).filter(p => !p.isOther); // Don't show currently selected striker
+});
+
+const bowlingRoster = computed(() => {
+  const bowlingClub = currentInnings.value.bowlingClub;
+  if (bowlingClub === form.homeClub) return rosterData.value.homeClub.players || [];
+  if (bowlingClub === form.awayClub) return rosterData.value.awayClub.players || [];
+  return [];
+});
+
+const tossInfo = computed(() => {
+  if (!form.toss.wonBy) return '';
+  const winner = form.toss.wonBy === form.homeClub ? homeTeamName.value : awayTeamName.value;
+  return `${winner} won the toss and chose to ${form.toss.decision}`;
+});
+
+const currentOver = computed(() => Math.floor(currentInnings.value.totalBalls / 6) + 1);
+const currentBallInOver = computed(() => currentInnings.value.totalBalls % 6);
+
+const currentOverBalls = computed(() => {
+  const overs = currentInnings.value.overs || [];
+  const lastOver = overs.find(o => o.overNumber === currentOver.value);
+  return lastOver?.balls || [];
+});
+
+const canUndo = computed(() => ballHistory.value.length > 0);
+
+const needsFielder = computed(() => ['Caught', 'Run Out', 'Stumped'].includes(wicketForm.how));
+
+const strikerStats = computed(() => {
+  if (!currentStriker.value) return null;
+  const bat = currentInnings.value.battingCard.find(b => b.playerName === currentStriker.value);
+  if (!bat) return null;
+  return {
+    runs: bat.runs || 0,
+    balls: bat.balls || 0,
+    sr: calcSR(bat.runs, bat.balls)
+  };
+});
+
+const nonStrikerStats = computed(() => {
+  if (!currentNonStriker.value) return null;
+  const bat = currentInnings.value.battingCard.find(b => b.playerName === currentNonStriker.value);
+  if (!bat) return null;
+  return {
+    runs: bat.runs || 0,
+    balls: bat.balls || 0,
+    sr: calcSR(bat.runs, bat.balls)
+  };
+});
+
+const bowlerStats = computed(() => {
+  if (!currentBowler.value) return null;
+  const bowl = currentInnings.value.bowlingCard.find(b => b.bowlerName === currentBowler.value);
+  if (!bowl) return null;
+  const balls = bowl.balls || 0;
+  return {
+    overs: `${Math.floor(balls/6)}.${balls%6}`,
+    maidens: bowl.maidens || 0,
+    runs: bowl.runs || 0,
+    wickets: bowl.wickets || 0,
+    econ: calcEcon(bowl.runs, balls/6)
+  };
+});
+
+const partnership = computed(() => {
+  // Calculate from last wicket
+  return { runs: 0, balls: 0 }; // Simplified for now
+});
+
+const targetInfo = computed(() => {
+  if (activeInnings.value === 0) return '';
+  const firstInnings = form.innings[0];
+  const secondInnings = form.innings[1];
+  if (!firstInnings.totalRuns) return '';
+  
+  const target = firstInnings.totalRuns + 1;
+  const needed = target - secondInnings.totalRuns;
+  const ballsLeft = (tournament.value?.oversLimit || 20) * 6 - secondInnings.totalBalls;
+  
+  if (needed <= 0) return `${getBattingTeamName(1)} won by ${10 - secondInnings.totalWickets} wickets!`;
+  if (secondInnings.totalWickets >= 10) return `${getBattingTeamName(0)} won by ${needed - 1} runs!`;
+  if (ballsLeft <= 0) return `${getBattingTeamName(0)} won by ${needed - 1} runs!`;
+  
+  return `${getBattingTeamName(1)} need ${needed} runs from ${ballsLeft} balls (Target: ${target})`;
+});
+
+// Current run rate (for batting team in current innings)
+const currentRunRate = computed(() => {
+  const inn = form.innings[activeInnings.value];
+  if (!inn || !inn.totalBalls) return '0.00';
+  const overs = inn.totalBalls / 6;
+  return (inn.totalRuns / overs).toFixed(2);
+});
+
+// Required run rate (only for 2nd innings)
+const requiredRunRate = computed(() => {
+  if (activeInnings.value === 0) return '';
+  const firstInnings = form.innings[0];
+  const secondInnings = form.innings[1];
+  if (!firstInnings.totalRuns) return '';
+  
+  const target = firstInnings.totalRuns + 1;
+  const needed = target - secondInnings.totalRuns;
+  const ballsLeft = (tournament.value?.oversLimit || 20) * 6 - secondInnings.totalBalls;
+  
+  if (needed <= 0 || ballsLeft <= 0) return '';
+  
+  const oversLeft = ballsLeft / 6;
+  return (needed / oversLeft).toFixed(2);
+});
+
+const autoTopScorer = computed(() => {
+  const allBatters = [...form.innings[0].battingCard, ...form.innings[1].battingCard];
+  const top = allBatters.sort((a, b) => (b.runs || 0) - (a.runs || 0))[0];
+  return top ? `${top.playerName} - ${top.runs}(${top.balls})` : '';
+});
+
+// Methods
+function getInningsScore(idx) {
+  const inn = form.innings[idx];
+  if (!inn) return '-';
+  const runs = inn.totalRuns || calcInningsTotal(inn);
+  const wickets = inn.totalWickets || calcInningsWickets(inn);
+  return `${runs}/${wickets}`;
+}
+
+function getInningsOvers(idx) {
+  const inn = form.innings[idx];
+  if (!inn) return '';
+  const balls = inn.totalBalls || 0;
+  return `(${Math.floor(balls/6)}.${balls%6} ov)`;
+}
+
+function getBattingTeamName(idx) {
+  const battingClub = form.innings[idx]?.battingClub;
+  if (battingClub === form.homeClub) return homeTeamName.value;
+  if (battingClub === form.awayClub) return awayTeamName.value;
+  return 'Team';
+}
+
+function getBowlingTeamName(idx) {
+  const bowlingClub = form.innings[idx]?.bowlingClub;
+  if (bowlingClub === form.homeClub) return homeTeamName.value;
+  if (bowlingClub === form.awayClub) return awayTeamName.value;
+  return 'Team';
+}
+
+function calcInningsTotal(inn) {
+  const batRuns = (inn.battingCard || []).reduce((s, b) => s + (b.runs || 0), 0);
+  const ex = inn.extras || {};
+  return batRuns + (ex.wides || 0) + (ex.noBalls || 0) + (ex.byes || 0) + (ex.legByes || 0);
+}
+
+function calcInningsWickets(inn) {
+  return (inn.battingCard || []).filter(b => b.dismissalHow && b.dismissalHow !== 'Not Out').length;
+}
+
+function calcSR(runs, balls) {
+  if (!balls) return '0.00';
+  return ((runs / balls) * 100).toFixed(2);
+}
+
+function calcEcon(runs, overs) {
+  if (!overs) return '0.00';
+  return (runs / overs).toFixed(2);
+}
+
+function getBallClass(ball) {
+  if (ball.wicket) return 'ball-wicket';
+  if (ball.runs === 4) return 'ball-four';
+  if (ball.runs === 6) return 'ball-six';
+  if (ball.extras && ball.extras !== 'none') return 'ball-extra';
+  if (ball.runs === 0) return 'ball-dot';
+  return 'ball-run';
+}
+
+function getBallDisplay(ball) {
+  if (ball.wicket) return 'W';
+  if (ball.extras === 'wide') return `${ball.runs}wd`;
+  if (ball.extras === 'noball') return `${ball.runs}nb`;
+  if (ball.extras === 'bye') return `${ball.runs}b`;
+  if (ball.extras === 'legbye') return `${ball.runs}lb`;
+  return ball.runs;
+}
+
+// Ball-by-ball logic
+function addBall(runs, extras = 'none', wicket = null) {
+  if (finalized.value) return;
+  if (!currentStriker.value || !currentBowler.value) {
+    notify.error('Please select striker and bowler');
+    return;
+  }
+
+  const inn = form.innings[activeInnings.value];
+  const isLegalDelivery = extras !== 'wide' && extras !== 'noball';
+  
+  // Create ball record
+  const ball = {
+    overNumber: currentOver.value,
+    ballNumber: currentBallInOver.value + 1,
+    runs,
+    extras,
+    wicket,
+    batsman: currentStriker.value,
+    bowler: currentBowler.value
+  };
+
+  // Save for undo
+  ballHistory.value.push({
+    inningsIdx: activeInnings.value,
+    ball,
+    striker: currentStriker.value,
+    nonStriker: currentNonStriker.value
+  });
+
+  // Update over structure
+  let overObj = inn.overs.find(o => o.overNumber === currentOver.value);
+  if (!overObj) {
+    overObj = { overNumber: currentOver.value, bowler: currentBowler.value, balls: [] };
+    inn.overs.push(overObj);
+  }
+  overObj.balls.push(ball);
+
+  // Update totals
+  inn.totalRuns = (inn.totalRuns || 0) + runs;
+  if (isLegalDelivery) {
+    inn.totalBalls = (inn.totalBalls || 0) + 1;
+  }
+
+  // Update extras
+  if (extras === 'wide') inn.extras.wides += runs;
+  else if (extras === 'noball') inn.extras.noBalls += runs;
+  else if (extras === 'bye') inn.extras.byes += runs;
+  else if (extras === 'legbye') inn.extras.legByes += runs;
+
+  // Update batsman stats (only for legal deliveries and bat runs)
+  if (extras === 'none' || extras === 'noball') {
+    updateBatsmanStats(currentStriker.value, extras === 'none' ? runs : runs - 1, isLegalDelivery);
+  }
+
+  // Update bowler stats
+  updateBowlerStats(currentBowler.value, runs, isLegalDelivery, !!wicket);
+
+  // Handle wicket
+  if (wicket) {
+    inn.totalWickets = (inn.totalWickets || 0) + 1;
+    markBatsmanOut(wicket.batsman, wicket.how, wicket.fielder, currentBowler.value);
+  }
+
+  // Strike rotation
+  handleStrikeRotation(runs, extras, wicket);
+
+  // Check if innings is complete (overs finished or all out)
+  checkInningsComplete();
+
+  // Auto-save
+  debouncedSave();
+}
+
+// Check if current innings is complete and auto-switch to next innings
+function checkInningsComplete() {
+  const inn = form.innings[activeInnings.value];
+  const maxBalls = (tournament.value?.oversLimit || 20) * 6;
+  const isAllOut = inn.totalWickets >= 10;
+  const isOversComplete = inn.totalBalls >= maxBalls;
+  
+  if (isAllOut || isOversComplete) {
+    if (activeInnings.value === 0) {
+      // Switch to 2nd innings
+      notify.success(`1st Innings Complete! Score: ${inn.totalRuns}/${inn.totalWickets}`);
+      activeInnings.value = 1;
+      
+      // Clear current batsmen and bowler for new innings
+      currentStriker.value = '';
+      currentNonStriker.value = '';
+      currentBowler.value = '';
+      
+      // Show target notification
+      const target = inn.totalRuns + 1;
+      setTimeout(() => {
+        notify.info(`Target: ${target} runs`);
+      }, 1000);
+    } else {
+      // Match complete - 2nd innings ended
+      const firstInningsRuns = form.innings[0].totalRuns;
+      const secondInningsRuns = inn.totalRuns;
+      
+      if (secondInningsRuns >= firstInningsRuns + 1) {
+        notify.success(`${getBattingTeamName(1)} won!`);
+      } else {
+        notify.success(`${getBattingTeamName(0)} won by ${firstInningsRuns - secondInningsRuns} runs!`);
       }
+    }
+  }
+}
+
+function updateBatsmanStats(name, runs, countBall) {
+  const inn = form.innings[activeInnings.value];
+  let bat = inn.battingCard.find(b => b.playerName === name);
+  if (!bat) {
+    bat = { playerName: name, runs: 0, balls: 0, fours: 0, sixes: 0, dismissalHow: '' };
+    inn.battingCard.push(bat);
+  }
+  bat.runs = (bat.runs || 0) + runs;
+  if (countBall) bat.balls = (bat.balls || 0) + 1;
+  if (runs === 4) bat.fours = (bat.fours || 0) + 1;
+  if (runs === 6) bat.sixes = (bat.sixes || 0) + 1;
+}
+
+function updateBowlerStats(name, runs, isLegalDelivery, gotWicket) {
+  const inn = form.innings[activeInnings.value];
+  let bowl = inn.bowlingCard.find(b => b.bowlerName === name);
+  if (!bowl) {
+    bowl = { bowlerName: name, balls: 0, maidens: 0, runs: 0, wickets: 0 };
+    inn.bowlingCard.push(bowl);
+  }
+  bowl.runs = (bowl.runs || 0) + runs;
+  if (isLegalDelivery) bowl.balls = (bowl.balls || 0) + 1;
+  if (gotWicket) bowl.wickets = (bowl.wickets || 0) + 1;
+}
+
+function markBatsmanOut(name, how, fielder, bowler) {
+  const inn = form.innings[activeInnings.value];
+  let bat = inn.battingCard.find(b => b.playerName === name);
+  if (!bat) {
+    bat = { playerName: name, runs: 0, balls: 0, fours: 0, sixes: 0, dismissalHow: '' };
+    inn.battingCard.push(bat);
+  }
+  bat.dismissalHow = how;
+  bat.dismissalFielder = fielder;
+  bat.dismissalBowler = bowler;
+}
+
+function handleStrikeRotation(runs, extras, wicket) {
+  const oddRuns = runs % 2 === 1;
+  const endOfOver = currentInnings.value.totalBalls % 6 === 0 && extras !== 'wide' && extras !== 'noball';
+
+  // Wicket handling
+  if (wicket) {
+    // New batsman needed - for now just show notification
+    notify.info('Select new batsman');
+    if (wicket.crossed) {
+      // Striker becomes current non-striker's position
+    }
+    return;
+  }
+
+  // Normal rotation
+  if (oddRuns || endOfOver) {
+    const temp = currentStriker.value;
+    currentStriker.value = currentNonStriker.value;
+    currentNonStriker.value = temp;
+  }
+}
+
+function openWicketModal(how) {
+  wicketForm.batsman = currentStriker.value;
+  wicketForm.how = how;
+  wicketForm.fielder = '';
+  wicketForm.bowler = currentBowler.value;
+  wicketForm.runs = 0;
+  wicketForm.crossed = false;
+  showWicketModal.value = true;
+}
+
+function confirmWicket() {
+  const wicket = {
+    batsman: wicketForm.batsman,
+    how: wicketForm.how,
+    fielder: wicketForm.fielder,
+    bowler: wicketForm.bowler,
+    crossed: wicketForm.crossed
+  };
+  addBall(wicketForm.runs, 'none', wicket);
+  showWicketModal.value = false;
+}
+
+function undoLastBall() {
+  if (!canUndo.value) return;
+  const last = ballHistory.value.pop();
+  if (!last) return;
+  
+  const inn = form.innings[last.inningsIdx];
+  const overObj = inn.overs.find(o => o.overNumber === last.ball.overNumber);
+  if (overObj) {
+    overObj.balls.pop();
+    if (overObj.balls.length === 0) {
+      inn.overs = inn.overs.filter(o => o !== overObj);
+    }
+  }
+
+  // Reverse totals
+  inn.totalRuns -= last.ball.runs;
+  if (last.ball.extras !== 'wide' && last.ball.extras !== 'noball') {
+    inn.totalBalls -= 1;
+  }
+  if (last.ball.wicket) {
+    inn.totalWickets -= 1;
+  }
+
+  // Restore players
+  currentStriker.value = last.striker;
+  currentNonStriker.value = last.nonStriker;
+
+  notify.success('Ball undone');
+}
+
+// Scorecard mode helpers
+function addBatter() {
+  currentInnings.value.battingCard.push({
+    playerName: '',
+    runs: 0,
+    balls: 0,
+    fours: 0,
+    sixes: 0,
+    dismissalHow: ''
+  });
+}
+
+function removeBatter(idx) {
+  currentInnings.value.battingCard.splice(idx, 1);
+}
+
+function addBowler() {
+  currentInnings.value.bowlingCard.push({
+    bowlerName: '',
+    overs: 0,
+    maidens: 0,
+    runs: 0,
+    wickets: 0
+  });
+}
+
+function removeBowler(idx) {
+  currentInnings.value.bowlingCard.splice(idx, 1);
+}
+
+// API calls
+async function load() {
+  loading.value = true;
+  error.value = '';
+  try {
+    const [tRes, mRes] = await Promise.all([
+      api.get(`/tournaments/${tournamentId}`),
+      api.get(`/tournaments/${tournamentId}/matches/${matchId}`)
+    ]);
+    
+    tournament.value = tRes.data;
+    match.value = mRes.data;
+    finalized.value = mRes.data.finalized || mRes.data.status === 'Completed';
+
+    // Populate form
+    form.homeClub = mRes.data.homeClub?._id || mRes.data.homeClub || '';
+    form.awayClub = mRes.data.awayClub?._id || mRes.data.awayClub || '';
+    form.homeName = mRes.data.teams?.home?.name || mRes.data.homeClub?.clubName || 'Home';
+    form.awayName = mRes.data.teams?.away?.name || mRes.data.awayClub?.clubName || 'Away';
+    form.date = mRes.data.date?.slice(0, 10) || '';
+    form.time = mRes.data.time || '';
+    form.venue = mRes.data.venue || '';
+    form.round = mRes.data.round || '';
+
+    if (mRes.data.toss) {
+      form.toss.wonBy = mRes.data.toss.wonBy?._id || mRes.data.toss.wonBy || '';
+      form.toss.decision = mRes.data.toss.decision || 'bat';
+    }
+
+    if (mRes.data.innings?.length) {
+      form.innings = mRes.data.innings.map(mapInningsFromAPI);
+    }
+
+    if (mRes.data.summary) {
+      form.summary = { ...mRes.data.summary };
+    }
+
+    // Load rosters
+    rosterData.value = {
+      homeClub: { players: mRes.data.homeClubRoster?.players || [] },
+      awayClub: { players: mRes.data.awayClubRoster?.players || [] }
     };
 
-    activeInnings.value = 0;
   } catch (e) {
-    error.value = e?.response?.data?.message || e.message || 'Failed to load match';
+    error.value = e.response?.data?.message || e.message || 'Failed to load';
   } finally {
     loading.value = false;
   }
 }
 
-function validateBeforeSave() {
-  // Basic checks for match details (no fixture validation needed)
-  if (!form.date) return 'Select a date';
-  if (!form.time) return 'Select a time';
-  if (!form.venue) return 'Select a venue';
-  
-  // Validate toss if provided
-  if (form.toss?.wonBy && !form.toss?.decision) {
-    return 'Select toss decision (bat or bowl)';
-  }
-  
-  return '';
+function mapInningsFromAPI(inn) {
+  return {
+    battingClub: inn.battingClub?._id || inn.battingClub || '',
+    bowlingClub: inn.bowlingClub?._id || inn.bowlingClub || '',
+    battingCard: (inn.battingCard || []).map(b => ({
+      playerName: b.playerName || '',
+      runs: b.runs || 0,
+      balls: b.balls || 0,
+      fours: b.fours || 0,
+      sixes: b.sixes || 0,
+      dismissalHow: b.dismissal?.how || b.dismissalHow || '',
+      dismissalFielder: b.dismissal?.fielder || b.dismissalFielder || '',
+      dismissalBowler: b.dismissal?.bowler || b.dismissalBowler || ''
+    })),
+    bowlingCard: (inn.bowlingCard || []).map(b => ({
+      bowlerName: b.bowlerName || '',
+      balls: b.balls || 0,
+      overs: b.balls ? b.balls / 6 : 0,
+      maidens: b.maidens || 0,
+      runs: b.runs || 0,
+      wickets: b.wickets || 0
+    })),
+    extras: {
+      wides: inn.extras?.wides || 0,
+      noBalls: inn.extras?.noBalls || 0,
+      byes: inn.extras?.byes || 0,
+      legByes: inn.extras?.legByes || 0,
+      penalty: inn.extras?.penalty || 0
+    },
+    overs: inn.overs || [],
+    totalRuns: inn.totalRuns || inn.runs || 0,
+    totalWickets: inn.totalWickets || inn.wickets || 0,
+    totalBalls: inn.totalBalls || inn.balls || 0
+  };
 }
 
-const validationMessage = computed(() => validateBeforeSave());
+let saveTimeout = null;
+function debouncedSave() {
+  if (saveTimeout) clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(() => save(), 2000);
+}
 
 async function save() {
-  const msg = validateBeforeSave();
-  if (msg) { notify.error(msg); return; }
-  saving.value = true; error.value = '';
+  if (saving.value || finalized.value) return;
+  saving.value = true;
   try {
-    // Ensure all innings have up-to-date calculated totals before saving
-    form.innings.forEach((innings, index) => {
-      if (innings.battingCard && innings.battingCard.length > 0) {
-        // Recalculate totals to ensure consistency
-        totals(index);
-      }
+    // Recalculate totals before saving
+    form.innings.forEach(inn => {
+      inn.totalRuns = calcInningsTotal(inn);
+      inn.totalWickets = calcInningsWickets(inn);
     });
-    
-    const payload = {
-      // Basic match metadata
+
+    await api.put(`/admin/tournaments/${tournamentId}/matches/${matchId}/details`, {
       date: form.date,
       time: form.time,
       venue: form.venue,
-      matchType: form.matchType,
-      
-      // Toss information
       toss: form.toss,
-      
-      // Innings data (now includes calculated totals)
       innings: form.innings,
-      
-      // Match summary
       summary: form.summary
-    };
-    
-    // Use the match details endpoint instead of fixture endpoint
-    await api.put(`/admin/tournaments/${tournamentId}/matches/${matchId}/details`, payload);
-    notify.success('Match details updated');
-    await load();
+    });
+    lastSaved.value = new Date().toLocaleTimeString();
+    notify.success('Saved');
   } catch (e) {
-    console.error('Save error:', e);
-    console.error('Error response:', e?.response?.data);
-    const msg = e?.response?.data?.error || e?.response?.data?.message || e.message || 'Failed to save';
-    error.value = msg;
-    notify.error(msg);
+    notify.error(e.response?.data?.message || 'Failed to save');
   } finally {
     saving.value = false;
   }
-}
-
-function confirmFinalize() { showFinalizeConfirm.value = true; }
-function openReschedule(){ reschedOpen.value = true; reschedError.value=''; }
-async function submitReschedule(){
-  if (!resched.value.date || !resched.value.time || !resched.value.venue || !resched.value.reason) { reschedError.value = 'All fields are required'; return; }
-  rescheduling.value = true; reschedError.value = '';
-  try {
-    await api.post(`/admin/tournaments/${tournamentId}/matches/${matchId}/reschedule`, { ...resched.value });
-    notify.success('Match rescheduled');
-    reschedOpen.value = false;
-    await load();
-  } catch (e) {
-    reschedError.value = e?.response?.data?.message || e.message || 'Failed to reschedule';
-  } finally { rescheduling.value = false; }
 }
 
 async function finalize() {
-  saving.value = true; error.value = '';
+  saving.value = true;
   try {
-    const reason = (finalizeOptions.reasonCustom || finalizeOptions.reasonPreset || '').trim();
-    const payload = { noResult: !!finalizeOptions.noResult, cancelled: !!finalizeOptions.cancelled, reason };
-    await api.put(`/admin/tournaments/${tournamentId}/matches/${matchId}/finalize`, payload);
+    await api.put(`/admin/tournaments/${tournamentId}/matches/${matchId}/finalize`, {
+      noResult: finalizeForm.noResult,
+      cancelled: finalizeForm.cancelled,
+      reason: finalizeForm.reason
+    });
     notify.success('Match finalized');
-    showFinalizeConfirm.value = false;
+    showFinalizeModal.value = false;
     await load();
   } catch (e) {
-    error.value = e?.response?.data?.message || e.message || 'Failed to finalize';
-    notify.error(error.value);
+    notify.error(e.response?.data?.message || 'Failed to finalize');
   } finally {
     saving.value = false;
   }
 }
 
-async function unlockForEdit(){
-  saving.value = true; error.value = '';
-  try{
-    await api.put(`/admin/tournaments/${tournamentId}/matches/${matchId}/unfinalize`);
-    notify.success('Match unlocked for editing');
-    await load();
-  } catch(e){
-    const msg = e?.response?.data?.message || e.message || 'Failed to unlock match';
-    error.value = msg;
-    notify.error(msg);
-  } finally { saving.value = false; }
-}
-
-function addInnings() { if (form.innings.length < 2) form.innings.push(emptyInnings()); }
-function removeInnings(i) { form.innings.splice(i, 1); if (activeInnings.value >= form.innings.length) activeInnings.value = Math.max(0, form.innings.length - 1); }
-function addBatter(i) { form.innings[i].battingCard.push({ playerName: '', runs: 0, balls: 0, fours: 0, sixes: 0, dismissalHow: '' }); }
-function addBowler(i) { form.innings[i].bowlingCard.push({ bowlerName: '', balls: 0, maidens: 0, runs: 0, wickets: 0 }); }
-
-// Ball-by-ball logic functions
-function addBall(inningsIndex, ballData) {
-  const innings = form.innings[inningsIndex];
-  if (!innings) return;
-  
-  const { runs, extras, wicket, batsman, bowler } = ballData;
-  
-  // Find or create current over
-  let currentOver = innings.overs.find(o => o.overNumber === innings.currentOver);
-  if (!currentOver) {
-    currentOver = {
-      overNumber: innings.currentOver,
-      bowler: bowler,
-      balls: [],
-      totalRuns: 0,
-      totalWickets: 0,
-      totalExtras: 0
-    };
-    innings.overs.push(currentOver);
-  }
-  
-  // Create ball entry
-  const ball = {
-    overNumber: innings.currentOver,
-    ballNumber: innings.currentBall,
-    runs: runs || 0,
-    extras: extras || 'none',
-    wicket: wicket || {},
-    batsman: batsman || '',
-    bowler: bowler || '',
-    likes: 0
-  };
-  
-  // Add ball to current over
-  currentOver.balls.push(ball);
-  
-  // Update over totals
-  currentOver.totalRuns += runs || 0;
-  if (wicket && wicket.how) {
-    currentOver.totalWickets += 1;
-  }
-  if (extras && extras !== 'none') {
-    currentOver.totalExtras += 1;
-  }
-  
-  // Handle ball progression logic
-  if (extras === 'wide' || extras === 'no-ball') {
-    // Wide/No-ball doesn't count as legal delivery, don't advance ball
-    // But add 1 run for the extra
-    currentOver.totalRuns += 1;
-  } else {
-    // Legal delivery, advance ball
-    if (innings.currentBall < 6) {
-      innings.currentBall += 1;
-    } else {
-      // Over complete, start new over
-      innings.currentOver += 1;
-      innings.currentBall = 1;
-    }
-  }
-  
-  // Update innings totals
-  calculateInningsTotals(inningsIndex);
-  
-  // Auto-update batsman and bowler stats
-  updateBatsmanStats(inningsIndex, batsman, runs, wicket);
-  updateBowlerStats(inningsIndex, bowler, runs, wicket);
-}
-
-function toggleLikeBall(inningsIndex, overNumber, ballNumber) {
-  const innings = form.innings[inningsIndex];
-  if (!innings) return;
-  
-  const over = innings.overs.find(o => o.overNumber === overNumber);
-  if (!over) return;
-  
-  const ball = over.balls.find(b => b.ballNumber === ballNumber);
-  if (!ball) return;
-  
-  ball.likes += 1;
-}
-
-function calculateInningsTotals(inningsIndex) {
-  const innings = form.innings[inningsIndex];
-  if (!innings) return;
-  
-  let totalRuns = 0;
-  let totalWickets = 0;
-  let totalBalls = 0;
-  let totalExtras = 0;
-  
-  // Calculate from overs
-  innings.overs.forEach(over => {
-    over.balls.forEach(ball => {
-      totalRuns += ball.runs;
-      if (ball.extras === 'wide' || ball.extras === 'no-ball') {
-        totalRuns += 1; // Extra run for wide/no-ball
-        totalExtras += 1;
-      } else if (ball.extras === 'bye' || ball.extras === 'leg-bye') {
-        totalExtras += 1;
-      }
-      
-      if (ball.wicket && ball.wicket.how) {
-        totalWickets += 1;
-      }
-      
-      // Only count legal deliveries
-      if (ball.extras === 'none' || ball.extras === 'bye' || ball.extras === 'leg-bye') {
-        totalBalls += 1;
-      }
-    });
-  });
-  
-  // Update innings totals (both legacy and standardized fields)
-  innings.runs = totalRuns;
-  innings.wickets = totalWickets;
-  innings.balls = totalBalls;
-  
-  // Update standardized fields
-  innings.totalRuns = totalRuns;
-  innings.totalWickets = totalWickets;
-  innings.totalBalls = totalBalls;
-  
-  // Calculate and update overs string (e.g., "15.3")
-  const completeOvers = Math.floor(totalBalls / 6);
-  const remainingBalls = totalBalls % 6;
-  innings.oversString = remainingBalls > 0 ? `${completeOvers}.${remainingBalls}` : `${completeOvers}.0`;
-  
-  // Calculate and update run rate
-  innings.runRate = totalBalls > 0 ? parseFloat((totalRuns / (totalBalls / 6)).toFixed(2)) : 0;
-  
-  // Update extras breakdown
-  innings.extras.wides = innings.overs.reduce((sum, over) => 
-    sum + over.balls.filter(b => b.extras === 'wide').length, 0);
-  innings.extras.noBalls = innings.overs.reduce((sum, over) => 
-    sum + over.balls.filter(b => b.extras === 'no-ball').length, 0);
-  innings.extras.byes = innings.overs.reduce((sum, over) => 
-    sum + over.balls.filter(b => b.extras === 'bye').length, 0);
-  innings.extras.legByes = innings.overs.reduce((sum, over) => 
-    sum + over.balls.filter(b => b.extras === 'leg-bye').length, 0);
-}
-
-function getCurrentOver(inningsIndex) {
-  const innings = form.innings[inningsIndex];
-  if (!innings) return null;
-  
-  return innings.overs.find(o => o.overNumber === innings.currentOver) || null;
-}
-
-function getCurrentBallNumber(inningsIndex) {
-  const innings = form.innings[inningsIndex];
-  if (!innings) return 1;
-  
-  const currentOver = getCurrentOver(inningsIndex);
-  if (!currentOver) return 1;
-  
-  return currentOver.balls.length + 1;
-}
-
-// Ball-by-ball UI helper functions
-function addBallToInnings(inningsIndex) {
-  const ballData = {
-    runs: parseInt(newBall.runs) || 0,
-    extras: newBall.extras,
-    wicket: newBall.wicket ? newBall.wicketDetails : null,
-    batsman: newBall.batsman,
-    bowler: newBall.bowler
-  };
-  
-  addBall(inningsIndex, ballData);
-  resetNewBall();
-}
-
-function resetNewBall() {
-  newBall.runs = 0;
-  newBall.extras = 'none';
-  newBall.wicket = false;
-  newBall.batsman = '';
-  newBall.bowler = '';
-  newBall.wicketDetails = {
-    how: '',
-    fielder: '',
-    bowler: ''
-  };
-}
-
-// Auto-update functions for batsman and bowler stats
-function updateBatsmanStats(inningsIndex, batsmanName, runs, wicket) {
-  const innings = form.innings[inningsIndex];
-  if (!innings || !batsmanName) return;
-  
-  // Find or create batsman entry
-  let batsman = innings.battingCard.find(b => b.playerName === batsmanName);
-  if (!batsman) {
-    batsman = {
-      playerName: batsmanName,
-      runs: 0,
-      balls: 0,
-      fours: 0,
-      sixes: 0,
-      dismissalHow: ''
-    };
-    innings.battingCard.push(batsman);
-  }
-  
-  // Update stats
-  batsman.runs += runs || 0;
-  if (runs === 4) batsman.fours += 1;
-  if (runs === 6) batsman.sixes += 1;
-  
-  // Only count legal deliveries (not wides/no-balls)
-  if (runs !== undefined) {
-    batsman.balls += 1;
-  }
-  
-  // Update dismissal if wicket
-  if (wicket && wicket.how) {
-    batsman.dismissalHow = wicket.how;
-    batsman.dismissalFielder = wicket.fielder || '';
-    batsman.dismissalBowler = wicket.bowler || '';
-  }
-}
-
-function updateBowlerStats(inningsIndex, bowlerName, runs, wicket) {
-  const innings = form.innings[inningsIndex];
-  if (!innings || !bowlerName) return;
-  
-  // Find or create bowler entry
-  let bowler = innings.bowlingCard.find(b => b.bowlerName === bowlerName);
-  if (!bowler) {
-    bowler = {
-      bowlerName: bowlerName,
-      balls: 0,
-      maidens: 0,
-      runs: 0,
-      wickets: 0
-    };
-    innings.bowlingCard.push(bowler);
-  }
-  
-  // Update stats
-  bowler.runs += runs || 0;
-  bowler.balls += 1; // Count all deliveries for bowler
-  
-  // Update wickets
-  if (wicket && wicket.how) {
-    bowler.wickets += 1;
-  }
-}
-
-// Auto update innings based on toss decision
-watch(() => [form.toss.wonBy, form.toss.decision, form.homeClub, form.awayClub], () => {
-  if (form.toss.wonBy && form.toss.decision && form.homeClub && form.awayClub) {
-    const tossWinner = form.toss.wonBy;
-    const tossLoser = tossWinner === form.homeClub ? form.awayClub : form.homeClub;
-    
-    // Determine batting and bowling teams based on toss decision
-    let firstInningsBatting, firstInningsBowling, secondInningsBatting, secondInningsBowling;
-    
-    if (form.toss.decision === 'bat') {
-      // Toss winner bats first
-      firstInningsBatting = tossWinner;
-      firstInningsBowling = tossLoser;
-      secondInningsBatting = tossLoser;
-      secondInningsBowling = tossWinner;
-    } else if (form.toss.decision === 'bowl') {
-      // Toss winner bowls first
-      firstInningsBatting = tossLoser;
-      firstInningsBowling = tossWinner;
-      secondInningsBatting = tossWinner;
-      secondInningsBowling = tossLoser;
-    }
-    
-    // Update innings 1
-    if (form.innings[0]) {
-      form.innings[0].battingClub = firstInningsBatting;
-      form.innings[0].bowlingClub = firstInningsBowling;
-    }
-    
-    // Update innings 2
-    if (form.innings[1]) {
-      form.innings[1].battingClub = secondInningsBatting;
-      form.innings[1].bowlingClub = secondInningsBowling;
-    }
-  }
-}, { deep: true });
-
-// Auto update player of the match suggestion
-watch(() => form.innings.map(i => ({ bats: i.battingCard, bowls: i.bowlingCard })), () => {
+async function unlockMatch() {
+  saving.value = true;
   try {
-    const allBats = form.innings.flatMap(i => i.battingCard);
-    const allBowls = form.innings.flatMap(i => i.bowlingCard);
-    const topBat = [...allBats].sort((a,b) => (b.runs||0) - (a.runs||0))[0];
-    const topBowl = [...allBowls].sort((a,b) => (b.wickets||0) - (a.wickets||0) || (a.runs||0) - (b.runs||0))[0];
-    if (!form.summary.playerOfTheMatch) {
-      if (topBat && topBat.playerName) form.summary.playerOfTheMatch = `${topBat.playerName}`;
-      else if (topBowl && topBowl.bowlerName) form.summary.playerOfTheMatch = `${topBowl.bowlerName}`;
-    }
-  } catch {}
-}, { deep: true });
-
-// Watch for changes in batting club and update player names if needed
-watch(() => form.innings.map((inn, idx) => ({
-  battingClub: inn.battingClub,
-  bowlingClub: inn.bowlingClub,
-  battingCard: inn.battingCard,
-  bowlingCard: inn.bowlingCard
-})), (newValues, oldValues) => {
-  newValues.forEach((inn, idx) => {
-    // Check if batting club changed
-    if (oldValues[idx] && inn.battingClub !== oldValues[idx].battingClub) {
-      // Clear player names that are not in the new roster
-      const battingPlayers = getBattingPlayerOptions(idx);
-      const battingPlayerNames = new Set(battingPlayers.map(p => p.playerName));
-      
-      inn.battingCard.forEach(batter => {
-        if (batter.playerName && !battingPlayerNames.has(batter.playerName)) {
-          batter.playerName = '';
-        }
-      });
-    }
-    
-    // Check if bowling club changed
-    if (oldValues[idx] && inn.bowlingClub !== oldValues[idx].bowlingClub) {
-      // Clear bowler names that are not in the new roster
-      const bowlingPlayers = getBowlingPlayerOptions(idx);
-      const bowlingPlayerNames = new Set(bowlingPlayers.map(p => p.playerName));
-      
-      inn.bowlingCard.forEach(bowler => {
-        if (bowler.bowlerName && !bowlingPlayerNames.has(bowler.bowlerName)) {
-          bowler.bowlerName = '';
-        }
-      });
-    }
-  });
-}, { deep: true });
-
-function resetOverWiseScores() {
-  overWiseScores.value = [0, 0, 0, 0, 0, 0];
-  overWiseExtras.value = ['none', 'none', 'none', 'none', 'none', 'none'];
-  overWiseWickets.value = [false, false, false, false, false, false];
-  overWiseWicketTypes.value = ['bowled', 'bowled', 'bowled', 'bowled', 'bowled', 'bowled'];
+    await api.put(`/admin/tournaments/${tournamentId}/matches/${matchId}/unfinalize`);
+    notify.success('Match unlocked');
+    await load();
+  } catch (e) {
+    notify.error(e.response?.data?.message || 'Failed to unlock');
+  } finally {
+    saving.value = false;
+  }
 }
 
-function addOverWiseScores(inningsIndex) {
-  const innings = form.innings[inningsIndex];
-  if (!innings) return;
+// Watch toss to set innings order
+watch(() => [form.toss.wonBy, form.toss.decision], ([wonBy, decision]) => {
+  if (!wonBy || !form.homeClub || !form.awayClub) return;
   
-  // Get current over and bowler info
-  const currentOverNumber = innings.currentOver;
-  const currentBowler = getCurrentBowler(inningsIndex);
-  const currentBatsman = getCurrentBatsman(inningsIndex);
+  const tossWinner = wonBy;
+  const tossLoser = wonBy === form.homeClub ? form.awayClub : form.homeClub;
   
-  // Add each ball in the over
-  for (let i = 0; i < 6; i++) {
-    // Set the current ball number for this ball
-    innings.currentBall = i + 1;
-    
-    const runs = overWiseScores.value[i] || 0;
-    const extras = overWiseExtras.value[i] || 'none';
-    const isWicket = overWiseWickets.value[i] || false;
-    const wicketType = overWiseWicketTypes.value[i] || 'bowled';
-    
-    // Create wicket data if needed
-    let wicket = null;
-    if (isWicket) {
-      wicket = {
-        how: wicketType,
-        bowler: currentBowler,
-        batsman: currentBatsman
-      };
+  if (decision === 'bat') {
+    form.innings[0].battingClub = tossWinner;
+    form.innings[0].bowlingClub = tossLoser;
+    form.innings[1].battingClub = tossLoser;
+    form.innings[1].bowlingClub = tossWinner;
+  } else {
+    form.innings[0].battingClub = tossLoser;
+    form.innings[0].bowlingClub = tossWinner;
+    form.innings[1].battingClub = tossWinner;
+    form.innings[1].bowlingClub = tossLoser;
+  }
+});
+
+// Restore batsmen from last over when page loads or innings changes
+function restoreBatsmenFromLastOver() {
+  const inn = form.innings[activeInnings.value];
+  if (!inn || !inn.overs || inn.overs.length === 0) return;
+  
+  // Get all balls across all overs, sorted by over and ball number
+  const allBalls = [];
+  for (const over of inn.overs) {
+    for (const ball of (over.balls || [])) {
+      allBalls.push({ ...ball, overNumber: over.overNumber });
     }
-    
-    // Create ball data
-    const ballData = {
-      runs: runs,
-      extras: extras,
-      wicket: wicket,
-      batsman: currentBatsman,
-      bowler: currentBowler
-    };
-    
-    // Add the ball to the innings
-    addBall(inningsIndex, ballData);
   }
   
-  // Reset the over-wise scores
-  resetOverWiseScores();
+  if (allBalls.length === 0) return;
   
-  // Move to next over and reset ball counter
-  innings.currentOver += 1;
-  innings.currentBall = 1;
+  // Get the last ball
+  const lastBall = allBalls[allBalls.length - 1];
+  const lastBatsman = lastBall.batsman;
+  
+  // Find the other batsman who's currently at crease (not out)
+  const notOutBatsmen = inn.battingCard
+    .filter(b => !b.dismissalHow || b.dismissalHow === '' || b.dismissalHow === 'Not Out')
+    .map(b => b.playerName);
+  
+  if (notOutBatsmen.length === 0) return;
+  
+  // The last ball's batsman was the striker
+  let striker = lastBatsman;
+  let nonStriker = notOutBatsmen.find(b => b !== striker) || '';
+  
+  // Check if we need to swap due to odd runs or end of over
+  const lastBallRuns = lastBall.runs || 0;
+  const lastBallExtras = lastBall.extras || 'none';
+  const isLegalDelivery = lastBallExtras !== 'wide' && lastBallExtras !== 'noball';
+  
+  // Count legal deliveries in the current over to check if we're at the start of a new over
+  const legalBallsInLastOver = (inn.overs.find(o => o.overNumber === lastBall.overNumber)?.balls || [])
+    .filter(b => b.extras !== 'wide' && b.extras !== 'noball').length;
+  
+  const endedOnOverComplete = legalBallsInLastOver === 6;
+  const oddRuns = lastBallRuns % 2 === 1;
+  
+  // If last ball ended the over (6 legal deliveries), striker and non-striker need to swap for new over
+  // If odd runs were scored on last ball, they already swapped
+  // Net effect: if over ended on odd runs, no swap needed; if over ended on even runs, swap needed
+  if (endedOnOverComplete) {
+    if (!oddRuns) {
+      // Swap for new over (odd runs already caused a swap, so even runs means we swap now)
+      const temp = striker;
+      striker = nonStriker;
+      nonStriker = temp;
+    }
+    // If odd runs, the addBall already swapped them, and end of over would swap again,
+    // but since we're restoring from the state AFTER the ball, they appear in swapped state
+  } else if (oddRuns) {
+    // Mid-over odd runs means striker and non-striker are already swapped in the saved state
+    // No action needed here
+  }
+  
+  // Set the values
+  if (striker && notOutBatsmen.includes(striker)) {
+    currentStriker.value = striker;
+  }
+  if (nonStriker && notOutBatsmen.includes(nonStriker)) {
+    currentNonStriker.value = nonStriker;
+  }
+  
+  // Also restore the bowler from the last over
+  const currentOverNum = Math.floor(inn.totalBalls / 6) + 1;
+  const currentOverObj = inn.overs.find(o => o.overNumber === currentOverNum);
+  if (currentOverObj && currentOverObj.bowler) {
+    currentBowler.value = currentOverObj.bowler;
+  }
 }
 
-function getCurrentBatsman(inningsIndex) {
-  const innings = form.innings[inningsIndex];
-  if (!innings || !innings.battingCard || innings.battingCard.length === 0) return '';
-  
-  // Find the batsman who is not out
-  const notOutBatsmen = innings.battingCard.filter(b => 
-    !b.dismissalHow || b.dismissalHow.toLowerCase() === 'not out' || b.dismissalHow === ''
-  );
-  
-  // Return the first not-out batsman or the first batsman if all are out
-  return notOutBatsmen.length > 0 ? notOutBatsmen[0].playerName : innings.battingCard[0].playerName;
-}
+// Watch activeInnings to restore batsmen when switching innings
+watch(activeInnings, () => {
+  restoreBatsmenFromLastOver();
+});
 
-function getCurrentBowler(inningsIndex) {
-  const innings = form.innings[inningsIndex];
-  if (!innings || !innings.bowlingCard || innings.bowlingCard.length === 0) return '';
-  
-  // Return the last bowler who bowled or the first bowler
-  return innings.bowlingCard[innings.bowlingCard.length - 1]?.bowlerName || innings.bowlingCard[0]?.bowlerName || '';
-}
-
-load();
+onMounted(async () => {
+  await load();
+  // Restore batsmen after data is loaded
+  restoreBatsmenFromLastOver();
+});
 </script>
 
 <style scoped>
-.container { max-width: 1100px; }
-.input { @apply w-full border rounded px-3 py-2 bg-white; }
-.label { @apply text-sm text-gray-600; }
-.card { @apply bg-white p-4 rounded shadow; }
-.card-title { @apply text-lg font-semibold; }
-.btn { @apply px-3 py-2 bg-gray-200 rounded; }
-.btn-primary { @apply px-3 py-2 bg-blue-600 text-white rounded disabled:opacity-60; }
-.btn-success { @apply px-3 py-2 bg-green-600 text-white rounded disabled:opacity-60; }
-.btn-danger { @apply px-3 py-2 bg-red-100 text-red-700 rounded; }
-.tab { @apply px-3 py-2 text-sm rounded-t hover:bg-gray-100; }
-.tab-active { @apply bg-white border-x border-t -mb-px; }
-.kpi { @apply bg-gray-50 border rounded p-3; }
-.kpi-label { @apply text-xs text-gray-600; }
-.kpi-value { @apply text-xl font-semibold; }
+/* Base styles */
+.label { @apply block text-sm text-white/60 mb-1; }
+.input-field { @apply w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500; }
+.input-sm { @apply bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm w-full; }
+.input-num { @apply bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-center w-16; }
+
+/* Cards */
+.glass-card { @apply bg-white/10 backdrop-blur-lg border border-white/10 rounded-2xl; }
+.scoreboard-card { @apply bg-gradient-to-r from-blue-600/80 to-purple-600/80 backdrop-blur-lg border border-white/20 rounded-2xl p-6; }
+
+/* Buttons */
+.btn { @apply px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50; }
+.btn-primary { @apply bg-blue-600 text-white hover:bg-blue-700; }
+.btn-success { @apply bg-green-600 text-white hover:bg-green-700; }
+.btn-danger { @apply bg-red-600 text-white hover:bg-red-700; }
+.btn-warning { @apply bg-yellow-600 text-white hover:bg-yellow-700; }
+.btn-outline { @apply border border-white/30 text-white hover:bg-white/10; }
+.btn-sm { @apply px-3 py-1.5 text-sm rounded-lg; }
+.btn-icon { @apply p-2 hover:bg-white/10 rounded-lg text-white transition-colors; }
+
+/* Mode toggle */
+.mode-btn { @apply px-4 py-2 rounded-full text-sm font-medium text-white/70 bg-white/10 hover:bg-white/20 transition-all; }
+.mode-btn-active { @apply bg-blue-600 text-white; }
+
+/* Innings tabs */
+.innings-tab { @apply px-4 py-2 rounded-lg text-sm font-medium text-white/70 bg-white/10 hover:bg-white/20 transition-all; }
+.innings-tab-active { @apply bg-blue-600 text-white; }
+
+/* Run buttons */
+.run-btn { @apply w-12 h-12 rounded-xl bg-white/10 text-white font-bold hover:bg-white/20 transition-all; }
+.run-btn-four { @apply bg-green-600/30 hover:bg-green-600/50; }
+.run-btn-six { @apply bg-purple-600/30 hover:bg-purple-600/50; }
+
+/* Extra buttons */
+.extra-btn { @apply px-3 py-2 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 transition-all; }
+
+/* Wicket buttons */
+.wicket-btn { @apply px-3 py-2 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 transition-all; }
+
+/* Ball indicators */
+.ball-indicator { @apply w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold; }
+.ball-empty { @apply bg-white/10 text-white/30; }
+.ball-dot { @apply bg-gray-600 text-white; }
+.ball-run { @apply bg-blue-600 text-white; }
+.ball-four { @apply bg-green-500 text-white; }
+.ball-six { @apply bg-purple-500 text-white; }
+.ball-wicket { @apply bg-red-600 text-white; }
+.ball-extra { @apply bg-amber-500 text-white; }
+
+/* Modal */
+.modal-overlay { @apply fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4; }
+.modal-content { @apply bg-slate-800 border border-white/10 rounded-2xl p-6 w-full max-w-md; }
+
+/* Fix for dropdown option visibility - browsers render options with white background */
+select option {
+  background-color: #1e293b;
+  color: #ffffff;
+}
+
+select option:hover,
+select option:focus,
+select option:checked {
+  background-color: #334155;
+  color: #ffffff;
+}
 </style>
