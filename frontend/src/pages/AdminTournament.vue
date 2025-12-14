@@ -163,6 +163,16 @@
                 Teams
               </button>
               
+              <!-- Generate Fixtures Button -->
+              <button v-if="!t.fixturesGenerated && t.status !== 'cancelled' && t.status !== 'completed' && (t.participants?.length || 0) >= 2"
+                      @click="openFixtureWizard(t)" 
+                      class="px-4 py-2 bg-green-50 text-green-600 rounded-xl text-sm font-medium hover:bg-green-100 transition-colors">
+                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                Generate
+              </button>
+              
               <button v-if="t.format === 'groups+knockouts' && t.status !== 'cancelled' && t.status !== 'completed'" 
                       @click="seedKnockout(t)" 
                       class="px-4 py-2 bg-purple-50 text-purple-600 rounded-xl text-sm font-medium hover:bg-purple-100 transition-colors">
@@ -547,54 +557,7 @@
         </div>
       </div>
 
-      <!-- Generate Fixtures Modal -->
-      <div v-if="genOpen" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <div class="bg-white w-full max-w-md max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl">
-          <div class="px-4 py-3 border-b flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-gray-900">Generate Fixtures</h3>
-            <button @click="closeGen" class="text-gray-500 hover:text-gray-700">✕</button>
-          </div>
-          <div class="p-4 space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Tournament</label>
-              <input class="w-full px-3 py-2 border rounded bg-gray-50" :value="currentTournament?.name" disabled />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Format</label>
-              <input class="w-full px-3 py-2 border rounded bg-gray-50" :value="currentTournament?.format" disabled />
-            </div>
-            <div v-if="currentTournament?.format === 'round-robin' || currentTournament?.format === 'league'" class="flex items-center gap-2">
-              <input id="doubleRR2" type="checkbox" v-model="gen.doubleRoundRobin" />
-              <label for="doubleRR2" class="text-sm">Double round robin</label>
-            </div>
-            <div v-if="currentTournament?.format === 'groups+knockouts' || currentTournament?.format === 'league+playoff'" class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-sm mb-1">Groups</label>
-                <input v-model.number="gen.groups" type="number" min="2" class="w-full px-3 py-2 border rounded" />
-              </div>
-              <div>
-                <label class="block text-sm mb-1">Qualify / group</label>
-                <input v-model.number="gen.qualifyPerGroup" type="number" min="1" class="w-full px-3 py-2 border rounded" />
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <input id="respectRounds2" type="checkbox" v-model="gen.respectRoundOrder" />
-              <label for="respectRounds2" class="text-sm">Respect round order (strict)</label>
-            </div>
-            <p v-if="genError" class="text-sm text-red-600">{{ genError }}</p>
-            <div v-if="genDiag" class="text-xs text-gray-600 bg-gray-50 border rounded p-2">
-              <div>Required matches: {{ genDiag.required }}</div>
-              <div>Capacity (slots): {{ genDiag.capacity }}</div>
-            </div>
-          </div>
-          <div class="px-4 py-3 border-t flex items-center justify-end gap-2">
-            <button class="px-3 py-2 border rounded" @click="closeGen">Cancel</button>
-            <button class="px-3 py-2 bg-indigo-600 text-white rounded disabled:opacity-50" :disabled="genLoading" @click="generateNow">
-              {{ genLoading ? 'Generating...' : 'Generate' }}
-            </button>
-          </div>
-        </div>
-      </div>
+      <!-- Old Generate Fixtures Modal removed - using V3 FixtureWizard instead -->
 
       <!-- Registrations Management Modal -->
       <div v-if="openRegistrationsModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -702,6 +665,15 @@
       </div>
 
     </div>
+
+    <!-- Fixture Wizard Component -->
+    <FixtureWizard
+      :show="showFixtureWizard"
+      :tournament="wizardTournament"
+      :teams="wizardTeams"
+      @close="showFixtureWizard = false"
+      @generated="onFixturesGenerated"
+    />
   </div>
 </template>
 
@@ -709,7 +681,7 @@
 import { ref, reactive, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../utils/api';
-// FixtureDraw import removed
+import FixtureWizard from '../components/admin/FixtureWizard.vue';
 
 const openCreate = ref(false);
 const activeFilter = ref('');
@@ -718,18 +690,16 @@ const loading = ref(false);
 const editing = ref(false);
 const openRegistrationsModal = ref(false);
 const registrations = ref([]);
+
+// Fixture Wizard state (old modal removed)
+const showFixtureWizard = ref(false);
+const wizardTournament = ref(null);
+const wizardTeams = ref([]);
 const currentTournament = ref(null);
 
 const current = ref(null); // kept for creation workflow only
 
 const errorMsg = ref('');
-
-// Fixture generation state
-const genOpen = ref(false);
-const genLoading = ref(false);
-const genError = ref('');
-const genDiag = ref(null);
-const gen = ref({ doubleRoundRobin: false, respectRoundOrder: true, groups: 2, qualifyPerGroup: 2 });
 
 const router = useRouter();
 
@@ -819,6 +789,29 @@ function statusDotClass(status){
          status === 'ongoing' ? 'bg-orange-400' :
          status === 'completed' ? 'bg-green-400' :
          'bg-gray-400';
+}
+
+// Fixture Wizard functions
+async function openFixtureWizard(tournament) {
+  wizardTournament.value = tournament;
+  wizardTeams.value = tournament.participants || [];
+  showFixtureWizard.value = true;
+}
+
+async function onFixturesGenerated(result) {
+  console.log('Fixtures generated:', result);
+  // Refresh tournaments list
+  loading.value = true;
+  try {
+    const res = await api.get('/admin/tournaments', { 
+      params: activeFilter.value ? { status: activeFilter.value } : {} 
+    });
+    tournaments.value = res.data;
+  } catch (err) {
+    console.error('Error refreshing:', err);
+  } finally {
+    loading.value = false;
+  }
 }
 
 async function openRegistrations(tournament){
@@ -1001,7 +994,7 @@ async function saveTournament(){
   if (form.entryFee < 0) { errorMsg.value = 'Entry fee cannot be negative'; return; }
   if (form.prizePool < 0) { errorMsg.value = 'Prize pool cannot be negative'; return; }
   if (form.restDaysMin < 0) { errorMsg.value = 'Minimum rest days cannot be negative'; return; }
-  if (form.oversLimit <= 0) { errorMsg.value = 'Overs limit must be greater than 0'; return; }
+  if (form.oversLimit < 1) { errorMsg.value = 'Overs limit must be at least 1'; return; }
   
   // Validate dates are not in the past
   const today = new Date();

@@ -2,14 +2,14 @@
   <div class="min-h-screen flex flex-col bg-[rgb(var(--bg))]">
     <template v-if="!isAdminRoute">
       <Navbar />
-      <main class="flex-1 pt-6">
-        <div class="max-w-7xl mx-auto px-4 md:px-6">
+      <main class="flex-1" :class="{ 'pt-6': !isAuthRoute }">
+        <div :class="isAuthRoute ? '' : 'max-w-7xl mx-auto px-4 md:px-6'">
           <transition name="page" mode="out-in">
             <router-view />
           </transition>
         </div>
       </main>
-      <footer class="border-t border-gray-200/60 dark:border-neutral-800 mt-10">
+      <footer v-if="!isAuthRoute" class="border-t border-gray-200/60 dark:border-neutral-800 mt-10">
         <div class="max-w-7xl mx-auto px-4 md:px-6 py-8 text-sm text-gray-500 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <span>© {{ new Date().getFullYear() }} CrickArena</span>
           <div class="flex items-center gap-6">
@@ -42,6 +42,7 @@ import ConfirmDialog from './components/ConfirmDialog.vue';
 
 const route = useRoute();
 const isAdminRoute = computed(() => route.matched.some(r => r.meta && (r.meta.requiresAdmin || r.meta.requiresClubManager || r.meta.requiresCoach || r.meta.requiresPlayer)));
+const isAuthRoute = computed(() => route.name === 'login' || route.name === 'register');
 </script>
 
 <style>

@@ -24,6 +24,7 @@ const { default: playerRoutes } = await import('./routes/players.js');
 const { default: coachRoutes } = await import('./routes/coaches.js');
 const { default: messageRoutes } = await import('./routes/messages.js');
 const { default: matchRoutes } = await import('./routes/matches.js');
+const { default: contactRoutes } = await import('./routes/contact.js');
 const { errorHandler, logger } = await import('./utils/logger.js');
 
 const app = express();
@@ -38,7 +39,7 @@ const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (mobile apps, etc.)
     if (!origin) return callback(null, true);
-    
+
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -107,7 +108,7 @@ app.use((req, res, next) => {
       res.status(408).json({ message: 'Request timeout' });
     }
   });
-  
+
   // Set response timeout
   res.setTimeout(30000, () => {
     console.warn(`Response timeout for ${req.method} ${req.url}`);
@@ -115,7 +116,7 @@ app.use((req, res, next) => {
       res.status(408).json({ message: 'Response timeout' });
     }
   });
-  
+
   next();
 });
 
@@ -131,6 +132,7 @@ app.use('/api/players', playerRoutes);
 app.use('/api/coaches', coachRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/matches', matchRoutes);
+app.use('/api/contact', contactRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
@@ -166,6 +168,6 @@ process.on('SIGINT', () => {
 try {
   const { syncTournamentAndMatches } = await import('./utils/statusSync.js');
   setInterval(() => {
-    syncTournamentAndMatches().catch(() => {});
+    syncTournamentAndMatches().catch(() => { });
   }, 60 * 1000);
-} catch (_) {}
+} catch (_) { }

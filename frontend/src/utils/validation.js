@@ -22,12 +22,31 @@ export const disposableEmailDomains = [
  * @returns {Object} - { isValid: boolean, error: string }
  */
 export function validateEmail(email) {
-  // RFC 5322-like local@domain check
-  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+  // RFC 5322-like local@domain check with stricter character validation
+  // Excludes problematic characters: $ % # [ ] \ " ; , ( ) and control characters
+  const emailRegex = /^[a-zA-Z0-9.!&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
   const trimmedEmail = email.trim().toLowerCase();
   
   if (!trimmedEmail) {
     return { isValid: false, error: 'Email is required' };
+  }
+  
+  // Check for invalid characters that shouldn't be in emails
+  const invalidChars = ['$', '%', '#', '[', ']', '\\', '"', ';', ','];
+  for (const char of invalidChars) {
+    if (trimmedEmail.includes(char)) {
+      return { isValid: false, error: `Email address cannot contain the '${char}' character` };
+    }
+  }
+  
+  // Check for parentheses which are not allowed
+  if (trimmedEmail.includes('(') || trimmedEmail.includes(')')) {
+    return { isValid: false, error: 'Email address cannot contain parentheses' };
+  }
+  
+  // Check for control characters (ASCII 0-31 and 127)
+  if (/[\x00-\x1F\x7F]/.test(trimmedEmail)) {
+    return { isValid: false, error: 'Email address contains invalid control characters' };
   }
   
   if (!emailRegex.test(trimmedEmail)) {
@@ -35,10 +54,21 @@ export function validateEmail(email) {
   }
   
   if (trimmedEmail.length > 254) {
-    return { isValid: false, error: 'Email address is too long' };
+    return { isValid: false, error: 'Email address is too long (maximum 254 characters)' };
   }
   
+  const localPart = trimmedEmail.split('@')[0];
   const domain = trimmedEmail.split('@')[1];
+  
+  // Local part cannot exceed 64 characters
+  if (localPart.length > 64) {
+    return { isValid: false, error: 'Email local part is too long (maximum 64 characters)' };
+  }
+  
+  // Domain cannot exceed 253 characters
+  if (domain.length > 253) {
+    return { isValid: false, error: 'Email domain is too long (maximum 253 characters)' };
+  }
   
   // Enforce at least one dot in domain and a letter-only TLD (e.g., .com, .net)
   const parts = domain.split('.');
