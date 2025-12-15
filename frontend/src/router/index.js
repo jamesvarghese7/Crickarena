@@ -43,7 +43,6 @@ import PlayerFeedback from '../pages/player/Feedback.vue'; // Added import
 import PlayerMatches from '../pages/player/Matches.vue'; // Added import
 
 import CoachRegistration from '../pages/CoachRegistration.vue';
-import CoachDashboard from '../pages/CoachDashboard.vue';
 import CoachPanel from '../pages/CoachPanel.vue';
 // Import new coach page components
 import CoachAnalytics from '../pages/coach/CoachAnalytics.vue';
@@ -156,7 +155,6 @@ const routes = [
   { path: '/coach/register', name: 'coach-registration', component: CoachRegistration, meta: { requiresAuth: true } },
   // Alias to support older links/components pointing to '/coach/registration'
   { path: '/coach/registration', redirect: { name: 'coach-registration' } },
-  { path: '/coach/dashboard', name: 'coach-dashboard', component: CoachDashboard, meta: { requiresAuth: true, requiresCoach: true } },
   // Coach panel layout with nested routes
   {
     path: '/coach-panel',
@@ -383,7 +381,7 @@ router.beforeEach(async (to, from, next) => {
           } else {
             alert('Your profile is already completed. Redirecting to dashboard.');
           }
-          return next({ name: 'coach-dashboard' });
+          return next({ name: 'coach-panel' });
         }
       } catch (e) {
         // If error, allow access to registration

@@ -624,7 +624,7 @@ const submitRegistration = async () => {
       });
     }
     alert('Coach profile created successfully! You can now apply to coach clubs.');
-    router.push({ name: 'coach-dashboard' });
+    router.push({ name: 'coach-panel' });
   } catch (error) {
     console.error('Registration error:', error);
     const firstValidation = Array.isArray(error?.response?.data?.errors) && error.response.data.errors.length

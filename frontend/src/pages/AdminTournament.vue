@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+  <div class="space-y-6">
     <!-- Header Bar -->
     <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
