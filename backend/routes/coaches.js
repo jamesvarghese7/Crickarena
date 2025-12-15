@@ -59,7 +59,7 @@ router.get('/profile', verifyFirebaseToken, async (req, res) => {
     // Add computed field to indicate if profile photo exists
     const coachData = coach.toObject();
     coachData.hasProfilePhoto = !!(coach.profilePhoto && coach.profilePhoto.data);
-    
+
     console.log(`[DEBUG] Coach profile request - hasProfilePhoto: ${coachData.hasProfilePhoto}`);
 
     res.json({ coach: coachData });
@@ -116,7 +116,7 @@ router.post('/register', verifyFirebaseToken, validateCoachRegistration, async (
       { $set: { role: 'coach' } }
     );
 
-    res.status(201).json({ 
+    res.status(201).json({
       message: 'Coach profile created successfully',
       coach: await coach.populate('currentClub', 'name clubName district city')
     });
@@ -151,10 +151,10 @@ router.put('/profile', verifyFirebaseToken, validateCoachRegistration, async (re
     // Update coach data
     Object.assign(coach, req.body, { age });
     coach.profileCompleted = true;
-    
+
     await coach.save();
 
-    res.json({ 
+    res.json({
       message: 'Coach profile updated successfully',
       coach: await coach.populate('currentClub', 'name clubName district city')
     });
@@ -196,7 +196,7 @@ router.post('/upload-document', verifyFirebaseToken, upload.single('document'), 
     coach.documents.push(document);
     await coach.save();
 
-    res.json({ 
+    res.json({
       message: 'Document uploaded successfully',
       documentId: coach.documents[coach.documents.length - 1]._id
     });
@@ -223,7 +223,7 @@ router.get('/document/:documentId', verifyFirebaseToken, async (req, res) => {
       'Content-Type': document.contentType,
       'Content-Disposition': `inline; filename="${document.name}"`
     });
-    
+
     res.send(document.data);
   } catch (error) {
     console.error('Error fetching document:', error);
@@ -290,19 +290,19 @@ router.get('/photo', verifyFirebaseToken, async (req, res) => {
     console.log(`[DEBUG] Coach photo request from user: ${req.user._id} (${req.user.email})`);
     const coach = await Coach.findOne({ user: req.user._id });
     console.log(`[DEBUG] Coach found: ${!!coach}`);
-    
+
     if (!coach) {
       console.log(`[DEBUG] No coach profile found for user: ${req.user._id}`);
       return res.status(404).json({ message: 'Coach profile not found' });
     }
-    
+
     console.log(`[DEBUG] Coach has profile photo: ${!!(coach.profilePhoto && coach.profilePhoto.data)}`);
-    
+
     if (!coach.profilePhoto || !coach.profilePhoto.data) {
       console.log(`[DEBUG] No photo data found for coach: ${req.user._id}`);
       return res.status(404).json({ message: 'Profile photo not found' });
     }
-    
+
     // Set content type for image response with no-cache headers
     res.set({
       'Content-Type': coach.profilePhoto.contentType,
@@ -342,8 +342,8 @@ router.post('/apply-to-club/:clubId', verifyFirebaseToken, async (req, res) => {
     }
 
     if (!coach.canApplyToClub(req.params.clubId)) {
-      return res.status(400).json({ 
-        message: 'Cannot apply to this club. You may have a pending application, already be associated with a club, or recently applied to this club.' 
+      return res.status(400).json({
+        message: 'Cannot apply to this club. You may have a pending application, already be associated with a club, or recently applied to this club.'
       });
     }
 
@@ -362,7 +362,7 @@ router.get('/applications', verifyFirebaseToken, async (req, res) => {
     const coach = await Coach.findOne({ user: req.user._id })
       .populate('applications.club', 'name clubName district city logoUrl')
       .populate('applications.processedBy', 'name email');
-    
+
     if (!coach) {
       return res.status(404).json({ message: 'Coach profile not found' });
     }
@@ -400,12 +400,12 @@ router.get('/club-status', verifyFirebaseToken, async (req, res) => {
     const coach = await Coach.findOne({ user: req.user._id })
       .populate('currentClub', 'name clubName district city')
       .select('currentClub joinedClubAt applications');
-    
+
     if (!coach) {
-      return res.json({ 
-        hasClub: false, 
+      return res.json({
+        hasClub: false,
         canApply: false,
-        message: 'Coach profile not found. Please complete your profile first.' 
+        message: 'Coach profile not found. Please complete your profile first.'
       });
     }
 
@@ -452,7 +452,7 @@ router.get('/club-status', verifyFirebaseToken, async (req, res) => {
 router.post('/resign-from-club', verifyFirebaseToken, async (req, res) => {
   try {
     const { resignReason } = req.body;
-    
+
     const coach = await Coach.findOne({ user: req.user._id });
     if (!coach) {
       return res.status(404).json({ message: 'Coach profile not found' });
@@ -494,21 +494,21 @@ router.post('/training-programs', verifyFirebaseToken, async (req, res) => {
     }
 
     const trainingProgram = req.body;
-    
+
     // Validate required fields
     if (!trainingProgram.title || !trainingProgram.description || !trainingProgram.startDate || !trainingProgram.endDate) {
       return res.status(400).json({ message: 'Title, description, start date, and end date are required' });
     }
-    
+
     // Validate date logic
     if (new Date(trainingProgram.startDate) >= new Date(trainingProgram.endDate)) {
       return res.status(400).json({ message: 'End date must be after start date' });
     }
-    
+
     // Add the training program
     const newProgram = await coach.createTrainingProgram(trainingProgram);
 
-    res.status(201).json({ 
+    res.status(201).json({
       message: 'Training program created successfully',
       trainingProgram: newProgram.trainingPrograms[newProgram.trainingPrograms.length - 1]
     });
@@ -527,14 +527,14 @@ router.put('/training-programs/:programId', verifyFirebaseToken, async (req, res
     }
 
     const trainingProgram = req.body;
-    
+
     // Validate date logic if dates are provided
     if (trainingProgram.startDate && trainingProgram.endDate) {
       if (new Date(trainingProgram.startDate) >= new Date(trainingProgram.endDate)) {
         return res.status(400).json({ message: 'End date must be after start date' });
       }
     }
-    
+
     // Update the training program
     await coach.updateTrainingProgram(req.params.programId, trainingProgram);
 
@@ -658,7 +658,7 @@ router.post('/add-player-to-program', verifyFirebaseToken, async (req, res) => {
     }
 
     const { playerId, programId } = req.body;
-    
+
     // In a real implementation, this would add the player to the program
     // For now, we'll just return a success message
     res.json({ message: 'Player added to program successfully' });
@@ -677,7 +677,7 @@ router.delete('/remove-player-from-program/:playerId/:programId', verifyFirebase
     }
 
     const { playerId, programId } = req.params;
-    
+
     // In a real implementation, this would remove the player from the program
     // For now, we'll just return a success message
     res.json({ message: 'Player removed from program successfully' });
@@ -696,18 +696,18 @@ router.post('/player-progress', verifyFirebaseToken, async (req, res) => {
     }
 
     const progressData = req.body;
-    
+
     // Validate required fields
     if (!progressData.player || !progressData.program) {
       return res.status(400).json({ message: 'Player and program are required' });
     }
-    
+
     // Check if progress record already exists
-    const existingProgress = coach.playerProgress.find(p => 
-      p.player.toString() === progressData.player && 
+    const existingProgress = coach.playerProgress.find(p =>
+      p.player.toString() === progressData.player &&
       p.program.toString() === progressData.program
     );
-    
+
     if (existingProgress) {
       // Update existing progress
       Object.assign(existingProgress, progressData);
@@ -715,9 +715,9 @@ router.post('/player-progress', verifyFirebaseToken, async (req, res) => {
       // Add new progress record
       coach.playerProgress.push(progressData);
     }
-    
+
     await coach.save();
-    
+
     res.json({ message: 'Player progress updated successfully' });
   } catch (error) {
     console.error('Error updating player progress:', error);
@@ -734,9 +734,9 @@ router.get('/player-progress/:programId', verifyFirebaseToken, async (req, res) 
     }
 
     const { programId } = req.params;
-    
+
     const progressRecords = coach.getPlayerProgressForProgram(programId);
-    
+
     res.json({ progressRecords });
   } catch (error) {
     console.error('Error fetching player progress:', error);
@@ -753,16 +753,16 @@ router.get('/player-progress-detail/:playerId/:programId', verifyFirebaseToken, 
     }
 
     const { playerId, programId } = req.params;
-    
-    const progressRecord = coach.playerProgress.find(p => 
-      p.player.toString() === playerId && 
+
+    const progressRecord = coach.playerProgress.find(p =>
+      p.player.toString() === playerId &&
       p.program.toString() === programId
     );
-    
+
     if (!progressRecord) {
       return res.status(404).json({ message: 'Player progress record not found' });
     }
-    
+
     res.json({ progress: progressRecord });
   } catch (error) {
     console.error('Error fetching player progress detail:', error);
@@ -816,22 +816,22 @@ router.post('/sessions', verifyFirebaseToken, async (req, res) => {
     }
 
     const sessionData = req.body;
-    
+
     // Validate required fields
-    if (!sessionData.date || !sessionData.startTime || !sessionData.endTime || 
-        !sessionData.focusArea || !sessionData.location) {
+    if (!sessionData.date || !sessionData.startTime || !sessionData.endTime ||
+      !sessionData.focusArea || !sessionData.location) {
       return res.status(400).json({ message: 'All session fields are required' });
     }
-    
+
     // Validate date (cannot be in the past)
     const sessionDate = new Date(sessionData.date);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     if (sessionDate < today) {
       return res.status(400).json({ message: 'Cannot schedule sessions on past dates' });
     }
-    
+
     // Add session to a training program (find the first program or create a default one)
     if (coach.trainingPrograms.length === 0) {
       // Create a default program if none exists
@@ -850,7 +850,7 @@ router.post('/sessions', verifyFirebaseToken, async (req, res) => {
       };
       coach.trainingPrograms.push(defaultProgram);
     }
-    
+
     // Add session to the first training program
     const program = coach.trainingPrograms[0];
     program.sessions.push({
@@ -861,13 +861,13 @@ router.post('/sessions', verifyFirebaseToken, async (req, res) => {
       focusArea: sessionData.focusArea,
       notes: sessionData.notes
     });
-    
+
     await coach.save();
-    
+
     const newSession = program.sessions[program.sessions.length - 1];
-    
-    res.status(201).json({ 
-      message: 'Session created successfully', 
+
+    res.status(201).json({
+      message: 'Session created successfully',
       session: newSession,
       programId: program._id
     });
@@ -887,11 +887,11 @@ router.put('/sessions/:sessionId', verifyFirebaseToken, async (req, res) => {
 
     const { sessionId } = req.params;
     const sessionData = req.body;
-    
+
     // Find the program that contains this session
     let program = null;
     let sessionIndex = -1;
-    
+
     for (let i = 0; i < coach.trainingPrograms.length; i++) {
       const prog = coach.trainingPrograms[i];
       const index = prog.sessions.findIndex(s => s._id.toString() === sessionId);
@@ -901,28 +901,28 @@ router.put('/sessions/:sessionId', verifyFirebaseToken, async (req, res) => {
         break;
       }
     }
-    
+
     if (!program || sessionIndex === -1) {
       return res.status(404).json({ message: 'Session not found' });
     }
-    
+
     // Validate date (cannot be in the past)
     if (sessionData.date) {
       const sessionDate = new Date(sessionData.date);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       if (sessionDate < today) {
         return res.status(400).json({ message: 'Cannot schedule sessions on past dates' });
       }
     }
-    
+
     // Update session
     Object.assign(program.sessions[sessionIndex], sessionData);
-    
+
     await coach.save();
-    
-    res.json({ 
+
+    res.json({
       message: 'Session updated successfully',
       session: program.sessions[sessionIndex]
     });
@@ -941,11 +941,11 @@ router.delete('/sessions/:sessionId', verifyFirebaseToken, async (req, res) => {
     }
 
     const { sessionId } = req.params;
-    
+
     // Find the program that contains this session
     let programIndex = -1;
     let sessionIndex = -1;
-    
+
     for (let i = 0; i < coach.trainingPrograms.length; i++) {
       const prog = coach.trainingPrograms[i];
       const index = prog.sessions.findIndex(s => s._id.toString() === sessionId);
@@ -955,16 +955,16 @@ router.delete('/sessions/:sessionId', verifyFirebaseToken, async (req, res) => {
         break;
       }
     }
-    
+
     if (programIndex === -1 || sessionIndex === -1) {
       return res.status(404).json({ message: 'Session not found' });
     }
-    
+
     // Remove session
     coach.trainingPrograms[programIndex].sessions.splice(sessionIndex, 1);
-    
+
     await coach.save();
-    
+
     res.json({ message: 'Session deleted successfully' });
   } catch (error) {
     console.error('Error deleting session:', error);
@@ -981,12 +981,12 @@ router.get('/sessions/:programId', verifyFirebaseToken, async (req, res) => {
     }
 
     const { programId } = req.params;
-    
+
     const program = coach.trainingPrograms.id(programId);
     if (!program) {
       return res.status(404).json({ message: 'Training program not found' });
     }
-    
+
     res.json({ sessions: program.sessions });
   } catch (error) {
     console.error('Error fetching sessions:', error);
@@ -1045,7 +1045,7 @@ router.post('/sessions/:sessionId/attendance', verifyFirebaseToken, async (req, 
 
     await coach.save();
 
-    res.json({ 
+    res.json({
       message: 'Attendance marked successfully',
       attendance: session.attendance
     });
@@ -1081,7 +1081,7 @@ router.get('/sessions/:sessionId/attendance', verifyFirebaseToken, async (req, r
       return res.status(404).json({ message: 'Session not found' });
     }
 
-    res.json({ 
+    res.json({
       attendance: session.attendance
     });
   } catch (error) {
@@ -1102,7 +1102,7 @@ router.get('/club/applications', verifyFirebaseToken, requireRole('clubManager')
     }
 
     // Find all coaches with applications to this club
-    const coaches = await Coach.find({ 
+    const coaches = await Coach.find({
       $or: [
         { 'applications.club': club._id },
         { 'resignHistory.club': club._id }
@@ -1115,10 +1115,10 @@ router.get('/club/applications', verifyFirebaseToken, requireRole('clubManager')
     const applications = [];
     coaches.forEach(coach => {
       // Add pending/approved/rejected applications
-      const clubApplications = coach.applications.filter(app => 
+      const clubApplications = coach.applications.filter(app =>
         app.club.toString() === club._id.toString()
       );
-      
+
       clubApplications.forEach(app => {
         applications.push({
           _id: app._id,
@@ -1152,13 +1152,13 @@ router.get('/club/applications', verifyFirebaseToken, requireRole('clubManager')
           approvalNotes: app.approvalNotes
         });
       });
-      
+
       // Add resign history as pseudo-applications with 'resigned' status
       if (coach.resignHistory) {
-        const clubResigns = coach.resignHistory.filter(record => 
+        const clubResigns = coach.resignHistory.filter(record =>
           record.club.toString() === club._id.toString()
         );
-        
+
         clubResigns.forEach(record => {
           applications.push({
             _id: record._id,
@@ -1323,7 +1323,7 @@ router.get('/club/coach/:coachId', verifyFirebaseToken, requireRole('clubManager
     }
 
     // Check if this coach has applied to the manager's club
-    const hasApplicationToClub = coach.applications.some(app => 
+    const hasApplicationToClub = coach.applications.some(app =>
       app.club._id.toString() === club._id.toString()
     );
 
@@ -1353,7 +1353,7 @@ router.get('/club/coach/:coachId/photo', verifyFirebaseToken, requireRole('clubM
     }
 
     // Check if this coach has applied to the manager's club
-    const hasApplicationToClub = coach.applications.some(app => 
+    const hasApplicationToClub = coach.applications.some(app =>
       app.club.toString() === club._id.toString()
     );
 
@@ -1369,7 +1369,7 @@ router.get('/club/coach/:coachId/photo', verifyFirebaseToken, requireRole('clubM
       'Content-Type': coach.profilePhoto.contentType,
       'Cache-Control': 'public, max-age=86400'
     });
-    
+
     res.send(coach.profilePhoto.data);
   } catch (error) {
     console.error('Error fetching coach photo:', error);
@@ -1392,7 +1392,7 @@ router.get('/club/coach/:coachId/document/:documentId', verifyFirebaseToken, req
     }
 
     // Check if this coach has applied to the manager's club
-    const hasApplicationToClub = coach.applications.some(app => 
+    const hasApplicationToClub = coach.applications.some(app =>
       app.club.toString() === club._id.toString()
     );
 
@@ -1409,7 +1409,7 @@ router.get('/club/coach/:coachId/document/:documentId', verifyFirebaseToken, req
       'Content-Type': document.contentType,
       'Content-Disposition': `inline; filename="${document.name}"`
     });
-    
+
     res.send(document.data);
   } catch (error) {
     console.error('Error fetching coach document:', error);
@@ -1432,15 +1432,15 @@ router.get('/club/players', verifyFirebaseToken, async (req, res) => {
 
     // Import Player model
     const Player = (await import('../models/Player.js')).default;
-    
+
     // Find all players who are currently members of the coach's club
-    const players = await Player.find({ 
+    const players = await Player.find({
       currentClub: coach.currentClub._id,
-      isActive: true 
+      isActive: true
     })
-    .populate('user', 'name email')
-    .select('fullName age preferredPosition playingExperience battingStyle bowlingStyle joinedClubAt statistics profilePhoto')
-    .sort({ joinedClubAt: -1 }); // Most recent first
+      .populate('user', 'name email')
+      .select('fullName age preferredPosition playingExperience battingStyle bowlingStyle joinedClubAt statistics profilePhoto')
+      .sort({ joinedClubAt: -1 }); // Most recent first
 
     // Format player data for frontend display
     const formattedPlayers = players.map(player => ({
@@ -1456,7 +1456,7 @@ router.get('/club/players', verifyFirebaseToken, async (req, res) => {
       hasProfilePhoto: !!(player.profilePhoto && player.profilePhoto.data)
     }));
 
-    res.json({ 
+    res.json({
       club: {
         id: coach.currentClub._id,
         name: coach.currentClub.clubName || coach.currentClub.name,
@@ -1486,7 +1486,7 @@ router.get('/club/player/:playerId', verifyFirebaseToken, async (req, res) => {
 
     // Import Player model
     const Player = (await import('../models/Player.js')).default;
-    
+
     const player = await Player.findById(req.params.playerId)
       .populate('user', 'name email')
       .populate('currentClub', 'name clubName district city');
@@ -1616,7 +1616,7 @@ router.get('/club/session-attendance/:sessionId', verifyFirebaseToken, requireRo
       player: playerMap[record.player.toString()] || { name: 'Unknown Player', position: 'N/A' }
     }));
 
-    res.json({ 
+    res.json({
       session: {
         _id: session._id,
         focusArea: session.focusArea,
@@ -1658,16 +1658,16 @@ router.get('/club/matches', verifyFirebaseToken, async (req, res) => {
         { awayClub: coach.currentClub._id }
       ]
     })
-    .populate('homeClub', 'clubName name logoUrl')
-    .populate('awayClub', 'clubName name logoUrl')
-    .populate('tournament', 'name status format')
-    .sort({ date: 1, time: 1 });
+      .populate('homeClub', 'clubName name logoUrl')
+      .populate('awayClub', 'clubName name logoUrl')
+      .populate('tournament', 'name status format')
+      .sort({ date: 1, time: 1 });
 
     // Transform matches for frontend
     const formattedMatches = matches.map(match => {
       const isHomeTeam = match.homeClub._id.toString() === coach.currentClub._id.toString();
       const opponent = isHomeTeam ? match.awayClub : match.homeClub;
-      
+
       return {
         _id: match._id,
         date: match.date,
@@ -1727,12 +1727,12 @@ router.get('/club/players', verifyFirebaseToken, async (req, res) => {
     const Player = (await import('../models/Player.js')).default;
 
     // Find all active players who are currently members of this club
-    const players = await Player.find({ 
+    const players = await Player.find({
       currentClub: coach.currentClub._id,
-      isActive: true 
+      isActive: true
     })
-    .select('fullName age preferredPosition battingStyle bowlingStyle jerseyNumber')
-    .sort({ fullName: 1 });
+      .select('fullName age preferredPosition battingStyle bowlingStyle jerseyNumber')
+      .sort({ fullName: 1 });
 
     // Format player data
     const formattedPlayers = players.map(player => ({
@@ -1745,7 +1745,7 @@ router.get('/club/players', verifyFirebaseToken, async (req, res) => {
       jerseyNumber: player.jerseyNumber || null
     }));
 
-    res.json({ 
+    res.json({
       players: formattedPlayers,
       totalPlayers: formattedPlayers.length,
       clubName: coach.currentClub.clubName || coach.currentClub.name
@@ -1762,20 +1762,20 @@ router.get('/club/players', verifyFirebaseToken, async (req, res) => {
 router.get('/admin/all', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
   try {
     const { page = 1, limit = 20, search, district, status } = req.query;
-    
+
     const query = {};
-    
+
     if (search) {
       query.$or = [
         { fullName: { $regex: search, $options: 'i' } },
         { email: { $regex: search, $options: 'i' } }
       ];
     }
-    
+
     if (district) {
       query['address.district'] = district;
     }
-    
+
     if (status) {
       query.isActive = status === 'active';
     }
@@ -1816,7 +1816,7 @@ router.post('/goals', verifyFirebaseToken, async (req, res) => {
     }
 
     const { playerId, title, description, targetType, targetValue, deadline } = req.body;
-    
+
     // Validate required fields
     if (!playerId || !title || !targetType || !targetValue || !deadline) {
       return res.status(400).json({ message: 'Player ID, title, target type, target value, and deadline are required' });
@@ -1824,13 +1824,13 @@ router.post('/goals', verifyFirebaseToken, async (req, res) => {
 
     // Import Player model
     const Player = (await import('../models/Player.js')).default;
-    
+
     // Check if player exists and is in the same club
-    const player = await Player.findOne({ 
-      _id: playerId, 
-      currentClub: coach.currentClub._id 
+    const player = await Player.findOne({
+      _id: playerId,
+      currentClub: coach.currentClub._id
     });
-    
+
     if (!player) {
       return res.status(404).json({ message: 'Player not found or not in your club' });
     }
@@ -1849,7 +1849,7 @@ router.post('/goals', verifyFirebaseToken, async (req, res) => {
     coach.playerGoals.push(newGoal);
     await coach.save();
 
-    res.status(201).json({ 
+    res.status(201).json({
       message: 'Goal set successfully',
       goal: newGoal
     });
@@ -1873,22 +1873,22 @@ router.get('/goals/:playerId', verifyFirebaseToken, async (req, res) => {
     }
 
     const { playerId } = req.params;
-    
+
     // Import Player model
     const Player = (await import('../models/Player.js')).default;
-    
+
     // Check if player exists and is in the same club
-    const player = await Player.findOne({ 
-      _id: playerId, 
-      currentClub: coach.currentClub._id 
+    const player = await Player.findOne({
+      _id: playerId,
+      currentClub: coach.currentClub._id
     });
-    
+
     if (!player) {
       return res.status(404).json({ message: 'Player not found or not in your club' });
     }
 
     // Get goals for this player
-    const playerGoals = coach.playerGoals.filter(goal => 
+    const playerGoals = coach.playerGoals.filter(goal =>
       goal.player.toString() === playerId
     );
 
@@ -1935,7 +1935,7 @@ router.put('/goals/:goalId', verifyFirebaseToken, async (req, res) => {
 
     const { goalId } = req.params;
     const { title, description, targetType, targetValue, currentValue, deadline, status } = req.body;
-    
+
     // Find the goal
     const goal = coach.playerGoals.id(goalId);
     if (!goal) {
@@ -1950,13 +1950,13 @@ router.put('/goals/:goalId', verifyFirebaseToken, async (req, res) => {
     if (currentValue !== undefined) goal.currentValue = currentValue;
     if (deadline !== undefined) goal.deadline = new Date(deadline);
     if (status !== undefined) goal.status = status;
-    
+
     // Update the updatedAt timestamp
     goal.updatedAt = new Date();
-    
+
     await coach.save();
 
-    res.json({ 
+    res.json({
       message: 'Goal updated successfully',
       goal: goal
     });
@@ -1981,7 +1981,7 @@ router.put('/goals/:goalId/progress', verifyFirebaseToken, async (req, res) => {
 
     const { goalId } = req.params;
     const { currentValue, status } = req.body;
-    
+
     // Find the goal
     const goal = coach.playerGoals.id(goalId);
     if (!goal) {
@@ -1993,7 +1993,7 @@ router.put('/goals/:goalId/progress', verifyFirebaseToken, async (req, res) => {
       // Ensure currentValue doesn't exceed targetValue
       const validatedCurrentValue = Math.min(currentValue, goal.targetValue);
       goal.currentValue = validatedCurrentValue;
-      
+
       // Auto-update status based on progress
       if (validatedCurrentValue >= goal.targetValue) {
         goal.status = 'achieved';
@@ -2003,15 +2003,15 @@ router.put('/goals/:goalId/progress', verifyFirebaseToken, async (req, res) => {
         goal.status = 'pending';
       }
     }
-    
+
     if (status !== undefined) goal.status = status;
-    
+
     // Update the updatedAt timestamp
     goal.updatedAt = new Date();
-    
+
     await coach.save();
 
-    res.json({ 
+    res.json({
       message: 'Goal progress updated successfully',
       goal: goal
     });
@@ -2035,7 +2035,7 @@ router.post('/feedback', verifyFirebaseToken, async (req, res) => {
     }
 
     const { playerId, session, title, content, type, priority } = req.body;
-    
+
     // Validate required fields
     if (!playerId || !title || !content) {
       return res.status(400).json({ message: 'Player ID, title, and content are required' });
@@ -2043,13 +2043,13 @@ router.post('/feedback', verifyFirebaseToken, async (req, res) => {
 
     // Import Player model
     const Player = (await import('../models/Player.js')).default;
-    
+
     // Check if player exists and is in the same club
-    const player = await Player.findOne({ 
-      _id: playerId, 
-      currentClub: coach.currentClub._id 
+    const player = await Player.findOne({
+      _id: playerId,
+      currentClub: coach.currentClub._id
     });
-    
+
     if (!player) {
       return res.status(404).json({ message: 'Player not found or not in your club' });
     }
@@ -2068,7 +2068,7 @@ router.post('/feedback', verifyFirebaseToken, async (req, res) => {
     coach.playerFeedback.push(newFeedback);
     await coach.save();
 
-    res.status(201).json({ 
+    res.status(201).json({
       message: 'Feedback sent successfully',
       feedback: newFeedback
     });
@@ -2092,22 +2092,22 @@ router.get('/feedback/:playerId', verifyFirebaseToken, async (req, res) => {
     }
 
     const { playerId } = req.params;
-    
+
     // Import Player model
     const Player = (await import('../models/Player.js')).default;
-    
+
     // Check if player exists and is in the same club
-    const player = await Player.findOne({ 
-      _id: playerId, 
-      currentClub: coach.currentClub._id 
+    const player = await Player.findOne({
+      _id: playerId,
+      currentClub: coach.currentClub._id
     });
-    
+
     if (!player) {
       return res.status(404).json({ message: 'Player not found or not in your club' });
     }
 
     // Get feedback for this player
-    const playerFeedback = coach.playerFeedback.filter(feedback => 
+    const playerFeedback = coach.playerFeedback.filter(feedback =>
       feedback.player.toString() === playerId
     );
 
@@ -2139,4 +2139,162 @@ router.get('/feedback', verifyFirebaseToken, async (req, res) => {
   }
 });
 
+// GET /api/coaches/analytics - Get coaching analytics data
+router.get('/analytics', verifyFirebaseToken, async (req, res) => {
+  try {
+    const coach = await Coach.findOne({ user: req.user._id })
+      .populate('currentClub', 'name clubName');
+
+    if (!coach) {
+      return res.status(404).json({ message: 'Coach profile not found' });
+    }
+
+    // Calculate sessions statistics
+    let totalSessions = 0;
+    let completedSessions = 0;
+    let upcomingSessions = 0;
+    let todaySessions = 0;
+    let totalAttendanceCount = 0;
+    let totalExpectedAttendance = 0;
+    const sessionsByType = {};
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    coach.trainingPrograms.forEach(program => {
+      program.sessions.forEach(session => {
+        totalSessions++;
+        const sessionDate = new Date(session.date);
+        sessionDate.setHours(0, 0, 0, 0);
+
+        if (sessionDate < today) {
+          completedSessions++;
+        } else if (sessionDate.getTime() === today.getTime()) {
+          todaySessions++;
+        } else {
+          upcomingSessions++;
+        }
+
+        // Track attendance
+        if (session.attendance && session.attendance.length > 0) {
+          const attended = session.attendance.filter(a => a.attended).length;
+          totalAttendanceCount += attended;
+          totalExpectedAttendance += session.attendance.length;
+        }
+
+        // Track by focus area
+        const focusArea = session.focusArea || 'Other';
+        if (!sessionsByType[focusArea]) {
+          sessionsByType[focusArea] = { count: 0, totalAttendance: 0, attendedCount: 0 };
+        }
+        sessionsByType[focusArea].count++;
+        if (session.attendance) {
+          sessionsByType[focusArea].totalAttendance += session.attendance.length;
+          sessionsByType[focusArea].attendedCount += session.attendance.filter(a => a.attended).length;
+        }
+      });
+    });
+
+    // Calculate attendance stats per session type
+    const attendanceStats = Object.entries(sessionsByType).map(([session, data]) => ({
+      session,
+      count: data.count,
+      attendance: data.totalAttendance > 0
+        ? Math.round((data.attendedCount / data.totalAttendance) * 100)
+        : 0
+    }));
+
+    // Get players count from club
+    let playersCoached = 0;
+    let playerProgressStats = [];
+
+    if (coach.currentClub) {
+      try {
+        const Player = (await import('../models/Player.js')).default;
+        const clubPlayers = await Player.find({ currentClub: coach.currentClub._id });
+        playersCoached = clubPlayers.length;
+
+        // Calculate player progress distribution
+        let beginnerCount = 0;
+        let intermediateCount = 0;
+        let advancedCount = 0;
+
+        clubPlayers.forEach(player => {
+          const experience = player.experienceLevel || 'beginner';
+          if (experience === 'beginner') beginnerCount++;
+          else if (experience === 'intermediate') intermediateCount++;
+          else if (experience === 'advanced' || experience === 'professional') advancedCount++;
+        });
+
+        const total = clubPlayers.length || 1;
+        playerProgressStats = [
+          { category: 'Beginner', percentage: Math.round((beginnerCount / total) * 100), color: 'bg-emerald-500' },
+          { category: 'Intermediate', percentage: Math.round((intermediateCount / total) * 100), color: 'bg-teal-500' },
+          { category: 'Advanced', percentage: Math.round((advancedCount / total) * 100), color: 'bg-cyan-500' }
+        ];
+      } catch (err) {
+        console.error('Error loading player stats:', err);
+      }
+    }
+
+    // Training programs count
+    const trainingProgramsCount = coach.trainingPrograms.length;
+    const activeProgramsCount = coach.trainingPrograms.filter(p => p.isActive).length;
+
+    // Goals statistics
+    const totalGoals = coach.playerGoals?.length || 0;
+    const completedGoals = coach.playerGoals?.filter(g => g.status === 'completed').length || 0;
+    const inProgressGoals = coach.playerGoals?.filter(g => g.status === 'in_progress').length || 0;
+
+    // Feedback statistics
+    const totalFeedback = coach.playerFeedback?.length || 0;
+    const readFeedback = coach.playerFeedback?.filter(f => f.isRead).length || 0;
+
+    // Calculate average attendance rate
+    const avgAttendance = totalExpectedAttendance > 0
+      ? Math.round((totalAttendanceCount / totalExpectedAttendance) * 100)
+      : 0;
+
+    res.json({
+      analytics: {
+        // Overview stats
+        playersCoached,
+        trainingSessions: totalSessions,
+        trainingPrograms: trainingProgramsCount,
+        activeProgramsCount,
+
+        // Session breakdown
+        completedSessions,
+        upcomingSessions,
+        todaySessions,
+
+        // Attendance
+        avgAttendance,
+        totalAttendanceCount,
+        totalExpectedAttendance,
+
+        // Charts data
+        playerProgressStats,
+        attendanceStats,
+
+        // Goals
+        totalGoals,
+        completedGoals,
+        inProgressGoals,
+
+        // Feedback
+        totalFeedback,
+        readFeedback,
+
+        // Club info
+        clubName: coach.currentClub?.clubName || coach.currentClub?.name || null,
+        hasClub: !!coach.currentClub
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching coaching analytics:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 export default router;
+

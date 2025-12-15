@@ -1,8 +1,8 @@
 <template>
   <div class="min-h-screen bg-gray-50 text-gray-900">
     <div class="flex min-h-screen">
-      <!-- Sidebar -->
-      <aside :class="['bg-white border-r w-72 shrink-0 flex-col hidden md:flex', sidebarOpen ? 'block' : '']">
+      <!-- Desktop Sidebar (always visible on md+) -->
+      <aside class="bg-white border-r w-72 shrink-0 flex-col hidden md:flex">
         <div class="h-16 flex items-center px-4 border-b">
           <div class="flex items-center gap-2">
             <div class="w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center font-bold">CA</div>
@@ -27,6 +27,44 @@
             <span>Player Management</span>
           </RouterLink>
           <RouterLink :to="{ name: 'admin-coaches' }" class="nav-item" :class="linkClass('admin-coaches')">
+            <span class="icon">👨‍🏫</span>
+            <span>Coach Management</span>
+          </RouterLink>
+          <div class="nav-item cursor-not-allowed opacity-60">
+            <span class="icon">📊</span>
+            <span>Analytics</span>
+            <span class="ml-auto text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">Coming Soon</span>
+          </div>
+        </nav>
+      </aside>
+
+      <!-- Mobile Sidebar Drawer (only visible when sidebarOpen is true) -->
+      <aside v-if="sidebarOpen" class="fixed inset-y-0 left-0 z-50 bg-white border-r w-72 flex flex-col md:hidden shadow-xl">
+        <div class="h-16 flex items-center px-4 border-b">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center font-bold">CA</div>
+            <div class="text-lg font-semibold">Admin Panel</div>
+          </div>
+          <button class="ml-auto p-2 rounded hover:bg-gray-100" @click="sidebarOpen = false">✕</button>
+        </div>
+        <nav class="p-3 space-y-1">
+          <RouterLink :to="{ name: 'admin' }" class="nav-item" :class="linkClass('admin')" @click="sidebarOpen = false">
+            <span class="icon">🏠</span>
+            <span>Overview</span>
+          </RouterLink>
+          <RouterLink :to="{ name: 'admin-tournaments' }" class="nav-item" :class="linkClass('admin-tournaments')" @click="sidebarOpen = false">
+            <span class="icon">🏆</span>
+            <span>Tournament Management</span>
+          </RouterLink>
+          <RouterLink :to="{ name: 'admin-clubs' }" class="nav-item" :class="linkClass('admin-clubs')" @click="sidebarOpen = false">
+            <span class="icon">👥</span>
+            <span>Club Management</span>
+          </RouterLink>
+          <RouterLink :to="{ name: 'admin-players' }" class="nav-item" :class="linkClass('admin-players')" @click="sidebarOpen = false">
+            <span class="icon">🏃</span>
+            <span>Player Management</span>
+          </RouterLink>
+          <RouterLink :to="{ name: 'admin-coaches' }" class="nav-item" :class="linkClass('admin-coaches')" @click="sidebarOpen = false">
             <span class="icon">👨‍🏫</span>
             <span>Coach Management</span>
           </RouterLink>

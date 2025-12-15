@@ -1,29 +1,29 @@
 <template>
-  <div class="space-y-8">
+  <div class="space-y-5">
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div>
-        <h1 class="text-3xl font-bold text-slate-900 mb-2">Match Management</h1>
-        <p class="text-slate-600">View and manage your club's matches across tournaments</p>
+        <h1 class="text-xl font-bold text-slate-800 mb-1">Match Management</h1>
+        <p class="text-slate-500 text-sm">View and manage your club's matches</p>
       </div>
-      <div class="px-4 py-2 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200">
-        <span class="text-sm font-semibold text-blue-700">{{ matches.length }} Total Matches</span>
+      <div class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200">
+        <span class="text-xs font-semibold text-emerald-700">{{ matches.length }} Total Matches</span>
       </div>
     </div>
 
     <!-- Tournament Filter -->
-    <div class="bg-white rounded-3xl shadow-xl shadow-slate-500/10 border border-slate-100/50 p-6">
-      <div class="flex flex-col sm:flex-row sm:items-center gap-4">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
-            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="bg-white rounded-xl shadow-sm border border-emerald-100 p-4">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
             </svg>
           </div>
-          <label class="text-sm font-semibold text-slate-900">Filter by Tournament:</label>
+          <label class="text-xs font-semibold text-slate-700">Filter by Tournament:</label>
         </div>
         <select v-model="selectedTournament" @change="loadMatches" 
-                class="px-4 py-3 border-2 border-slate-200 rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                class="px-3 py-2 border border-emerald-200 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white">
           <option value="">All Tournaments</option>
           <option v-for="tournament in tournaments" :key="tournament._id" :value="tournament._id">
             {{ tournament.name }}
@@ -33,30 +33,30 @@
     </div>
 
     <!-- Match Status Tabs -->
-    <div class="bg-white rounded-3xl shadow-xl shadow-slate-500/10 border border-slate-100/50 overflow-hidden">
-      <div class="border-b border-slate-200/50 bg-gradient-to-r from-slate-50 to-blue-50/30">
+    <div class="bg-white rounded-xl shadow-sm border border-emerald-100 overflow-hidden">
+      <div class="border-b border-emerald-100 bg-gradient-to-r from-slate-50 to-emerald-50/30">
         <nav class="flex">
           <button v-for="tab in tabs" :key="tab.key" @click="activeTab = tab.key"
                   :class="[
-                    'relative px-8 py-5 text-sm font-semibold transition-all duration-300',
+                    'relative px-5 py-3 text-xs font-semibold transition-all duration-200',
                     activeTab === tab.key 
-                      ? 'text-blue-600 bg-white shadow-lg' 
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                      ? 'text-emerald-700 bg-white shadow-sm' 
+                      : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
                   ]">
             <span class="relative z-10">{{ tab.label }}</span>
-            <span v-if="tab.count !== undefined" class="ml-3 px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg">
+            <span v-if="tab.count !== undefined" class="ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-emerald-500 to-teal-600 text-white">
               {{ tab.count }}
             </span>
-            <div v-if="activeTab === tab.key" class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-t-full"></div>
+            <div v-if="activeTab === tab.key" class="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-600"></div>
           </button>
         </nav>
       </div>
 
-      <div class="p-8">
+      <div class="p-5">
         <!-- Loading State -->
-        <div v-if="loading" class="text-center py-16">
-          <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
-          <p class="text-slate-600 mt-4 font-medium">Loading matches...</p>
+        <div v-if="loading" class="text-center py-10">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-3 border-emerald-500 border-t-transparent"></div>
+          <p class="text-slate-500 mt-3 text-sm">Loading matches...</p>
         </div>
 
         <!-- Empty State -->

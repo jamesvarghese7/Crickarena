@@ -1,51 +1,51 @@
 <template>
-  <div class="space-y-8">
+  <div class="space-y-5">
     <!-- Header -->
-    <div class="bg-white rounded-2xl shadow-lg p-6">
+    <div class="bg-white rounded-xl shadow-sm p-4 border border-emerald-100">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">Coach Dashboard</h1>
-          <p class="text-gray-600 mt-1">Overview of your coaching activities and club management</p>
+          <h1 class="text-lg font-bold text-slate-800">Coach Dashboard</h1>
+          <p class="text-slate-500 text-sm">Overview of your coaching activities</p>
         </div>
-        <div v-if="clubData" class="flex items-center gap-3">
-          <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
-            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div v-if="clubData" class="flex items-center gap-2">
+          <div class="w-9 h-9 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m0 0a5.002 5.002 0 0 1 9.75 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
             </svg>
           </div>
           <div>
-            <h3 class="font-bold text-gray-900">{{ clubData.clubName || clubData.name }}</h3>
-            <p class="text-sm text-gray-600">{{ clubData.city }}, {{ clubData.district }}</p>
+            <h3 class="font-semibold text-slate-800 text-sm">{{ clubData.clubName || clubData.name }}</h3>
+            <p class="text-xs text-slate-500">{{ clubData.city }}, {{ clubData.district }}</p>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Loading State -->
-    <div v-if="loading" class="bg-white rounded-2xl shadow-lg p-8">
-      <div class="flex flex-col items-center justify-center py-12">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-        <p class="text-gray-600">Loading dashboard...</p>
+    <div v-if="loading" class="bg-white rounded-xl shadow-sm p-6 border border-emerald-100">
+      <div class="flex flex-col items-center justify-center py-8">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mb-3"></div>
+        <p class="text-slate-500 text-sm">Loading dashboard...</p>
       </div>
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="bg-white rounded-2xl shadow-lg p-6">
-      <div class="bg-red-50 border border-red-200 rounded-xl p-6">
-        <div class="flex items-start gap-4">
-          <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <div v-else-if="error" class="bg-white rounded-xl shadow-sm p-4 border border-emerald-100">
+      <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div class="flex items-start gap-3">
+          <div class="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <circle cx="12" cy="12" r="10"/>
               <line x1="15" y1="9" x2="9" y2="15"/>
               <line x1="9" y1="9" x2="15" y2="15"/>
             </svg>
           </div>
           <div>
-            <h3 class="text-lg font-semibold text-red-800 mb-2">Error Loading Data</h3>
-            <p class="text-red-700">{{ error }}</p>
+            <h3 class="text-sm font-semibold text-red-800 mb-1">Error Loading Data</h3>
+            <p class="text-red-700 text-sm">{{ error }}</p>
             <button 
               @click="loadData"
-              class="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors"
+              class="mt-3 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-medium transition-colors"
             >
               Try Again
             </button>
@@ -55,26 +55,26 @@
     </div>
 
     <!-- No Club Assigned -->
-    <div v-else-if="!clubData" class="bg-white rounded-2xl shadow-lg p-6">
-      <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
-        <div class="flex items-start gap-4">
-          <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
-            <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <div v-else-if="!clubData" class="bg-white rounded-xl shadow-sm p-4 border border-emerald-100">
+      <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+        <div class="flex items-start gap-3">
+          <div class="w-6 h-6 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <circle cx="12" cy="12" r="10"/>
               <path d="M12 6v6l4 2"/>
             </svg>
           </div>
           <div>
-            <h3 class="text-lg font-semibold text-yellow-800 mb-2">No Club Assigned</h3>
-            <p class="text-yellow-700">
-              You are not currently assigned to any club. Coaching functions will appear here once you are associated with a club.
+            <h3 class="text-sm font-semibold text-amber-800 mb-1">No Club Assigned</h3>
+            <p class="text-amber-700 text-sm">
+              You are not currently assigned to any club. Apply to a club to start coaching.
             </p>
             <RouterLink 
               :to="{ name: 'clubs' }"
-              class="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors"
+              class="mt-3 inline-flex items-center px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium transition-colors"
             >
               Browse Clubs
-              <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
               </svg>
             </RouterLink>
@@ -84,45 +84,45 @@
     </div>
 
     <!-- Content -->
-    <div v-else class="space-y-8">
+    <div v-else class="space-y-5">
       <!-- Quick Stats -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 text-white shadow-lg">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl p-4 text-white shadow-sm">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-blue-100">Upcoming Matches</p>
-              <p class="text-3xl font-bold mt-2">{{ upcomingMatches.length }}</p>
+              <p class="text-emerald-100 text-xs">Upcoming Matches</p>
+              <p class="text-2xl font-bold mt-1">{{ upcomingMatches.length }}</p>
             </div>
-            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
             </div>
           </div>
         </div>
         
-        <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl p-6 text-white shadow-lg">
+        <div class="bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl p-4 text-white shadow-sm">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-green-100">Registered Players</p>
-              <p class="text-3xl font-bold mt-2">{{ players.length }}</p>
+              <p class="text-teal-100 text-xs">Registered Players</p>
+              <p class="text-2xl font-bold mt-1">{{ players.length }}</p>
             </div>
-            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m0 0a5.002 5.002 0 0 1 9.75 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
               </svg>
             </div>
           </div>
         </div>
         
-        <div class="bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl p-6 text-white shadow-lg">
+        <div class="bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl p-4 text-white shadow-sm">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-purple-100">Active Tournaments</p>
-              <p class="text-3xl font-bold mt-2">{{ registeredTournaments.filter(t => t.status === 'active').length }}</p>
+              <p class="text-cyan-100 text-xs">Active Tournaments</p>
+              <p class="text-2xl font-bold mt-1">{{ registeredTournaments.filter(t => t.status === 'active').length }}</p>
             </div>
-            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
               </svg>
             </div>
@@ -131,166 +131,139 @@
       </div>
 
       <!-- Coach Functions Overview -->
-      <div class="bg-white rounded-2xl shadow-lg p-6">
-        <h2 class="text-xl font-bold text-gray-900 mb-6">Coach Functions</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="bg-white rounded-xl shadow-sm p-4 border border-emerald-100">
+        <h2 class="text-base font-bold text-slate-800 mb-4">Quick Actions</h2>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           <RouterLink 
             :to="{ name: 'coach-panel-matches' }"
-            class="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow group"
+            class="border border-emerald-100 rounded-lg p-3 hover:shadow-sm hover:border-emerald-300 transition-all group text-center"
           >
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-500 transition-colors">
-                <svg class="w-6 h-6 text-blue-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                </svg>
-              </div>
-              <div>
-                <h3 class="font-bold text-gray-900">Match Management</h3>
-                <p class="text-sm text-gray-600 mt-1">View and manage your club's matches</p>
-              </div>
+            <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center mx-auto group-hover:bg-emerald-500 transition-colors">
+              <svg class="w-5 h-5 text-emerald-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
             </div>
+            <h3 class="font-medium text-slate-800 text-xs mt-2">Matches</h3>
           </RouterLink>
           
           <RouterLink 
             :to="{ name: 'coach-panel-players' }"
-            class="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow group"
+            class="border border-emerald-100 rounded-lg p-3 hover:shadow-sm hover:border-emerald-300 transition-all group text-center"
           >
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-500 transition-colors">
-                <svg class="w-6 h-6 text-blue-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m0 0a5.002 5.002 0 0 1 9.75 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
-                </svg>
-              </div>
-              <div>
-                <h3 class="font-bold text-gray-900">Players</h3>
-                <p class="text-sm text-gray-600 mt-1">Manage your club's players</p>
-              </div>
+            <div class="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center mx-auto group-hover:bg-teal-500 transition-colors">
+              <svg class="w-5 h-5 text-teal-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m0 0a5.002 5.002 0 0 1 9.75 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+              </svg>
             </div>
+            <h3 class="font-medium text-slate-800 text-xs mt-2">Players</h3>
           </RouterLink>
           
           <RouterLink 
             :to="{ name: 'coach-panel-sessions' }"
-            class="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow group"
+            class="border border-emerald-100 rounded-lg p-3 hover:shadow-sm hover:border-emerald-300 transition-all group text-center"
           >
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center group-hover:bg-yellow-500 transition-colors">
-                <svg class="w-6 h-6 text-yellow-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-              </div>
-              <div>
-                <h3 class="font-bold text-gray-900">Session Management</h3>
-                <p class="text-sm text-gray-600 mt-1">Schedule and manage training sessions</p>
-              </div>
+            <div class="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center mx-auto group-hover:bg-cyan-500 transition-colors">
+              <svg class="w-5 h-5 text-cyan-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
             </div>
+            <h3 class="font-medium text-slate-800 text-xs mt-2">Sessions</h3>
           </RouterLink>
           
           <RouterLink 
             :to="{ name: 'coach-panel-analytics' }"
-            class="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow group"
+            class="border border-emerald-100 rounded-lg p-3 hover:shadow-sm hover:border-emerald-300 transition-all group text-center"
           >
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center group-hover:bg-red-500 transition-colors">
-                <svg class="w-6 h-6 text-red-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                </svg>
-              </div>
-              <div>
-                <h3 class="font-bold text-gray-900">Analytics</h3>
-                <p class="text-sm text-gray-600 mt-1">View performance analytics</p>
-              </div>
+            <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center mx-auto group-hover:bg-emerald-500 transition-colors">
+              <svg class="w-5 h-5 text-emerald-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
             </div>
+            <h3 class="font-medium text-slate-800 text-xs mt-2">Analytics</h3>
           </RouterLink>
           
           <RouterLink 
             :to="{ name: 'coach-panel-profile' }"
-            class="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow group"
+            class="border border-emerald-100 rounded-lg p-3 hover:shadow-sm hover:border-emerald-300 transition-all group text-center"
           >
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center group-hover:bg-indigo-500 transition-colors">
-                <svg class="w-6 h-6 text-indigo-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                </svg>
-              </div>
-              <div>
-                <h3 class="font-bold text-gray-900">Profile</h3>
-                <p class="text-sm text-gray-600 mt-1">Manage your coach profile</p>
-              </div>
+            <div class="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center mx-auto group-hover:bg-teal-500 transition-colors">
+              <svg class="w-5 h-5 text-teal-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+              </svg>
             </div>
+            <h3 class="font-medium text-slate-800 text-xs mt-2">Profile</h3>
           </RouterLink>
         </div>
       </div>
 
       <!-- Upcoming Matches Preview -->
-      <div class="bg-white rounded-2xl shadow-lg p-6">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-xl font-bold text-gray-900">Upcoming Matches</h2>
+      <div class="bg-white rounded-xl shadow-sm p-4 border border-emerald-100">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-base font-bold text-slate-800">Upcoming Matches</h2>
           <RouterLink 
             :to="{ name: 'coach-panel-matches' }"
-            class="text-sm font-semibold text-blue-600 hover:text-blue-800 flex items-center"
+            class="text-xs font-semibold text-emerald-600 hover:text-emerald-800 flex items-center"
           >
-            View All Matches
-            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            View All
+            <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
             </svg>
           </RouterLink>
         </div>
 
-        <div v-if="upcomingMatches.length === 0" class="text-center py-8">
-          <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <div v-if="upcomingMatches.length === 0" class="text-center py-6">
+          <div class="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-3">
+            <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <circle cx="12" cy="12" r="10"/>
               <path d="M12 6v6l4 2"/>
             </svg>
           </div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-2">No Upcoming Matches</h3>
-          <p class="text-gray-600">There are no upcoming matches scheduled for your club.</p>
+          <h3 class="text-sm font-semibold text-slate-800 mb-1">No Upcoming Matches</h3>
+          <p class="text-slate-500 text-xs">Your club's matches will appear here</p>
         </div>
 
-        <div v-else class="grid gap-4">
+        <div v-else class="space-y-3">
           <div 
             v-for="match in upcomingMatches.slice(0, 3)" 
             :key="match._id"
-            class="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow"
+            class="border border-emerald-100 rounded-lg p-3 hover:shadow-sm transition-shadow"
           >
             <div class="flex items-center justify-between">
-              <div class="flex items-center gap-4">
+              <div class="flex items-center gap-3">
                 <div class="text-center">
-                  <div class="font-bold text-gray-900">{{ formatDate(match.date) }}</div>
-                  <div class="text-sm text-gray-600">{{ formatTime(match.time) }}</div>
+                  <div class="font-semibold text-slate-800 text-xs">{{ formatDate(match.date) }}</div>
+                  <div class="text-[10px] text-slate-500">{{ formatTime(match.time) }}</div>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
                   <div class="flex flex-col items-center">
-                    <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mb-1">
-                      <span class="text-gray-600 font-bold text-sm">
+                    <div class="w-7 h-7 bg-emerald-100 rounded-full flex items-center justify-center">
+                      <span class="text-emerald-600 font-bold text-[10px]">
                         {{ match.homeClub.name.charAt(0).toUpperCase() }}
                       </span>
                     </div>
-                    <div class="text-sm font-medium text-gray-900 max-w-[80px] truncate">
+                    <div class="text-[10px] font-medium text-slate-700 max-w-[60px] truncate mt-0.5">
                       {{ match.homeClub.name }}
                     </div>
                   </div>
-                  <div class="text-gray-400 font-bold">VS</div>
+                  <div class="text-slate-400 font-bold text-[10px]">VS</div>
                   <div class="flex flex-col items-center">
-                    <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mb-1">
-                      <span class="text-gray-600 font-bold text-sm">
+                    <div class="w-7 h-7 bg-teal-100 rounded-full flex items-center justify-center">
+                      <span class="text-teal-600 font-bold text-[10px]">
                         {{ match.awayClub.name.charAt(0).toUpperCase() }}
                       </span>
                     </div>
-                    <div class="text-sm font-medium text-gray-900 max-w-[80px] truncate">
+                    <div class="text-[10px] font-medium text-slate-700 max-w-[60px] truncate mt-0.5">
                       {{ match.awayClub.name }}
                     </div>
                   </div>
                 </div>
               </div>
               <div class="text-right">
-                <div class="text-sm font-medium text-gray-900">{{ match.tournament.name }}</div>
-                <div class="text-sm text-gray-600">{{ match.venue }}</div>
-                <div class="mt-2">
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {{ match.status }}
-                  </span>
-                </div>
+                <div class="text-[10px] font-medium text-slate-700">{{ match.tournament.name }}</div>
+                <div class="text-[10px] text-slate-500">{{ match.venue }}</div>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-100 text-emerald-700 mt-1">
+                  {{ match.status }}
+                </span>
               </div>
             </div>
           </div>
@@ -298,31 +271,31 @@
       </div>
 
       <!-- Recent Activity -->
-      <div class="bg-white rounded-2xl shadow-lg p-6">
-        <h2 class="text-xl font-bold text-gray-900 mb-6">Recent Activity</h2>
-        <div v-if="activities.length === 0" class="text-center py-8">
-          <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <div class="bg-white rounded-xl shadow-sm p-4 border border-emerald-100">
+        <h2 class="text-base font-bold text-slate-800 mb-4">Recent Activity</h2>
+        <div v-if="activities.length === 0" class="text-center py-6">
+          <div class="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-3">
+            <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
           </div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-2">No Recent Activity</h3>
-          <p class="text-gray-600">Your recent coaching activities will appear here.</p>
+          <h3 class="text-sm font-semibold text-slate-800 mb-1">No Recent Activity</h3>
+          <p class="text-slate-500 text-xs">Your coaching activities will appear here</p>
         </div>
-        <div v-else class="space-y-4">
+        <div v-else class="space-y-2">
           <div 
             v-for="activity in activities.slice(0, 5)" 
             :key="activity.id"
-            class="flex items-start gap-4 p-4 border border-gray-200 rounded-xl"
+            class="flex items-start gap-3 p-3 border border-emerald-100 rounded-lg"
           >
-            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
             </div>
             <div class="flex-1">
-              <p class="font-medium text-gray-900">{{ activity.message }}</p>
-              <p class="text-sm text-gray-600">{{ formatActivityDate(activity.date) }}</p>
+              <p class="font-medium text-slate-800 text-xs">{{ activity.message }}</p>
+              <p class="text-[10px] text-slate-500">{{ formatActivityDate(activity.date) }}</p>
             </div>
           </div>
         </div>
@@ -379,7 +352,6 @@ async function loadData() {
       const matchesResponse = await axios.get(`${API}/coaches/club/matches`, { withCredentials: true });
       matches.value = matchesResponse.data.matches || [];
     } catch (matchError) {
-      // If coach is not associated with a club, this is expected
       if (matchError.response?.status === 400 && matchError.response?.data?.message?.includes('not associated')) {
         matches.value = [];
       } else {
@@ -393,7 +365,6 @@ async function loadData() {
       const tournamentsResponse = await axios.get(`${API}/clubs/my-club/tournaments`, { withCredentials: true });
       tournaments.value = tournamentsResponse.data.tournaments || [];
     } catch (tournamentError) {
-      // If coach is not associated with a club, this is expected
       if (tournamentError.response?.status === 403 || tournamentError.response?.status === 400) {
         tournaments.value = [];
       } else {
@@ -407,7 +378,6 @@ async function loadData() {
       const playersResponse = await axios.get(`${API}/coaches/club/players`, { withCredentials: true });
       players.value = playersResponse.data.players || [];
     } catch (playerError) {
-      // If coach is not associated with a club, this is expected
       if (playerError.response?.status === 400 && playerError.response?.data?.message?.includes('not associated')) {
         players.value = [];
       } else {
@@ -424,7 +394,6 @@ async function loadData() {
     ];
   } catch (err) {
     console.error('Error loading data:', err);
-    // Handle specific error cases
     if (err.response?.status === 403) {
       error.value = 'Access denied. You must be associated with a club to view dashboard.';
     } else if (err.response?.status === 404) {
@@ -473,7 +442,6 @@ const registeredTournaments = computed(() => {
 function formatDate(dateString) {
   if (!dateString) return 'N/A';
   return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
     month: 'short',
     day: 'numeric'
   });
@@ -488,7 +456,6 @@ function formatTime(timeString) {
 
 function formatActivityDate(date) {
   return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
     month: 'short',
     day: 'numeric',
     hour: '2-digit',

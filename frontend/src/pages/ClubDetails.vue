@@ -29,12 +29,9 @@
     
     <div v-else>
       <!-- Hero Section -->
-      <div class="relative bg-gradient-to-br from-green-600 via-emerald-600 to-teal-700 overflow-hidden">
-        <!-- Background Pattern -->
-        <div class="absolute inset-0 bg-black bg-opacity-20"></div>
-        <div class="absolute inset-0" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.05\'%3E%3Ccircle cx=\'30\' cy=\'30\' r=\'2\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"></div>
+      <div class="relative bg-gradient-to-br from-gray-50 via-white to-gray-100 border-b-2 border-emerald-100">
         
-        <div class="relative max-w-7xl mx-auto px-4 py-16">
+        <div class="relative max-w-7xl mx-auto px-4 py-12">
           <div class="flex flex-col lg:flex-row items-start gap-8">
             <!-- Club Logo and Basic Info -->
             <div class="flex items-center gap-6">
@@ -43,45 +40,46 @@
                   v-if="club.logoUrl" 
                   :src="resolvedLogoUrl" 
                   alt="Club Logo" 
-                  class="w-32 h-32 rounded-3xl object-cover border-4 border-white shadow-2xl" 
+                  class="w-32 h-32 rounded-2xl object-cover border-2 border-emerald-200 shadow-lg" 
                   @error="e => (e.target.style.display='none')" 
                 />
                 <div 
                   v-else 
-                  class="w-32 h-32 rounded-3xl bg-white bg-opacity-20 backdrop-blur-sm border-4 border-white shadow-2xl flex items-center justify-center text-white text-4xl font-bold"
+                  class="w-32 h-32 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 border-2 border-emerald-300 shadow-lg flex items-center justify-center text-white text-4xl font-bold"
                 >
                   {{ (club.name || club.clubName)?.charAt(0)?.toUpperCase() || 'C' }}
                 </div>
                 <!-- Status Badge -->
-                <div class="absolute -bottom-2 -right-2 w-10 h-10 bg-green-500 rounded-full border-4 border-white flex items-center justify-center shadow-lg">
+                <div class="absolute -bottom-2 -right-2 w-10 h-10 bg-emerald-500 rounded-full border-4 border-white flex items-center justify-center shadow-md">
                   <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                   </svg>
                 </div>
               </div>
               
-              <div class="text-white">
+              <div class="text-gray-900">
                 <h1 class="text-4xl lg:text-5xl font-black mb-2">{{ club.name || club.clubName }}</h1>
-                <div class="flex items-center gap-2 text-xl text-green-100 mb-4">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m0 0a5.002 5.002 0 0 1 9.75 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                <div class="flex items-center gap-2 text-lg text-gray-600 mb-4">
+                  <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                   </svg>
-                  <span>{{ club.city || club.district }}</span>
+                  <span class="font-medium">{{ club.city || club.district }}</span>
                 </div>
                 
                 <!-- Quick Stats -->
-                <div class="flex flex-wrap gap-4">
-                  <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl px-4 py-2 border border-white border-opacity-30">
-                    <div class="text-2xl font-bold">{{ club.memberCount || 0 }}</div>
-                    <div class="text-sm text-green-100">Active Players</div>
+                <div class="flex flex-wrap gap-3">
+                  <div class="bg-white rounded-xl px-4 py-3 border border-emerald-100 shadow-sm">
+                    <div class="text-2xl font-bold text-emerald-600">{{ club.memberCount || 0 }}</div>
+                    <div class="text-xs text-gray-600 font-medium">Active Players</div>
                   </div>
-                  <div v-if="club.foundedYear" class="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl px-4 py-2 border border-white border-opacity-30">
-                    <div class="text-2xl font-bold">{{ club.foundedYear }}</div>
-                    <div class="text-sm text-green-100">Founded</div>
+                  <div v-if="club.foundedYear" class="bg-white rounded-xl px-4 py-3 border border-emerald-100 shadow-sm">
+                    <div class="text-2xl font-bold text-emerald-600">{{ club.foundedYear }}</div>
+                    <div class="text-xs text-gray-600 font-medium">Founded</div>
                   </div>
-                  <div v-if="club.groundName" class="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl px-4 py-2 border border-white border-opacity-30">
-                    <div class="text-sm font-medium">Home Ground</div>
-                    <div class="text-sm text-green-100 truncate max-w-32">{{ club.groundName }}</div>
+                  <div v-if="club.groundName" class="bg-white rounded-xl px-4 py-3 border border-emerald-100 shadow-sm">
+                    <div class="text-xs font-semibold text-gray-600 uppercase">Home Ground</div>
+                    <div class="text-sm text-gray-900 font-medium truncate max-w-32">{{ club.groundName }}</div>
                   </div>
                 </div>
               </div>
@@ -89,8 +87,8 @@
             
             <!-- Action Buttons -->
             <div class="lg:ml-auto flex flex-col gap-3">
-              <button @click="toggleFavoriteClub()" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white bg-opacity-20 backdrop-blur-sm border border-white border-opacity-30 text-white hover:bg-opacity-30 transition-all duration-200">
-                <span class="text-yellow-300 text-xl">{{ isFav ? '★' : '☆' }}</span>
+              <button @click="toggleFavoriteClub()" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white border border-gray-200 text-gray-700 hover:border-emerald-300 hover:bg-emerald-50 transition-all duration-300 shadow-sm hover:shadow-md">
+                <span class="text-yellow-500 text-xl">{{ isFav ? '★' : '☆' }}</span>
                 <span class="font-medium">{{ isFav ? 'Favorited' : 'Add to Favorites' }}</span>
             </button>
               
@@ -100,12 +98,12 @@
                 @click="handleApplyClick()" 
                 :disabled="isApplying || !canApply"
                 :class="[
-                  'inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-lg',
+                  'inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-sm',
                   canApply 
-                    ? 'bg-orange-600 text-white hover:bg-orange-700 hover:shadow-xl' 
+                    ? 'bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-lg border border-emerald-600' 
                     : playerStatus?.hasClub 
-                      ? 'bg-green-600 text-white cursor-not-allowed'
-                      : 'bg-yellow-600 text-white cursor-not-allowed',
+                      ? 'bg-green-100 text-green-700 cursor-not-allowed border border-green-200'
+                      : 'bg-gray-100 text-gray-500 cursor-not-allowed border border-gray-200',
                   'disabled:opacity-75'
                 ]"
               >
@@ -130,12 +128,12 @@
               @click="handleCoachApplyClick()" 
               :disabled="isCoachApplying || !canCoachApply"
               :class="[
-                'inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-lg',
+                'inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-sm',
                 canCoachApply 
-                  ? 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-xl' 
+                  ? 'bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-lg border border-emerald-600' 
                   : coachStatus?.hasClub 
-                    ? 'bg-green-600 text-white cursor-not-allowed'
-                    : 'bg-yellow-600 text-white cursor-not-allowed',
+                    ? 'bg-green-100 text-green-700 cursor-not-allowed border border-green-200'
+                    : 'bg-gray-100 text-gray-500 cursor-not-allowed border border-gray-200',
                 'disabled:opacity-75'
               ]"
             >
@@ -164,50 +162,50 @@
           <!-- Main Content Area -->
           <div class="lg:col-span-2 space-y-8">
             <!-- About Section -->
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-8 hover:shadow-lg transition-shadow duration-300">
               <div class="flex items-center gap-3 mb-6">
-                <div class="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
-                  <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
+                  <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                   </svg>
                 </div>
                 <h2 class="text-2xl font-bold text-gray-900">About the Club</h2>
               </div>
               <div class="prose prose-gray max-w-none">
-                <p class="text-gray-700 leading-relaxed text-lg">
+                <p class="text-gray-700 leading-relaxed text-base">
                   {{ club.description || 'This cricket club is dedicated to promoting the sport and nurturing talent at all levels. We welcome players of all skill levels and provide a supportive environment for growth and development.' }}
                 </p>
               </div>
             </div>
 
             <!-- Achievements Section -->
-            <div v-if="club.achievements" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            <div v-if="club.achievements" class="bg-white rounded-2xl shadow-md border border-gray-200 p-8 hover:shadow-lg transition-shadow duration-300">
               <div class="flex items-center gap-3 mb-6">
-                <div class="w-10 h-10 rounded-xl bg-yellow-100 flex items-center justify-center">
-                  <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="w-12 h-12 rounded-xl bg-yellow-100 flex items-center justify-center">
+                  <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138z"/>
                   </svg>
                 </div>
                 <h2 class="text-2xl font-bold text-gray-900">Achievements & Honors</h2>
               </div>
               <div class="prose prose-gray max-w-none">
-                <p class="text-gray-700 leading-relaxed whitespace-pre-line">{{ club.achievements }}</p>
+                <p class="text-gray-700 leading-relaxed whitespace-pre-line text-base">{{ club.achievements }}</p>
               </div>
             </div>
             
             <!-- Club Players Section -->
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-8 hover:shadow-lg transition-shadow duration-300">
               <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m0 0a5.002 5.002 0 0 1 9.75 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
                     </svg>
                   </div>
                   <h2 class="text-2xl font-bold text-gray-900">Squad Members</h2>
                 </div>
                 <div v-if="clubPlayers.length > 0" class="flex items-center gap-2">
-                  <span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-sm font-medium">
+                  <span class="px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-700 text-sm font-semibold">
                     {{ clubPlayers.length }} Active Players
                   </span>
                 </div>
@@ -230,10 +228,10 @@
               
               <div v-else class="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
                 <div v-for="player in clubPlayers" :key="player.id" 
-                     class="group bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 hover:from-blue-50 hover:to-indigo-50 transition-all duration-300 border border-gray-200 hover:border-blue-200 hover:shadow-lg">
+                     class="group bg-white rounded-2xl p-6 border border-gray-200 hover:border-emerald-300 hover:shadow-xl transition-all duration-300">
                   <div class="text-center">
                     <div class="relative inline-block mb-4">
-                      <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xl font-bold shadow-lg">
+                      <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white text-xl font-bold shadow-md">
                         {{ player.fullName?.charAt(0)?.toUpperCase() || 'P' }}
                       </div>
                       <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
@@ -245,7 +243,7 @@
                     
                     <h3 class="text-lg font-bold text-gray-900 mb-1">{{ player.fullName }}</h3>
                     <div class="flex items-center justify-center gap-2 mb-4">
-                      <span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+                      <span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
                         {{ player.preferredPosition || 'All-rounder' }}
                       </span>
                       <span class="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
@@ -255,27 +253,27 @@
 
                     <!-- Player Stats -->
                     <div class="grid grid-cols-3 gap-2 mb-4">
-                      <div class="text-center p-3 bg-white rounded-xl shadow-sm">
-                        <div class="text-lg font-bold text-blue-600">{{ player.statistics.matchesPlayed }}</div>
-                        <div class="text-xs text-gray-500 font-medium">Matches</div>
+                      <div class="text-center p-3 bg-gray-50 rounded-xl border border-gray-200">
+                        <div class="text-lg font-bold text-emerald-600">{{ player.statistics.matchesPlayed }}</div>
+                        <div class="text-xs text-gray-600 font-medium">Matches</div>
                       </div>
-                      <div class="text-center p-3 bg-white rounded-xl shadow-sm">
-                        <div class="text-lg font-bold text-green-600">{{ player.statistics.runsScored }}</div>
-                        <div class="text-xs text-gray-500 font-medium">Runs</div>
+                      <div class="text-center p-3 bg-gray-50 rounded-xl border border-gray-200">
+                        <div class="text-lg font-bold text-emerald-600">{{ player.statistics.runsScored }}</div>
+                        <div class="text-xs text-gray-600 font-medium">Runs</div>
                       </div>
-                      <div class="text-center p-3 bg-white rounded-xl shadow-sm">
-                        <div class="text-lg font-bold text-orange-600">{{ player.statistics.wicketsTaken }}</div>
-                        <div class="text-xs text-gray-500 font-medium">Wickets</div>
+                      <div class="text-center p-3 bg-gray-50 rounded-xl border border-gray-200">
+                        <div class="text-lg font-bold text-emerald-600">{{ player.statistics.wicketsTaken }}</div>
+                        <div class="text-xs text-gray-600 font-medium">Wickets</div>
           </div>
         </div>
 
                     <!-- Player Details -->
                     <div class="space-y-2 text-sm">
-                      <div class="flex items-center justify-between py-2 px-3 bg-white rounded-lg">
+                      <div class="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg border border-gray-200">
                         <span class="text-gray-600">Experience</span>
                         <span class="font-semibold text-gray-900">{{ player.playingExperience || 'N/A' }}</span>
                       </div>
-                      <div class="flex items-center justify-between py-2 px-3 bg-white rounded-lg">
+                      <div class="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg border border-gray-200">
                         <span class="text-gray-600">Joined</span>
                         <span class="font-semibold text-gray-900">{{ formatDate(player.joinedAt) }}</span>
                       </div>
@@ -287,18 +285,18 @@
           </div>
           
           <!-- Club Coaches Section - Enhanced Details -->
-          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+          <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-8 hover:shadow-lg transition-shadow duration-300">
             <div class="flex items-center justify-between mb-6">
               <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
-                  <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
+                  <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m0 0a5.002 5.002 0 0 1 9.75 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
                   </svg>
                 </div>
                 <h2 class="text-2xl font-bold text-gray-900">Coaching Team</h2>
               </div>
               <div v-if="clubCoaches.length > 0" class="flex items-center gap-2">
-                <span class="px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-sm font-medium">
+                <span class="px-3 py-1.5 rounded-full bg-orange-100 text-orange-700 text-sm font-semibold">
                   {{ clubCoaches.length }} Coaches
                 </span>
               </div>
@@ -321,18 +319,18 @@
             
             <div v-else class="space-y-6">
               <div v-for="coach in clubCoaches" :key="coach.id" 
-                   class="border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow">
+                   class="border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg hover:border-emerald-300 transition-all duration-300">
                 <!-- Coach Header -->
                 <div class="flex items-center gap-4 p-4 bg-gray-50">
                   <div class="relative flex-shrink-0">
-                    <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center text-white font-bold text-lg">
+                    <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
                       {{ coach.fullName?.charAt(0)?.toUpperCase() || 'C' }}
                     </div>
                     <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white"></div>
                   </div>
                   
                   <div class="flex-1 min-w-0">
-                    <h3 class="font-bold text-gray-900 text-lg truncate">{{ coach.fullName }}</h3>
+                    <h3 class="font-bold text-gray-900 text-lg">{{ coach.fullName }}</h3>
                     <div class="flex flex-wrap items-center gap-2 mt-1">
                       <span class="text-xs px-2.5 py-1 rounded-full bg-orange-100 text-orange-700 font-medium">
                         {{ formatExperience(coach.coachingExperience) }}
@@ -341,7 +339,10 @@
                     </div>
                   </div>
                   
-                  <button class="text-orange-600 hover:text-orange-700 text-sm font-medium px-3 py-1.5 rounded-lg hover:bg-orange-100 transition-colors">
+                  <button 
+                    @click="viewCoachProfile(coach)"
+                    class="text-emerald-600 hover:text-emerald-700 text-sm font-semibold px-4 py-2 rounded-lg hover:bg-emerald-50 transition-all duration-300 border border-emerald-200 hover:border-emerald-300"
+                  >
                     View Profile
                   </button>
                 </div>
@@ -390,14 +391,14 @@
         <!-- Sidebar -->
         <div class="space-y-6">
           <!-- Contact Information -->
-          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow duration-300">
             <div class="flex items-center gap-3 mb-6">
-              <div class="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
-                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
+                <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                 </svg>
               </div>
-              <h3 class="text-lg font-bold text-gray-900">Contact Information</h3>
+              <h3 class="text-xl font-bold text-gray-900">Contact Information</h3>
             </div>
             
             <div class="space-y-4">
@@ -406,8 +407,8 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                 </svg>
                 <div>
-                  <div class="text-sm text-gray-600">Email</div>
-                  <a :href="`mailto:${club.email}`" class="text-green-600 hover:text-green-700 font-medium">{{ club.email }}</a>
+                  <div class="text-sm text-gray-600 font-medium">Email</div>
+                  <a :href="`mailto:${club.email}`" class="text-emerald-600 hover:text-emerald-700 font-medium transition-colors">{{ club.email }}</a>
                 </div>
               </div>
               
@@ -416,8 +417,8 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                 </svg>
                 <div>
-                  <div class="text-sm text-gray-600">Phone</div>
-                  <a :href="`tel:${club.phone}`" class="text-green-600 hover:text-green-700 font-medium">{{ club.phone }}</a>
+                  <div class="text-sm text-gray-600 font-medium">Phone</div>
+                  <a :href="`tel:${club.phone}`" class="text-emerald-600 hover:text-emerald-700 font-medium transition-colors">{{ club.phone }}</a>
                 </div>
               </div>
               
@@ -426,8 +427,8 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
                 <div>
-                  <div class="text-sm text-gray-600">Website</div>
-                  <a :href="club.website" target="_blank" class="text-green-600 hover:text-green-700 font-medium break-all">{{ club.website }}</a>
+                  <div class="text-sm text-gray-600 font-medium">Website</div>
+                  <a :href="club.website" target="_blank" class="text-emerald-600 hover:text-emerald-700 font-medium break-all transition-colors">{{ club.website }}</a>
                 </div>
               </div>
               
@@ -443,29 +444,29 @@
           </div>
 
           <!-- Club Statistics -->
-          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow duration-300">
             <div class="flex items-center gap-3 mb-6">
-              <div class="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
-                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
+                <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                 </svg>
               </div>
-              <h3 class="text-lg font-bold text-gray-900">Club Statistics</h3>
+              <h3 class="text-xl font-bold text-gray-900">Club Statistics</h3>
             </div>
             
             <div class="space-y-4">
-              <div class="flex items-center justify-between py-3 px-4 bg-gray-50 rounded-xl">
-                <span class="text-gray-600 font-medium">Active Players</span>
-                <span class="text-2xl font-bold text-green-600">{{ club.memberCount || 0 }}</span>
+              <div class="flex items-center justify-between py-3 px-4 bg-emerald-50 rounded-xl border border-emerald-100">
+                <span class="text-gray-700 font-semibold">Active Players</span>
+                <span class="text-2xl font-bold text-emerald-600">{{ club.memberCount || 0 }}</span>
               </div>
               
-              <div v-if="club.foundedYear" class="flex items-center justify-between py-3 px-4 bg-gray-50 rounded-xl">
-                <span class="text-gray-600 font-medium">Years Active</span>
-                <span class="text-2xl font-bold text-blue-600">{{ new Date().getFullYear() - club.foundedYear }}</span>
+              <div v-if="club.foundedYear" class="flex items-center justify-between py-3 px-4 bg-emerald-50 rounded-xl border border-emerald-100">
+                <span class="text-gray-700 font-semibold">Years Active</span>
+                <span class="text-2xl font-bold text-emerald-600">{{ new Date().getFullYear() - club.foundedYear }}</span>
               </div>
               
-              <div v-if="club.groundName" class="py-3 px-4 bg-gray-50 rounded-xl">
-                <div class="text-gray-600 font-medium mb-1">Home Ground</div>
+              <div v-if="club.groundName" class="py-3 px-4 bg-gray-50 rounded-xl border border-gray-200">
+                <div class="text-gray-600 font-semibold mb-1">Home Ground</div>
                 <div class="text-gray-900 font-semibold">{{ club.groundName }}</div>
               </div>
             </div>
@@ -473,6 +474,118 @@
         </div>
       </div>
     </div>
+    
+    <!-- Coach Profile Modal -->
+    <Transition name="fade">
+      <div 
+        v-if="showCoachModal && selectedCoach" 
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm"
+        @click.self="closeCoachModal"
+      >
+        <div class="relative bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <!-- Close Button -->
+          <button 
+            @click="closeCoachModal"
+            class="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors z-10"
+          >
+            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+
+          <!-- Modal Header -->
+          <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 px-8 py-8 rounded-t-3xl">
+            <div class="flex items-center gap-6">
+              <div class="w-24 h-24 rounded-2xl bg-white bg-opacity-20 backdrop-blur-sm flex items-center justify-center text-white text-3xl font-bold border-4 border-white shadow-lg">
+                {{ selectedCoach.fullName?.charAt(0)?.toUpperCase() || 'C' }}
+              </div>
+              <div class="text-white">
+                <h2 class="text-3xl font-black mb-2">{{ selectedCoach.fullName }}</h2>
+                <div class="flex items-center gap-4 text-emerald-100">
+                  <span class="text-lg">Age {{ selectedCoach.age }}</span>
+                  <span class="text-lg">•</span>
+                  <span class="text-lg">{{ formatExperience(selectedCoach.coachingExperience) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="p-8 space-y-6">
+            <!-- Specializations -->
+            <div v-if="selectedCoach.specializations && selectedCoach.specializations.length > 0">
+              <h3 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138z"/>
+                </svg>
+                Specializations
+              </h3>
+              <div class="flex flex-wrap gap-2">
+                <span 
+                  v-for="spec in selectedCoach.specializations" 
+                  :key="spec"
+                  class="px-4 py-2 rounded-full bg-emerald-100 text-emerald-700 text-sm font-semibold"
+                >
+                  {{ formatSpecialization(spec) }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Coaching History -->
+            <div v-if="selectedCoach.coachingHistory && selectedCoach.coachingHistory.length > 0">
+              <h3 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Coaching History
+              </h3>
+              <div class="space-y-3">
+                <div 
+                  v-for="(history, index) in selectedCoach.coachingHistory" 
+                  :key="index"
+                  class="p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-emerald-200 hover:bg-emerald-50 transition-colors"
+                >
+                  <div class="flex items-start justify-between">
+                    <div>
+                      <h4 class="font-bold text-gray-900">{{ history.teamName }}</h4>
+                      <p class="text-sm text-gray-600 mt-1">{{ history.position }}</p>
+                    </div>
+                    <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold">
+                      {{ history.yearsCoached || 'N/A' }}
+                    </span>
+                  </div>
+                  <div v-if="history.playersCoached" class="mt-3 pt-3 border-t border-gray-200">
+                    <p class="text-sm text-gray-600">
+                      <span class="font-semibold text-emerald-600">{{ history.playersCoached }}</span> players coached
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- No Additional Info -->
+            <div v-if="(!selectedCoach.specializations || selectedCoach.specializations.length === 0) && (!selectedCoach.coachingHistory || selectedCoach.coachingHistory.length === 0)" class="text-center py-8">
+              <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <p class="text-gray-500">No additional information available</p>
+            </div>
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="px-8 py-6 bg-gray-50 rounded-b-3xl border-t border-gray-200">
+            <button 
+              @click="closeCoachModal"
+              class="w-full px-6 py-3 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors shadow-sm"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -504,6 +617,10 @@ const loadingPlayers = ref(false);
 // Coach functionality
 const clubCoaches = ref([]);
 const loadingCoaches = ref(false);
+
+// Coach profile modal
+const showCoachModal = ref(false);
+const selectedCoach = ref(null);
 
 const resolvedLogoUrl = computed(() => {
   if (!club.value) return '';
@@ -776,6 +893,18 @@ function formatExperience(experience) {
 function formatSpecialization(spec) {
   if (!spec) return '';
   return spec.charAt(0).toUpperCase() + spec.slice(1).replace(/([A-Z])/g, ' $1').trim();
+}
+
+// View coach profile function
+function viewCoachProfile(coach) {
+  if (!coach) return;
+  selectedCoach.value = coach;
+  showCoachModal.value = true;
+}
+
+function closeCoachModal() {
+  showCoachModal.value = false;
+  selectedCoach.value = null;
 }
 
 onMounted(async () => {

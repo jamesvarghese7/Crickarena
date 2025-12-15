@@ -1027,11 +1027,13 @@ onUnmounted(() => {
   backdrop-filter: blur(15px) saturate(200%);
   -webkit-backdrop-filter: blur(15px) saturate(200%);
   border: 1px solid rgba(255, 255, 255, 0.25);
-  border-top: 2px solid rgba(0, 255, 136, 0.3);
+  border-top: 2px solid rgba(0, 255, 136, 0.35);
   box-shadow: 
     0 10px 40px rgba(0, 0, 0, 0.2),
-    0 0 1px rgba(0, 255, 136, 0.5);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    0 0 1px rgba(0, 255, 136, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: fadeInUp 0.6s ease-out;
 }
 
 :deep(.glass-panel-strong) {
@@ -1068,11 +1070,14 @@ onUnmounted(() => {
 /* Enhanced hover effects */
 :deep(.glass-panel:hover) {
   background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(0, 255, 136, 0.6);
-  transform: translateY(-4px);
+  border: 1px solid rgba(0, 255, 136, 0.65);
+  border-top: 2px solid rgba(0, 255, 136, 0.8);
+  transform: translateY(-2px);
   box-shadow: 
     0 15px 50px rgba(0, 0, 0, 0.25),
-    0 0 20px rgba(0, 255, 136, 0.3);
+    0 0 25px rgba(0, 255, 136, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.25s ease-out;
 }
 
 /* Premium Typography */
