@@ -228,7 +228,7 @@
                 </div>
 
                 <!-- Player Statistics -->
-                <div class="grid grid-cols-3 gap-2 mb-4">
+                <div class="grid grid-cols-5 gap-2 mb-4">
                   <div class="text-center p-2 bg-blue-50 rounded-lg">
                     <div class="text-lg font-bold text-blue-600">{{ player.matchesPlayed }}</div>
                     <div class="text-xs text-blue-500">Matches</div>
@@ -240,6 +240,14 @@
                   <div class="text-center p-2 bg-orange-50 rounded-lg">
                     <div class="text-lg font-bold text-orange-600">{{ player.wicketsTaken }}</div>
                     <div class="text-xs text-orange-500">Wickets</div>
+                  </div>
+                  <div class="text-center p-2 bg-yellow-50 rounded-lg">
+                    <div class="text-lg font-bold text-yellow-600">{{ player.catches || 0 }}</div>
+                    <div class="text-xs text-yellow-500">Catches</div>
+                  </div>
+                  <div class="text-center p-2 bg-red-50 rounded-lg">
+                    <div class="text-lg font-bold text-red-600">{{ player.stumpings || 0 }}</div>
+                    <div class="text-xs text-red-500">Stumpings</div>
                   </div>
                 </div>
                 
@@ -378,18 +386,26 @@
               </svg>
               Performance Statistics
             </h5>
-            <div class="grid grid-cols-3 gap-4">
+            <div class="grid grid-cols-5 gap-4">
               <div class="bg-white rounded-xl p-4 text-center">
                 <div class="text-3xl font-bold text-blue-600 mb-1">{{ selectedPlayer.matchesPlayed || 0 }}</div>
-                <p class="text-sm text-gray-600">Matches Played</p>
+                <p class="text-sm text-gray-600">Matches</p>
               </div>
               <div class="bg-white rounded-xl p-4 text-center">
                 <div class="text-3xl font-bold text-green-600 mb-1">{{ selectedPlayer.runsScored || 0 }}</div>
-                <p class="text-sm text-gray-600">Runs Scored</p>
+                <p class="text-sm text-gray-600">Runs</p>
               </div>
               <div class="bg-white rounded-xl p-4 text-center">
                 <div class="text-3xl font-bold text-orange-600 mb-1">{{ selectedPlayer.wicketsTaken || 0 }}</div>
-                <p class="text-sm text-gray-600">Wickets Taken</p>
+                <p class="text-sm text-gray-600">Wickets</p>
+              </div>
+              <div class="bg-white rounded-xl p-4 text-center">
+                <div class="text-3xl font-bold text-yellow-600 mb-1">{{ selectedPlayer.catches || 0 }}</div>
+                <p class="text-sm text-gray-600">Catches</p>
+              </div>
+              <div class="bg-white rounded-xl p-4 text-center">
+                <div class="text-3xl font-bold text-red-600 mb-1">{{ selectedPlayer.stumpings || 0 }}</div>
+                <p class="text-sm text-gray-600">Stumpings</p>
               </div>
             </div>
           </div>
@@ -555,6 +571,8 @@ async function loadApprovedPlayers() {
       matchesPlayed: app.player.statistics?.matchesPlayed || 0,
       runsScored: app.player.statistics?.runsScored || 0,
       wicketsTaken: app.player.statistics?.wicketsTaken || 0,
+      catches: app.player.statistics?.catches || 0,
+      stumpings: app.player.statistics?.stumpings || 0,
       joinedDate: app.processedAt || app.appliedAt,
       approvedAt: app.processedAt,
       approvalNotes: app.approvalNotes,

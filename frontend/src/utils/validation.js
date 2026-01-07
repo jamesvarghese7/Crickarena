@@ -26,11 +26,11 @@ export function validateEmail(email) {
   // Excludes problematic characters: $ % # [ ] \ " ; , ( ) and control characters
   const emailRegex = /^[a-zA-Z0-9.!&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
   const trimmedEmail = email.trim().toLowerCase();
-  
+
   if (!trimmedEmail) {
     return { isValid: false, error: 'Email is required' };
   }
-  
+
   // Check for invalid characters that shouldn't be in emails
   const invalidChars = ['$', '%', '#', '[', ']', '\\', '"', ';', ','];
   for (const char of invalidChars) {
@@ -38,38 +38,38 @@ export function validateEmail(email) {
       return { isValid: false, error: `Email address cannot contain the '${char}' character` };
     }
   }
-  
+
   // Check for parentheses which are not allowed
   if (trimmedEmail.includes('(') || trimmedEmail.includes(')')) {
     return { isValid: false, error: 'Email address cannot contain parentheses' };
   }
-  
+
   // Check for control characters (ASCII 0-31 and 127)
   if (/[\x00-\x1F\x7F]/.test(trimmedEmail)) {
     return { isValid: false, error: 'Email address contains invalid control characters' };
   }
-  
+
   if (!emailRegex.test(trimmedEmail)) {
     return { isValid: false, error: 'Please enter a valid email address' };
   }
-  
+
   if (trimmedEmail.length > 254) {
     return { isValid: false, error: 'Email address is too long (maximum 254 characters)' };
   }
-  
+
   const localPart = trimmedEmail.split('@')[0];
   const domain = trimmedEmail.split('@')[1];
-  
+
   // Local part cannot exceed 64 characters
   if (localPart.length > 64) {
     return { isValid: false, error: 'Email local part is too long (maximum 64 characters)' };
   }
-  
+
   // Domain cannot exceed 253 characters
   if (domain.length > 253) {
     return { isValid: false, error: 'Email domain is too long (maximum 253 characters)' };
   }
-  
+
   // Enforce at least one dot in domain and a letter-only TLD (e.g., .com, .net)
   const parts = domain.split('.');
   if (parts.length < 2) {
@@ -79,11 +79,11 @@ export function validateEmail(email) {
   if (!/^[a-zA-Z]{2,}$/.test(tld)) {
     return { isValid: false, error: 'Please enter a valid email address' };
   }
-  
+
   if (disposableEmailDomains.includes(domain)) {
     return { isValid: false, error: 'Please use a permanent email address, not a disposable one' };
   }
-  
+
   return { isValid: true, error: '', cleanEmail: trimmedEmail };
 }
 
@@ -95,23 +95,23 @@ export function validateEmail(email) {
 export function validateName(name) {
   const nameRegex = /^[a-zA-Z\s'-]+$/;
   const trimmedName = name.trim();
-  
+
   if (!trimmedName) {
     return { isValid: false, error: 'Full name is required' };
   }
-  
+
   if (trimmedName.length < 2) {
     return { isValid: false, error: 'Name must be at least 2 characters long' };
   }
-  
+
   if (trimmedName.length > 50) {
     return { isValid: false, error: 'Name must be less than 50 characters' };
   }
-  
+
   if (!nameRegex.test(trimmedName)) {
     return { isValid: false, error: 'Name can only contain letters, spaces, hyphens, and apostrophes' };
   }
-  
+
   return { isValid: true, error: '', cleanName: trimmedName };
 }
 
@@ -129,40 +129,40 @@ export function validatePassword(password, name = '') {
     hasNumber: /\d/.test(password),
     hasSpecial: /[!@#$%^&*(),.?":{}|<>]/.test(password)
   };
-  
+
   if (!password) {
     return { isValid: false, error: 'Password is required', criteria };
   }
-  
+
   if (password.length < 8) {
     return { isValid: false, error: 'Password must be at least 8 characters long', criteria };
   }
-  
+
   if (password.length > 128) {
     return { isValid: false, error: 'Password must be less than 128 characters', criteria };
   }
-  
+
   if (!criteria.hasUppercase) {
     return { isValid: false, error: 'Password must contain at least one uppercase letter', criteria };
   }
-  
+
   if (!criteria.hasLowercase) {
     return { isValid: false, error: 'Password must contain at least one lowercase letter', criteria };
   }
-  
+
   if (!criteria.hasNumber) {
     return { isValid: false, error: 'Password must contain at least one number', criteria };
   }
-  
+
   if (!criteria.hasSpecial) {
     return { isValid: false, error: 'Password must contain at least one special character', criteria };
   }
-  
+
   if (commonPasswords.includes(password.toLowerCase())) {
     return { isValid: false, error: 'Please choose a more secure password', criteria };
   }
-  
-  
+
+
   return { isValid: true, error: '', criteria };
 }
 
@@ -176,11 +176,11 @@ export function validatePasswordConfirmation(password, confirmPassword) {
   if (!confirmPassword) {
     return { isValid: false, error: 'Please confirm your password' };
   }
-  
+
   if (password !== confirmPassword) {
     return { isValid: false, error: 'Passwords do not match' };
   }
-  
+
   return { isValid: true, error: '' };
 }
 
@@ -190,16 +190,16 @@ export function validatePasswordConfirmation(password, confirmPassword) {
  * @returns {Object} - { isValid: boolean, error: string }
  */
 export function validateRole(role) {
-  const allowedRoles = ['public', 'clubManager', 'player', 'coach'];
-  
+  const allowedRoles = ['public', 'clubManager', 'player', 'coach', 'sponsor'];
+
   if (!role) {
     return { isValid: false, error: 'Please select a role' };
   }
-  
+
   if (!allowedRoles.includes(role)) {
     return { isValid: false, error: 'Please select a valid role' };
   }
-  
+
   return { isValid: true, error: '' };
 }
 
@@ -210,19 +210,19 @@ export function validateRole(role) {
  */
 export function validatePhone(phone) {
   const trimmedPhone = phone.trim();
-  
+
   if (!trimmedPhone) {
     return { isValid: false, error: 'Phone number is required' };
   }
-  
+
   // Remove spaces, hyphens, and plus sign for validation
   const cleanPhone = trimmedPhone.replace(/[\s-]/g, '');
-  
+
   // Indian mobile number patterns:
   // With country code: +919876543210 or 919876543210
   // Without country code: 9876543210
   const phoneRegex = /^(\+91|91)?[6-9]\d{9}$/;
-  
+
   if (!phoneRegex.test(cleanPhone)) {
     if (cleanPhone.length < 10) {
       return { isValid: false, error: 'Phone number must be 10 digits' };
@@ -238,7 +238,7 @@ export function validatePhone(phone) {
     }
     return { isValid: false, error: 'Please enter a valid Indian mobile number' };
   }
-  
+
   return { isValid: true, error: '', cleanPhone };
 }
 
@@ -249,17 +249,17 @@ export function validatePhone(phone) {
  */
 export function validatePincode(pincode) {
   const trimmedPincode = pincode.trim();
-  
+
   if (!trimmedPincode) {
     return { isValid: false, error: 'Pincode is required' };
   }
-  
+
   // Remove spaces for validation
   const cleanPincode = trimmedPincode.replace(/\s/g, '');
-  
+
   // Must be exactly 6 digits
   const pincodeRegex = /^\d{6}$/;
-  
+
   if (!pincodeRegex.test(cleanPincode)) {
     if (!/^\d+$/.test(cleanPincode)) {
       return { isValid: false, error: 'Pincode must contain only numbers' };
@@ -272,7 +272,7 @@ export function validatePincode(pincode) {
     }
     return { isValid: false, error: 'Please enter a valid 6-digit pincode' };
   }
-  
+
   return { isValid: true, error: '', cleanPincode };
 }
 

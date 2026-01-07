@@ -1896,6 +1896,152 @@ async function recalcStandings(tournamentId) {
   await tu.save();
 }
 
+/**
+ * Aggregate player statistics from a finalized match.
+ * Updates Player.statistics with runs, wickets, catches, stumpings, and matchesPlayed.
+ * @param {Object} match - The match document with rosters and innings
+ * @param {Number} multiplier - 1 for adding stats, -1 for reversing stats
+ */
+async function updatePlayerStatsFromMatch(match, multiplier = 1) {
+  try {
+    // Build name-to-playerId mapping from rosters
+    const nameToPlayerId = new Map();
+
+    if (match.homeClubRoster?.players) {
+      for (const p of match.homeClubRoster.players) {
+        if (p.playerId && p.playerName) {
+          nameToPlayerId.set(p.playerName.toLowerCase().trim(), p.playerId);
+        }
+      }
+    }
+
+    if (match.awayClubRoster?.players) {
+      for (const p of match.awayClubRoster.players) {
+        if (p.playerId && p.playerName) {
+          nameToPlayerId.set(p.playerName.toLowerCase().trim(), p.playerId);
+        }
+      }
+    }
+
+    // If no roster data, we cannot link player names to IDs
+    if (nameToPlayerId.size === 0) {
+      console.log('No roster data available for player stats aggregation');
+      return { success: false, reason: 'No roster data' };
+    }
+
+    const innings = Array.isArray(match.innings) ? match.innings : [];
+    const participatedPlayerIds = new Set();
+    const statsUpdates = []; // Collect all updates for batch processing
+
+    for (const inn of innings) {
+      const battingCard = Array.isArray(inn.battingCard) ? inn.battingCard : [];
+      const bowlingCard = Array.isArray(inn.bowlingCard) ? inn.bowlingCard : [];
+
+      // Process batting card - update runsScored
+      for (const bat of battingCard) {
+        const playerName = (bat.playerName || '').toLowerCase().trim();
+        const playerId = nameToPlayerId.get(playerName);
+
+        if (playerId) {
+          participatedPlayerIds.add(playerId.toString());
+          const runs = Number(bat.runs) || 0;
+
+          if (runs !== 0) {
+            statsUpdates.push({
+              playerId,
+              update: { $inc: { 'statistics.runsScored': runs * multiplier } }
+            });
+          }
+
+          // Parse dismissal for catches and stumpings (credit the fielder)
+          if (bat.dismissal) {
+            const how = (bat.dismissal.how || '').toLowerCase();
+            const fielderName = (bat.dismissal.fielder || '').toLowerCase().trim();
+            const fielderId = nameToPlayerId.get(fielderName);
+
+            if (fielderId) {
+              // Caught - various formats: 'c', 'caught', 'c fieldername', 'c & b'
+              if (how === 'c' || how === 'caught' || how.startsWith('c ') || how.includes('caught')) {
+                statsUpdates.push({
+                  playerId: fielderId,
+                  update: { $inc: { 'statistics.catches': 1 * multiplier } }
+                });
+              }
+              // Stumped - formats: 'st', 'stumped', 'st keepername'
+              else if (how === 'st' || how === 'stumped' || how.startsWith('st ')) {
+                statsUpdates.push({
+                  playerId: fielderId,
+                  update: { $inc: { 'statistics.stumpings': 1 * multiplier } }
+                });
+              }
+            }
+          }
+        }
+      }
+
+      // Process bowling card - update wicketsTaken
+      for (const bowl of bowlingCard) {
+        const bowlerName = (bowl.bowlerName || '').toLowerCase().trim();
+        const playerId = nameToPlayerId.get(bowlerName);
+
+        if (playerId) {
+          participatedPlayerIds.add(playerId.toString());
+          const wickets = Number(bowl.wickets) || 0;
+
+          if (wickets !== 0) {
+            statsUpdates.push({
+              playerId,
+              update: { $inc: { 'statistics.wicketsTaken': wickets * multiplier } }
+            });
+          }
+        }
+      }
+    }
+
+    // Update matchesPlayed for all unique players (once per match, not per innings)
+    for (const playerIdStr of participatedPlayerIds) {
+      statsUpdates.push({
+        playerId: playerIdStr,
+        update: { $inc: { 'statistics.matchesPlayed': 1 * multiplier } }
+      });
+    }
+
+    // Execute all updates
+    let updatedCount = 0;
+    for (const item of statsUpdates) {
+      try {
+        await Player.findByIdAndUpdate(item.playerId, item.update);
+        updatedCount++;
+      } catch (err) {
+        console.error(`Failed to update player ${item.playerId}:`, err.message);
+      }
+    }
+
+    console.log(`Player stats ${multiplier === 1 ? 'aggregated' : 'reversed'}: ${updatedCount} updates for ${participatedPlayerIds.size} players`);
+    return { success: true, playersUpdated: participatedPlayerIds.size, updatesApplied: updatedCount };
+
+  } catch (error) {
+    console.error('Error in updatePlayerStatsFromMatch:', error);
+    return { success: false, reason: error.message };
+  }
+}
+
+/**
+ * Aggregate player statistics when a match is finalized.
+ * @param {Object} match - The finalized match document
+ */
+async function aggregatePlayerStats(match) {
+  return updatePlayerStatsFromMatch(match, 1);
+}
+
+/**
+ * Reverse player statistics when a match is unfinalized.
+ * @param {Object} match - The match being unfinalized
+ */
+async function reversePlayerStats(match) {
+  return updatePlayerStatsFromMatch(match, -1);
+}
+
 function computeDerivedInnings(inn) {
   try {
     if (!inn) return inn;
@@ -2276,6 +2422,14 @@ router.put('/tournaments/:id/matches/:matchId/finalize', verifyFirebaseToken, re
       }
     }
 
+    // Aggregate player career statistics from match performance data
+    try {
+      const statsResult = await aggregatePlayerStats(match);
+      console.log('Player stats aggregation result:', statsResult);
+    } catch (statsError) {
+      console.error('Error aggregating player stats (non-fatal):', statsError);
+    }
+
     res.json({ message: 'Match finalized', match });
   } catch (error) {
     console.error('Error finalizing match:', error);
@@ -2290,6 +2444,14 @@ router.put('/tournaments/:id/matches/:matchId/unfinalize', verifyFirebaseToken, 
     if (!match) return res.status(404).json({ message: 'Match not found' });
     if (String(match.tournament) !== String(req.params.id)) return res.status(400).json({ message: 'Match does not belong to this tournament' });
     if (!match.finalized) return res.status(400).json({ message: 'Match is not finalized' });
+
+    // Reverse player statistics before removing result
+    try {
+      const statsResult = await reversePlayerStats(match);
+      console.log('Player stats reversal result:', statsResult);
+    } catch (statsError) {
+      console.error('Error reversing player stats (non-fatal):', statsError);
+    }
 
     // Remove finalized/result state and set status back based on innings
     match.finalized = false;

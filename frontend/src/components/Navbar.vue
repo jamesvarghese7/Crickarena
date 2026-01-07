@@ -64,6 +64,11 @@
                 <a :href="href" :class="navLinkClass('/coach-panel')">Coach Dashboard</a>
               </RouterLink>
             </li>
+            <li v-if="isSponsor">
+              <RouterLink :to="'/sponsor-panel'" v-slot="{ href }">
+                <a :href="href" :class="navLinkClass('/sponsor-panel')">Sponsor Dashboard</a>
+              </RouterLink>
+            </li>
             <!-- Replace legacy Admin links with one Admin Panel entry -->
             <li v-if="isAdmin">
               <RouterLink :to="'/admin'" v-slot="{ href }">
@@ -187,6 +192,9 @@
                 <li v-if="isCoach">
                   <RouterLink to="/coach-panel" class="menuItem emerald">Coach Dashboard</RouterLink>
                 </li>
+                <li v-if="isSponsor">
+                  <RouterLink to="/sponsor-panel" class="menuItem emerald">Sponsor Dashboard</RouterLink>
+                </li>
                 <li v-if="isAdmin">
                   <RouterLink to="/admin" class="menuItem emerald">Admin Panel</RouterLink>
                 </li>
@@ -240,6 +248,7 @@
               <li v-if="isClubManager"><RouterLink @click="openMobile=false" to="/club-manager" class="mobileLink">Club Manager</RouterLink></li>
               <li v-if="isPlayer"><RouterLink @click="openMobile=false" to="/player-panel" class="mobileLink">Player Dashboard</RouterLink></li>
               <li v-if="isCoach"><RouterLink @click="openMobile=false" to="/coach-panel" class="mobileLink">Coach Dashboard</RouterLink></li>
+              <li v-if="isSponsor"><RouterLink @click="openMobile=false" to="/sponsor-panel" class="mobileLink">Sponsor Dashboard</RouterLink></li>
               <li v-if="isAdmin"><RouterLink @click="openMobile=false" to="/admin" class="mobileLink">Admin Panel</RouterLink></li>
               <li class="py-2 border-t border-gray-200 dark:border-neutral-800">
                 <div class="flex items-center gap-3 mb-2">
@@ -508,6 +517,7 @@ const isAdmin = computed(() => {
 const isClubManager = computed(() => (auth.userProfile?.role || 'public') === 'clubManager')
 const isPlayer = computed(() => (auth.userProfile?.role || 'public') === 'player')
 const isCoach = computed(() => (auth.userProfile?.role || 'public') === 'coach')
+const isSponsor = computed(() => (auth.userProfile?.role || 'public') === 'sponsor')
 
 // User display helpers
 function getUserDisplayName() {

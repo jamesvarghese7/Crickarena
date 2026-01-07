@@ -45,7 +45,7 @@ const registerSchema = Joi.object({
       'string.email': 'Please enter a valid email address',
       'string.max': 'Email address is too long'
     }),
-  role: Joi.string().valid('public', 'clubManager', 'player', 'coach').default('public')
+  role: Joi.string().valid('public', 'clubManager', 'player', 'coach', 'sponsor').default('public')
 });
 
 // Disposable email domains to block
@@ -88,24 +88,24 @@ function sanitizeInput(obj) {
 function checkRateLimit(ip, maxAttempts = 5, windowMs = 15 * 60 * 1000) {
   const now = Date.now();
   const key = `${ip}`;
-  
+
   if (!rateLimitStore.has(key)) {
     rateLimitStore.set(key, { count: 1, resetTime: now + windowMs });
     return true;
   }
-  
+
   const record = rateLimitStore.get(key);
-  
+
   if (now > record.resetTime) {
     // Reset the counter
     rateLimitStore.set(key, { count: 1, resetTime: now + windowMs });
     return true;
   }
-  
+
   if (record.count >= maxAttempts) {
     return false;
   }
-  
+
   record.count++;
   return true;
 }
@@ -152,7 +152,7 @@ router.post('/session/logout', async (req, res) => {
       try {
         const decoded = await firebaseAdmin.auth().verifySessionCookie(session, true);
         await firebaseAdmin.auth().revokeRefreshTokens(decoded.sub);
-      } catch {}
+      } catch { }
     }
     clearSessionCookie(res);
     res.json({ message: 'Logged out' });
@@ -164,18 +164,18 @@ router.post('/session/logout', async (req, res) => {
 router.post('/register', async (req, res) => {
   try {
     console.log('Registration request received:', req.body);
-    
+
     // Check rate limiting
     const clientIP = req.ip || req.connection.remoteAddress;
     if (!checkRateLimit(clientIP, 30, 60 * 60 * 1000)) { // 30 attempts per hour
       console.log(`Rate limit exceeded for IP: ${clientIP}`);
       return res.status(429).json({ message: 'Too many registration attempts. Please try again later.' });
     }
-    
+
     // Sanitize input data
     const sanitizedBody = sanitizeInput(req.body);
     console.log('Sanitized input:', sanitizedBody);
-    
+
     // Verify Firebase session or bearer token
     let decoded;
     try {
@@ -193,7 +193,7 @@ router.post('/register', async (req, res) => {
       console.error('ID token verify failed:', err?.message || err);
       return res.status(401).json({ message: 'Invalid token' });
     }
-    
+
     if (decoded.uid !== sanitizedBody.firebaseUid) {
       console.warn('UID mismatch', { decodedUid: decoded.uid, bodyUid: sanitizedBody.firebaseUid });
       return res.status(403).json({ message: 'UID mismatch' });
@@ -213,9 +213,9 @@ router.post('/register', async (req, res) => {
     }
 
     // Check if email is already registered by another user
-    const existingUser = await User.findOne({ 
-      email: value.email, 
-      firebaseUid: { $ne: value.firebaseUid } 
+    const existingUser = await User.findOne({
+      email: value.email,
+      firebaseUid: { $ne: value.firebaseUid }
     });
     if (existingUser) {
       console.log('Email already in use by different user:', value.email);

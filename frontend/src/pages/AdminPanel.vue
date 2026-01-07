@@ -30,6 +30,10 @@
             <span class="icon">👨‍🏫</span>
             <span>Coach Management</span>
           </RouterLink>
+          <RouterLink :to="{ name: 'admin-sponsors' }" class="nav-item" :class="linkClass('admin-sponsors')">
+            <span class="icon">💼</span>
+            <span>Sponsor Management</span>
+          </RouterLink>
           <div class="nav-item cursor-not-allowed opacity-60">
             <span class="icon">📊</span>
             <span>Analytics</span>
@@ -68,6 +72,10 @@
             <span class="icon">👨‍🏫</span>
             <span>Coach Management</span>
           </RouterLink>
+          <RouterLink :to="{ name: 'admin-sponsors' }" class="nav-item" :class="linkClass('admin-sponsors')" @click="sidebarOpen = false">
+            <span class="icon">💼</span>
+            <span>Sponsor Management</span>
+          </RouterLink>
           <div class="nav-item cursor-not-allowed opacity-60">
             <span class="icon">📊</span>
             <span>Analytics</span>
@@ -94,6 +102,7 @@
                 <RouterLink :to="{ name: 'admin-clubs' }" class="top-link" :class="topLinkClass('admin-clubs')">Clubs</RouterLink>
                 <RouterLink :to="{ name: 'admin-players' }" class="top-link" :class="topLinkClass('admin-players')">Players</RouterLink>
                 <RouterLink :to="{ name: 'admin-coaches' }" class="top-link" :class="topLinkClass('admin-coaches')">Coaches</RouterLink>
+                <RouterLink :to="{ name: 'admin-sponsors' }" class="top-link" :class="topLinkClass('admin-sponsors')">Sponsors</RouterLink>
                 <span class="top-link opacity-50 cursor-not-allowed" title="Coming soon">Analytics</span>
               </nav>
             </div>
@@ -122,6 +131,7 @@
           <RouterLink :to="{ name: 'admin-clubs' }" class="mobile-link" :class="topLinkClass('admin-clubs')">Clubs</RouterLink>
           <RouterLink :to="{ name: 'admin-players' }" class="mobile-link" :class="topLinkClass('admin-players')">Players</RouterLink>
           <RouterLink :to="{ name: 'admin-coaches' }" class="mobile-link" :class="topLinkClass('admin-coaches')">Coaches</RouterLink>
+          <RouterLink :to="{ name: 'admin-sponsors' }" class="mobile-link" :class="topLinkClass('admin-sponsors')">Sponsors</RouterLink>
           <span class="mobile-link opacity-50">Analytics</span>
         </div>
 

@@ -25,6 +25,8 @@ const { default: coachRoutes } = await import('./routes/coaches.js');
 const { default: messageRoutes } = await import('./routes/messages.js');
 const { default: matchRoutes } = await import('./routes/matches.js');
 const { default: contactRoutes } = await import('./routes/contact.js');
+const { default: sponsorRoutes } = await import('./routes/sponsors.js');
+const { default: sponsorshipRoutes } = await import('./routes/sponsorships.js');
 const { errorHandler, logger } = await import('./utils/logger.js');
 
 const app = express();
@@ -133,6 +135,8 @@ app.use('/api/coaches', coachRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/sponsors', sponsorRoutes);
+app.use('/api/sponsorships', sponsorshipRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

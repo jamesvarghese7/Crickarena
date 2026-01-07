@@ -211,6 +211,21 @@
           </RouterLink>
 
           <RouterLink 
+            :to="{ name: 'club-manager-sponsorships' }" 
+            class="nav-link group"
+            :class="isActive('club-manager-sponsorships')"
+            @click="sidebarOpen = false"
+          >
+            <div class="nav-icon-wrapper">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <span class="nav-text">Sponsorships</span>
+            <div class="nav-indicator"></div>
+          </RouterLink>
+
+          <RouterLink 
             :to="{ name: 'club-manager-messages' }" 
             class="nav-link group"
             :class="isActive('club-manager-messages')"
@@ -390,6 +405,8 @@ function getPageTitle() {
     'club-manager-coaches': 'Coaches',
     'club-manager-training-sessions': 'Training Sessions', // Added title
     'club-manager-matches': 'Matches',
+    'club-manager-sponsorships': 'Sponsorships',
+    'club-manager-messages': 'Messages',
     'club-manager-profile': 'Profile'
   };
   return titles[route.name] || 'Club Manager';

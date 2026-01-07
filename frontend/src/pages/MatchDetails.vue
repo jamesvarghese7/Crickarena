@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
+  <div class="min-h-screen bg-slate-900 flex flex-col">
     <!-- Loading State -->
     <div v-if="loading" class="flex items-center justify-center min-h-screen">
       <div class="text-center">
@@ -25,7 +25,7 @@
     </div>
 
     <!-- Match Content -->
-    <div v-else-if="match" class="max-w-7xl mx-auto">
+    <div v-else-if="match" class="flex-1 w-full">
       <!-- Hero Section -->
       <div class="relative overflow-hidden">
         <!-- Background Pattern -->
@@ -181,10 +181,10 @@
       </div>
 
       <!-- Main Content -->
-      <div class="px-4 sm:px-6 lg:px-8 py-8">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-12">
         <!-- Navigation Tabs -->
-        <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-          <div class="border-b border-gray-200">
+        <div class="bg-slate-800/60 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-700/50 overflow-hidden">
+          <div class="border-b border-slate-700/50">
             <nav class="flex flex-wrap gap-1 p-2">
               <button v-for="tab in tabs" :key="tab.key" 
                       @click="activeTab = tab.key"
@@ -192,7 +192,7 @@
                         'group relative px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center gap-2',
                         activeTab === tab.key 
                           ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md' 
-                          : 'text-gray-600 hover:bg-gray-100'
+                          : 'text-slate-300 hover:bg-slate-700/50'
                       ]">
                 <span>{{ tab.icon }}</span>
                 <span>{{ tab.label }}</span>
