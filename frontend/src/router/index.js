@@ -14,6 +14,7 @@ import ClubManagerCoaches from '../pages/ClubManagerCoaches.vue';
 import ClubManagerMatches from '../pages/ClubManagerMatches.vue';
 import ClubManagerProfile from '../pages/ClubManagerProfile.vue';
 import ClubManagerTrainingSessions from '../pages/ClubManagerTrainingSessions.vue'; // Added import
+import ClubManagerSponsorships from '../pages/ClubManagerSponsorships.vue'; // Sponsorships
 import ClubsList from '../pages/ClubsList.vue';
 import ClubDetails from '../pages/ClubDetails.vue';
 import AdminTournament from '../pages/AdminTournament.vue';
@@ -71,6 +72,15 @@ import AdminOverview from '../pages/AdminOverview.vue';
 import AdminPlayerManagement from '../components/admin/AdminPlayerManagement.vue';
 import AdminCoachManagement from '../components/admin/AdminCoachManagement.vue';
 
+// Sponsor imports
+import SponsorRegistration from '../pages/SponsorRegistration.vue';
+import SponsorPanel from '../pages/SponsorPanel.vue';
+import SponsorDashboard from '../pages/SponsorDashboard.vue';
+import SponsorMarketplace from '../pages/SponsorMarketplace.vue';
+import SponsorDeals from '../pages/SponsorDeals.vue';
+import SponsorProfile from '../pages/SponsorProfile.vue';
+import AdminSponsorManagement from '../components/admin/AdminSponsorManagement.vue';
+
 const API = import.meta.env.VITE_API_BASE || 'http://localhost:4000/api';
 
 const routes = [
@@ -93,6 +103,7 @@ const routes = [
       { path: 'coaches', name: 'club-manager-coaches', component: ClubManagerCoaches },
       { path: 'matches', name: 'club-manager-matches', component: ClubManagerMatches },
       { path: 'training-sessions', name: 'club-manager-training-sessions', component: ClubManagerTrainingSessions }, // Added route
+      { path: 'sponsorships', name: 'club-manager-sponsorships', component: ClubManagerSponsorships }, // Sponsorships
       { path: 'messages', name: 'club-manager-messages', component: ClubManagerMessages },
       { path: 'profile', name: 'club-manager-profile', component: ClubManagerProfile }
     ]
@@ -107,7 +118,8 @@ const routes = [
       { path: 'tournaments', name: 'admin-tournaments', component: AdminTournament },
       { path: 'clubs', name: 'admin-clubs', component: AdminDashboard },
       { path: 'players', name: 'admin-players', component: AdminPlayerManagement },
-      { path: 'coaches', name: 'admin-coaches', component: AdminCoachManagement }
+      { path: 'coaches', name: 'admin-coaches', component: AdminCoachManagement },
+      { path: 'sponsors', name: 'admin-sponsors', component: AdminSponsorManagement }
     ]
   },
   // Backward-compatible alias redirect (if any code still links to old path names)
@@ -125,7 +137,7 @@ const routes = [
   { path: '/explore', redirect: { name: 'home' } },
 
   // Public match details view
-  { path: '/tournaments/:id/matches/:matchId', name: 'match-details', component: MatchDetails, props: true },
+  { path: '/tournaments/:id/matches/:matchId', name: 'match-details', component: MatchDetails, props: true, meta: { fullWidth: true } },
   // Admin match editor
   { path: '/admin/tournaments/:id/matches/:matchId', name: 'admin-match-editor', component: AdminMatchEditor, meta: { requiresAuth: true, requiresAdmin: true }, props: true },
 
@@ -177,7 +189,22 @@ const routes = [
   },
 
   { path: '/login', name: 'login', component: Login },
-  { path: '/register', name: 'register', component: Register }
+  { path: '/register', name: 'register', component: Register },
+
+  // Sponsor routes
+  { path: '/sponsor/register', name: 'sponsor-registration', component: SponsorRegistration, meta: { requiresAuth: true } },
+  {
+    path: '/sponsor-panel',
+    component: SponsorPanel,
+    meta: { requiresAuth: true, requiresSponsor: true },
+    children: [
+      { path: '', name: 'sponsor-dashboard', component: SponsorDashboard },
+      { path: 'marketplace', name: 'sponsor-marketplace', component: SponsorMarketplace },
+      { path: 'deals', name: 'sponsor-deals', component: SponsorDeals },
+      { path: 'analytics', name: 'sponsor-analytics', component: SponsorDashboard },
+      { path: 'profile', name: 'sponsor-profile', component: SponsorProfile }
+    ]
+  }
 ];
 
 const router = createRouter({ history: createWebHistory(), routes });
@@ -341,6 +368,19 @@ router.beforeEach(async (to, from, next) => {
         return next({ name: 'coach-registration' });
       }
       console.warn('Failed to check coach profile:', e?.response?.data || e.message);
+    }
+  }
+
+  // Check sponsor access
+  if (to.meta.requiresSponsor && isAuthed) {
+    const role = auth.userProfile?.role || 'public';
+    if (role !== 'sponsor') {
+      if (typeof window.$notify !== 'undefined') {
+        window.$notify.error('Access Denied', 'Sponsor access required. Please register as a sponsor first.');
+      } else {
+        alert('Sponsor access required. Please register as a sponsor first.');
+      }
+      return next({ name: 'sponsor-registration' });
     }
   }
 

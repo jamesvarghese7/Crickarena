@@ -486,6 +486,32 @@
                       </div>
                     </div>
                   </div>
+
+                  <!-- Sponsors Section -->
+                  <div v-if="tournamentSponsors.length > 0" class="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-2xl p-6 border border-amber-100">
+                    <div class="flex items-center gap-3 mb-4">
+                      <div class="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                      </div>
+                      <h3 class="text-lg font-bold text-gray-900">Sponsors</h3>
+                    </div>
+                    <div class="space-y-3">
+                      <div v-for="sponsor in tournamentSponsors.slice(0, 5)" :key="sponsor._id" 
+                           class="flex items-center gap-3 p-3 bg-white rounded-xl border border-amber-200">
+                        <div class="w-10 h-10 rounded-lg overflow-hidden bg-amber-100 flex items-center justify-center flex-shrink-0">
+                          <img v-if="sponsor.logoUrl" :src="getSponsorLogoUrl(sponsor.logoUrl)" 
+                               :alt="sponsor.companyName" class="w-full h-full object-cover" />
+                          <span v-else class="text-amber-600 font-bold">{{ sponsor.companyName?.charAt(0) }}</span>
+                        </div>
+                        <div class="min-w-0">
+                          <div class="font-semibold text-gray-900 text-sm truncate">{{ sponsor.companyName }}</div>
+                          <div class="text-xs text-amber-600">{{ sponsor.tier || 'Sponsor' }}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
             </div>
           </div>
@@ -620,6 +646,36 @@
                                 <div class="font-bold text-gray-900 text-sm mb-1">{{ clubName(fx.awayClub) }}</div>
                                 <div class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">Away</div>
                               </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Match Result (for Completed matches) -->
+                        <div v-if="fx.status === 'Completed' && (fx.result || fx.innings?.length)" class="mb-4">
+                          <div class="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl p-4 border border-amber-200">
+                            <!-- Score Display -->
+                            <div v-if="fx.innings && fx.innings.length > 0" class="flex items-center justify-between mb-3">
+                              <div class="text-center flex-1">
+                                <p class="text-xs text-gray-500 font-medium mb-1">{{ getInningsTeamName(fx, 0) }}</p>
+                                <p class="text-xl font-bold text-gray-900">{{ getInningsScore(fx, 0) }}</p>
+                              </div>
+                              <div class="text-gray-400 font-bold text-sm">vs</div>
+                              <div class="text-center flex-1">
+                                <p class="text-xs text-gray-500 font-medium mb-1">{{ getInningsTeamName(fx, 1) }}</p>
+                                <p class="text-xl font-bold text-gray-900">{{ getInningsScore(fx, 1) }}</p>
+                              </div>
+                            </div>
+                            
+                            <!-- Result Summary -->
+                            <div class="flex items-center justify-center gap-2">
+                              <div class="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center">
+                                <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0011 15.9V19H7v2h10v-2h-4v-3.1a5.01 5.01 0 003.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/>
+                                </svg>
+                              </div>
+                              <p class="text-sm font-semibold text-amber-800">
+                                {{ getResultSummary(fx) }}
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -1462,6 +1518,27 @@ const clubPaymentVerified = ref(false);
 const showRegistrationSuccess = ref(false);
 const syncing = ref(false);
 
+// Sponsors
+const tournamentSponsors = ref([]);
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
+function getSponsorLogoUrl(url) {
+  if (url?.startsWith('http')) return url;
+  return `${API_URL}${url}`;
+}
+
+async function fetchSponsors() {
+  try {
+    const res = await fetch(`${API_URL}/api/sponsorships/target/tournament/${route.params.id}/sponsors`);
+    if (res.ok) {
+      const data = await res.json();
+      tournamentSponsors.value = data.sponsors || [];
+    }
+  } catch (e) {
+    console.warn('Failed to fetch sponsors:', e);
+  }
+}
+
 // Animated draw state
 // Fixture draw variables removed
 
@@ -1579,6 +1656,102 @@ function clubName(c){
   return (p?.clubName || p?.name) || 'Club';
 }
 
+// Match result display helpers
+function getInningsTeamName(match, inningsIndex) {
+  const innings = match.innings?.[inningsIndex];
+  if (!innings) return '';
+  
+  // Get batting club ID
+  const battingClubId = String(innings.battingClub?._id || innings.battingClub || '');
+  
+  // Check if it matches homeClub or awayClub
+  const homeId = String(match.homeClub?._id || match.homeClub || '');
+  const awayId = String(match.awayClub?._id || match.awayClub || '');
+  
+  if (battingClubId === homeId) {
+    return clubName(match.homeClub);
+  } else if (battingClubId === awayId) {
+    return clubName(match.awayClub);
+  }
+  
+  // Fallback to looking up in participants
+  return clubName(innings.battingClub);
+}
+
+function getInningsScore(match, inningsIndex) {
+  const innings = match.innings?.[inningsIndex];
+  if (!innings) return '-';
+  
+  const runs = innings.runs || 0;
+  const wickets = innings.wickets || 0;
+  const balls = innings.balls || 0;
+  
+  // Calculate overs from balls
+  const overs = Math.floor(balls / 6);
+  const remainingBalls = balls % 6;
+  const oversStr = remainingBalls > 0 ? `${overs}.${remainingBalls}` : `${overs}`;
+  
+  return `${runs}/${wickets} (${oversStr})`;
+}
+
+function getResultSummary(match) {
+  // First check for explicit result summary
+  if (match.result?.summary) {
+    return match.result.summary;
+  }
+  
+  // Check for special cases
+  if (match.result?.isNoResult) {
+    return 'Match abandoned - No result';
+  }
+  
+  if (match.result?.isTie) {
+    if (match.result?.isSuperOverWin && match.superOver?.winner) {
+      const soWinnerName = clubName(match.superOver.winner);
+      return `Match tied - ${soWinnerName} won in Super Over`;
+    }
+    return 'Match tied';
+  }
+  
+  // Get winner details
+  const winnerId = String(match.result?.winner || '');
+  if (!winnerId) {
+    return 'Match completed';
+  }
+  
+  // Determine winner name
+  const homeId = String(match.homeClub?._id || match.homeClub || '');
+  const awayId = String(match.awayClub?._id || match.awayClub || '');
+  
+  let winnerName = '';
+  if (winnerId === homeId) {
+    winnerName = clubName(match.homeClub);
+  } else if (winnerId === awayId) {
+    winnerName = clubName(match.awayClub);
+  } else {
+    winnerName = 'Winner';
+  }
+  
+  // Build result string from margin
+  const margin = match.result?.margin;
+  if (margin?.runs && margin.runs > 0) {
+    return `${winnerName} won by ${margin.runs} run${margin.runs !== 1 ? 's' : ''}`;
+  } else if (margin?.wickets && margin.wickets > 0) {
+    return `${winnerName} won by ${margin.wickets} wicket${margin.wickets !== 1 ? 's' : ''}`;
+  }
+  
+  // DLS or Super Over win without margin details
+  if (match.result?.isDLSWin) {
+    return `${winnerName} won (D/L method)`;
+  }
+  if (match.result?.isSuperOverWin) {
+    return `${winnerName} won in Super Over`;
+  }
+  
+  return `${winnerName} won`;
+}
+
+
 // Favorite (server-backed per-account)
 const isFav = ref(false);
 async function loadFav(){
@@ -1683,6 +1856,7 @@ onMounted(async () => {
   try{
     const id = route.params.id;
     loadFav();
+    fetchSponsors();
     await loadAll(id);
     
     // Load payment status for club managers

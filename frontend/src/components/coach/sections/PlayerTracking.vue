@@ -91,6 +91,30 @@
           </div>
         </div>
 
+        <!-- Career Statistics -->
+        <div class="mt-3 grid grid-cols-5 gap-1.5 text-xs">
+          <div class="text-center p-1.5 bg-blue-50 rounded">
+            <div class="font-bold text-blue-600">{{ player.statistics?.matchesPlayed || 0 }}</div>
+            <div class="text-blue-500 text-[10px]">Matches</div>
+          </div>
+          <div class="text-center p-1.5 bg-green-50 rounded">
+            <div class="font-bold text-green-600">{{ player.statistics?.runsScored || 0 }}</div>
+            <div class="text-green-500 text-[10px]">Runs</div>
+          </div>
+          <div class="text-center p-1.5 bg-purple-50 rounded">
+            <div class="font-bold text-purple-600">{{ player.statistics?.wicketsTaken || 0 }}</div>
+            <div class="text-purple-500 text-[10px]">Wickets</div>
+          </div>
+          <div class="text-center p-1.5 bg-yellow-50 rounded">
+            <div class="font-bold text-yellow-600">{{ player.statistics?.catches || 0 }}</div>
+            <div class="text-yellow-500 text-[10px]">Catches</div>
+          </div>
+          <div class="text-center p-1.5 bg-red-50 rounded">
+            <div class="font-bold text-red-600">{{ player.statistics?.stumpings || 0 }}</div>
+            <div class="text-red-500 text-[10px]">Stumpings</div>
+          </div>
+        </div>
+
         <div class="mt-3 flex gap-2">
           <button 
             @click="viewPlayerDetails(player)"

@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, index: true, unique: true, lowercase: true, trim: true },
   phone: { type: String },
   district: { type: String },
-  role: { type: String, enum: ['admin', 'clubManager', 'player', 'coach', 'public'], default: 'public' },
+  role: { type: String, enum: ['admin', 'clubManager', 'player', 'coach', 'sponsor', 'public'], default: 'public' },
   emailVerified: { type: Boolean, default: false },
   phoneVerified: { type: Boolean, default: false },
   club: { type: mongoose.Schema.Types.ObjectId, ref: 'Club' },

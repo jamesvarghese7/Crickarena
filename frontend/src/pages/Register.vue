@@ -279,7 +279,8 @@ const roleOptions = [
   { value: 'public', title: 'Public' },
   { value: 'clubManager', title: 'Club Manager' },
   { value: 'player', title: 'Player' },
-  { value: 'coach', title: 'Coach' }
+  { value: 'coach', title: 'Coach' },
+  { value: 'sponsor', title: 'Sponsor' }
 ];
 
 const passwordValidation = computed(() => ({
@@ -364,6 +365,8 @@ async function onSubmit() {
       router.push({ name: 'player-registration' });
     } else if (role.value === 'coach') {
       router.push({ name: 'coach-registration' });
+    } else if (role.value === 'sponsor') {
+      router.push({ name: 'sponsor-registration' });
     } else {
       router.push({ name: 'crickhub' });
     }
@@ -396,6 +399,8 @@ async function onGoogleRegister() {
       router.push({ name: 'player-registration' });
     } else if (role.value === 'coach') {
       router.push({ name: 'coach-registration' });
+    } else if (role.value === 'sponsor') {
+      router.push({ name: 'sponsor-registration' });
     } else {
       router.push({ name: 'crickhub' });
     }
