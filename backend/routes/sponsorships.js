@@ -476,6 +476,10 @@ router.get('/deals/my', async (req, res) => {
                     path: 'opportunity',
                     populate: { path: 'createdBy', select: 'name email' }
                 })
+                .populate({
+                    path: 'agreement',
+                    select: 'status agreementNumber sponsor club'
+                })
                 .sort({ appliedAt: -1 })
                 .skip(skip)
                 .limit(parseInt(limit)),
@@ -894,7 +898,8 @@ router.get('/target/:type/:id/sponsors', async (req, res) => {
             status: { $in: ['active', 'approved'] }
         })
             .populate('sponsor', 'companyName logoUrl industry website contactPerson')
-            .populate('opportunity', 'tier title askingPrice');
+            .populate('opportunity', 'tier title askingPrice')
+            .populate('agreement', 'status agreementNumber');
 
         // Return full deal objects if format=full (for club manager)
         if (format === 'full') {
@@ -908,7 +913,8 @@ router.get('/target/:type/:id/sponsors', async (req, res) => {
                     proposedAmount: deal.proposedAmount,
                     startDate: deal.startDate,
                     endDate: deal.endDate,
-                    reviewedAt: deal.reviewedAt
+                    reviewedAt: deal.reviewedAt,
+                    agreement: deal.agreement // Include agreement for status display
                 }))
             });
         }

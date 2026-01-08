@@ -27,6 +27,7 @@ const { default: matchRoutes } = await import('./routes/matches.js');
 const { default: contactRoutes } = await import('./routes/contact.js');
 const { default: sponsorRoutes } = await import('./routes/sponsors.js');
 const { default: sponsorshipRoutes } = await import('./routes/sponsorships.js');
+const { default: agreementRoutes } = await import('./routes/agreements.js');
 const { errorHandler, logger } = await import('./utils/logger.js');
 
 const app = express();
@@ -137,6 +138,7 @@ app.use('/api/matches', matchRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/sponsors', sponsorRoutes);
 app.use('/api/sponsorships', sponsorshipRoutes);
+app.use('/api/agreements', agreementRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

@@ -225,6 +225,41 @@
               </div>
             </div>
           </div>
+
+          <!-- Agreement Actions -->
+          <div class="agreement-actions">
+            <!-- Agreement exists - show status and actions -->
+            <template v-if="deal.agreement">
+              <!-- Show agreement status badge -->
+              <span :class="['agreement-status', getAgreementStatus(deal)]">
+                {{ getAgreementStatusText(deal) }}
+              </span>
+              
+              <!-- View/Sign buttons based on status -->
+              <router-link 
+                v-if="getAgreementStatus(deal) === 'pending-club'"
+                :to="{ name: 'agreement-sign', params: { agreementId: deal.agreement._id || deal.agreement } }"
+                class="sign-agreement-btn"
+              >
+                ✍️ Counter-Sign Agreement
+              </router-link>
+              <router-link 
+                :to="{ name: 'agreement-details', params: { id: deal.agreement._id || deal.agreement } }"
+                class="view-agreement-btn"
+              >
+                📄 View Agreement
+              </router-link>
+            </template>
+            
+            <!-- No agreement yet - show create button -->
+            <router-link 
+              v-else-if="deal.status === 'approved' || deal.status === 'active'"
+              :to="{ name: 'agreement-create', params: { dealId: deal._id } }"
+              class="create-agreement-btn"
+            >
+              ✍️ Create Agreement
+            </router-link>
+          </div>
         </div>
       </div>
     </div>
@@ -419,6 +454,30 @@ function formatTier(tier) {
     'official-partner': 'Official Partner'
   };
   return tierMap[tier] || tier || 'Unknown';
+}
+
+// Agreement status helpers
+function getAgreementStatus(deal) {
+  if (!deal.agreement) return null;
+  // If agreement is populated as object
+  if (typeof deal.agreement === 'object' && deal.agreement.status) {
+    return deal.agreement.status;
+  }
+  // Default to pending-sponsor if only ID (not populated)
+  return 'pending-sponsor';
+}
+
+function getAgreementStatusText(deal) {
+  const status = getAgreementStatus(deal);
+  const statusMap = {
+    'draft': '📝 Draft',
+    'pending-sponsor': '⏳ Awaiting Sponsor Signature',
+    'pending-club': '✍️ Awaiting Your Signature',
+    'active': '✅ Agreement Active',
+    'completed': '🏆 Completed',
+    'terminated': '❌ Terminated'
+  };
+  return statusMap[status] || status;
 }
 
 function formatIndustry(industry) {
@@ -1280,6 +1339,102 @@ onMounted(() => {
   font-weight: 700;
   color: #1D4ED8;
   font-size: 1rem;
+}
+
+/* Agreement Actions */
+.agreement-actions {
+  width: 100%;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #E5E7EB;
+}
+
+.create-agreement-btn,
+.view-agreement-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.create-agreement-btn {
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: white;
+}
+
+.create-agreement-btn:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+}
+
+.view-agreement-btn {
+  background: #EFF6FF;
+  color: #1E40AF;
+  border: 1px solid #BFDBFE;
+}
+
+.view-agreement-btn:hover {
+  background: #DBEAFE;
+}
+
+.sign-agreement-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  color: white;
+}
+
+.sign-agreement-btn:hover {
+  background: linear-gradient(135deg, #D97706, #B45309);
+}
+
+.agreement-status {
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.agreement-status.pending-sponsor {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.agreement-status.pending-club {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+.agreement-status.active {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.agreement-status.completed {
+  background: #E0E7FF;
+  color: #3730A3;
+}
+
+.agreement-status.terminated {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+.agreement-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 /* Modal */
