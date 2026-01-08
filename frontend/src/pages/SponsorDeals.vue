@@ -155,6 +155,28 @@
           >
             Cancel Application
           </button>
+          <!-- Agreement Actions -->
+          <template v-if="deal.agreement">
+            <!-- Show agreement status -->
+            <span :class="['agreement-status', getAgreementStatus(deal)]">
+              {{ getAgreementStatusText(deal) }}
+            </span>
+            
+            <router-link
+              v-if="needsSignature(deal)"
+              :to="{ name: 'agreement-sign', params: { agreementId: deal.agreement._id || deal.agreement } }"
+              class="sign-agreement-btn"
+            >
+              ✍️ Sign Agreement
+            </router-link>
+            <router-link
+              :to="{ name: 'agreement-details', params: { id: deal.agreement._id || deal.agreement } }"
+              class="view-agreement-btn"
+            >
+              📄 View Agreement
+            </router-link>
+          </template>
+          
           <button class="details-btn" @click="viewDetails(deal)">
             View Details
           </button>
@@ -356,6 +378,39 @@ function formatDate(date) {
 
 function canCancel(deal) {
   return ['applied', 'under-review', 'negotiating'].includes(deal.status);
+}
+
+function needsSignature(deal) {
+  // Check if agreement is pending sponsor signature
+  if (!deal.agreement) return false;
+  // If agreement object is populated, check status
+  if (typeof deal.agreement === 'object') {
+    return deal.agreement.status === 'pending-sponsor';
+  }
+  // If only ID, assume needs signature if deal is approved
+  return deal.status === 'approved';
+}
+
+// Agreement status helpers
+function getAgreementStatus(deal) {
+  if (!deal.agreement) return null;
+  if (typeof deal.agreement === 'object' && deal.agreement.status) {
+    return deal.agreement.status;
+  }
+  return 'pending-sponsor';
+}
+
+function getAgreementStatusText(deal) {
+  const status = getAgreementStatus(deal);
+  const statusMap = {
+    'draft': '📝 Draft',
+    'pending-sponsor': '✍️ Awaiting Your Signature',
+    'pending-club': '⏳ Awaiting Club Signature',
+    'active': '✅ Agreement Active',
+    'completed': '🏆 Completed',
+    'terminated': '❌ Terminated'
+  };
+  return statusMap[status] || status;
 }
 
 async function fetchDeals() {
@@ -803,6 +858,73 @@ onMounted(() => {
 
 .cancel-btn:hover {
   background: #FEE2E2;
+}
+
+/* Agreement Buttons */
+.sign-agreement-btn,
+.view-agreement-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sign-agreement-btn {
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: white;
+}
+
+.sign-agreement-btn:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+}
+
+.view-agreement-btn {
+  background: #EFF6FF;
+  color: #1E40AF;
+  border: 1px solid #BFDBFE;
+}
+
+.view-agreement-btn:hover {
+  background: #DBEAFE;
+}
+
+/* Agreement Status */
+.agreement-status {
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-right: 0.5rem;
+}
+
+.agreement-status.pending-sponsor {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+.agreement-status.pending-club {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.agreement-status.active {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.agreement-status.completed {
+  background: #E0E7FF;
+  color: #3730A3;
+}
+
+.agreement-status.terminated {
+  background: #FEE2E2;
+  color: #991B1B;
 }
 
 /* Pagination */

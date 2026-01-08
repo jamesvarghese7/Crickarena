@@ -81,7 +81,13 @@ import SponsorDeals from '../pages/SponsorDeals.vue';
 import SponsorProfile from '../pages/SponsorProfile.vue';
 import AdminSponsorManagement from '../components/admin/AdminSponsorManagement.vue';
 
+// Agreement imports
+import AgreementCreate from '../pages/AgreementCreate.vue';
+import AgreementSign from '../pages/AgreementSign.vue';
+import AgreementDetails from '../pages/AgreementDetails.vue';
+
 const API = import.meta.env.VITE_API_BASE || 'http://localhost:4000/api';
+
 
 const routes = [
   { path: '/', name: 'home', component: HomePage },
@@ -204,7 +210,12 @@ const routes = [
       { path: 'analytics', name: 'sponsor-analytics', component: SponsorDashboard },
       { path: 'profile', name: 'sponsor-profile', component: SponsorProfile }
     ]
-  }
+  },
+
+  // Agreement routes
+  { path: '/agreement/create/:dealId', name: 'agreement-create', component: AgreementCreate, meta: { requiresAuth: true, requiresClubManager: true } },
+  { path: '/agreement/sign/:agreementId', name: 'agreement-sign', component: AgreementSign, meta: { requiresAuth: true } },
+  { path: '/agreement/:id', name: 'agreement-details', component: AgreementDetails, meta: { requiresAuth: true } }
 ];
 
 const router = createRouter({ history: createWebHistory(), routes });

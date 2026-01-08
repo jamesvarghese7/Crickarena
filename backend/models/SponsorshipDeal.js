@@ -12,6 +12,11 @@ const sponsorshipDealSchema = new mongoose.Schema({
         ref: 'Sponsor',
         required: true
     },
+    // Reference to agreement (populated when agreement is created)
+    agreement: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'SponsorshipAgreement'
+    },
 
     // Deal terms
     proposedAmount: {
