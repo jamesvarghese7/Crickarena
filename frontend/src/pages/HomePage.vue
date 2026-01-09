@@ -14,7 +14,7 @@
           <div class="space-y-8">
             <div class="space-y-4">
               <div class="inline-flex items-center gap-2 bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-sm border border-green-400/30 text-white px-4 py-2 rounded-full text-sm font-semibold">
-                <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                <span class="w-2 h-2 bg-green-400 rounded-full"></span>
                 Kerala's Premier Cricket Platform
               </div>
               <h1 class="text-5xl lg:text-7xl font-black leading-tight">
@@ -28,7 +28,7 @@
             <!-- Action Buttons -->
             <div class="flex flex-wrap gap-4">
               <template v-if="auth.user">
-                <RouterLink to="/crickhub" class="group relative bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300">
+                <RouterLink to="/crickhub" class="group relative bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300">
                   <span class="relative z-10">Go to Dashboard</span>
                   <div class="absolute inset-0 bg-gradient-to-r from-green-700 to-emerald-700 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </RouterLink>
@@ -40,7 +40,7 @@
                 </button>
               </template>
               <template v-else>
-                <RouterLink to="/register" class="group relative bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300">
+                <RouterLink to="/register" class="group relative bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300">
                   <span class="relative z-10">Get Started Free</span>
                   <div class="absolute inset-0 bg-gradient-to-r from-green-700 to-emerald-700 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </RouterLink>
@@ -91,17 +91,17 @@
               </div>
 
               <!-- Floating Cricket Elements -->
-              <div class="absolute top-8 left-8 w-16 h-16 bg-white rounded-full shadow-lg flex items-center justify-center animate-bounce" style="animation-duration: 2s">
+              <div class="absolute top-8 left-8 w-16 h-16 bg-white rounded-full shadow-lg flex items-center justify-center">
                 <div class="w-10 h-10 bg-red-500 rounded-full relative">
                   <div class="absolute top-1 left-1 right-1 bottom-1 border-2 border-white rounded-full"></div>
                 </div>
               </div>
 
-              <div class="absolute top-16 right-12 w-12 h-20 bg-amber-100 rounded-lg shadow-lg flex items-center justify-center animate-pulse">
+              <div class="absolute top-16 right-12 w-12 h-20 bg-amber-100 rounded-lg shadow-lg flex items-center justify-center">
                 <div class="w-2 h-16 bg-amber-600 rounded-full"></div>
               </div>
 
-              <div class="absolute bottom-12 left-16 w-14 h-14 bg-white rounded-full shadow-lg flex items-center justify-center animate-spin" style="animation-duration: 4s">
+              <div class="absolute bottom-12 left-16 w-14 h-14 bg-white rounded-full shadow-lg flex items-center justify-center">
                 <svg class="w-6 h-6 text-green-600" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                 </svg>
@@ -112,7 +112,7 @@
                 <div class="flex items-center justify-between">
                   <div>
                     <div class="flex items-center gap-2 mb-2">
-                      <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+                      <span class="w-3 h-3 bg-green-500 rounded-full"></span>
                       <span class="text-sm font-semibold text-green-600">Featured Tournament</span>
                     </div>
                     <h3 class="text-lg font-bold text-gray-900">{{ activeTournament.name || 'Cricket Championship' }}</h3>
@@ -156,7 +156,7 @@
         <!-- Section Header -->
         <div class="text-center mb-12">
           <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-4 badge-live">
-            <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+            <span class="w-2 h-2 bg-white rounded-full"></span>
             Live Cricket Action
           </div>
           <h2 class="text-4xl font-black mb-4">Upcoming Fixtures</h2>
@@ -185,14 +185,14 @@
           <div
             v-for="fx in fixtures.slice(0, 6)"
             :key="fx._id"
-            class="group premium-card rounded-3xl overflow-hidden hover:shadow-xl hover:-translate-y-2 transition-all duration-500 cursor-pointer"
+            class="group premium-card rounded-3xl overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer"
             @click="router.push({ name: 'match-details', params: { id: fx.tournament?._id, matchId: fx._id } })"
           >
             
             <!-- Match Status Badge -->
             <div class="absolute top-4 right-4 z-10">
               <div class="badge-status inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold">
-                <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <div class="w-2 h-2 bg-green-400 rounded-full"></div>
                 Upcoming
               </div>
             </div>
@@ -307,7 +307,7 @@
         <div v-if="fixtures.length > 0" class="text-center mt-12">
           <button 
             @click="navigateToFixtures"
-            class="btn-primary inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:-translate-y-1"
+            class="btn-primary inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -330,12 +330,12 @@
           <div
             v-for="t in ongoingTournaments"
             :key="t._id"
-            class="premium-card rounded-3xl overflow-hidden hover:shadow-md transition-all duration-500 transform hover:-translate-y-2 cursor-pointer group"
+            class="premium-card rounded-3xl overflow-hidden hover:shadow-md transition-all duration-300 cursor-pointer group"
           >
             <div class="h-32 bg-gradient-to-br from-green-400/20 to-emerald-400/20 backdrop-blur-sm relative">
               <img v-if="t.bannerUrl" :src="t.bannerUrl" class="w-full h-full object-cover opacity-80 group-hover:scale-110 transition-transform duration-500" />
               <div class="absolute top-3 left-3 badge-live inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full font-semibold">
-                <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                <span class="w-2 h-2 bg-white rounded-full"></span>
                 Live
               </div>
             </div>
@@ -377,7 +377,7 @@
 
         <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           <!-- Feature Card 1: Local Tournaments -->
-          <div class="group premium-card rounded-3xl p-8 transition-all duration-500 transform hover:-translate-y-2 cursor-pointer" @click="goToTournaments">
+          <div class="group premium-card rounded-3xl p-8 transition-all duration-300 cursor-pointer" @click="goToTournaments">
             <div class="relative z-10">
               <!-- Icon with Neon Gradient -->
               <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 icon-glow">
@@ -398,7 +398,7 @@
           </div>
 
           <!-- Feature Card 2: Club Management -->
-          <div class="group premium-card rounded-3xl p-8 transition-all duration-500 transform hover:-translate-y-2 cursor-pointer" @click="goToClubs">
+          <div class="group premium-card rounded-3xl p-8 transition-all duration-300 cursor-pointer" @click="goToClubs">
             <div class="relative z-10">
               <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 icon-glow">
                 <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -417,7 +417,7 @@
           </div>
 
           <!-- Feature Card 3: Live Scoring -->
-          <div class="group premium-card rounded-3xl p-8 transition-all duration-500 transform hover:-translate-y-2 cursor-pointer">
+          <div class="group premium-card rounded-3xl p-8 transition-all duration-300 cursor-pointer">
             <div class="relative z-10">
               <div class="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 icon-glow">
                 <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -436,7 +436,7 @@
           </div>
 
           <!-- Feature Card 4: Player Network -->
-          <div class="group premium-card rounded-3xl p-8 transition-all duration-500 transform hover:-translate-y-2 cursor-pointer" @click="goToClubs">
+          <div class="group premium-card rounded-3xl p-8 transition-all duration-300 cursor-pointer" @click="goToClubs">
             <div class="relative z-10">
               <div class="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 icon-glow">
                 <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -499,7 +499,7 @@
 
         <div class="text-center">
           <template v-if="!user">
-            <RouterLink to="/register" class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-2xl font-bold text-lg hover:from-orange-600 hover:to-red-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+            <RouterLink to="/register" class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-2xl font-bold text-lg hover:from-orange-600 hover:to-red-700 transition-all duration-300 shadow-lg hover:shadow-xl">
               <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
               </svg>
@@ -507,7 +507,7 @@
             </RouterLink>
           </template>
           <template v-else-if="user.role === 'player'">
-            <RouterLink to="/player/dashboard" class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-2xl font-bold text-lg hover:from-orange-600 hover:to-red-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+            <RouterLink to="/player/dashboard" class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-2xl font-bold text-lg hover:from-orange-600 hover:to-red-700 transition-all duration-300 shadow-lg hover:shadow-xl">
               <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
               </svg>
@@ -515,7 +515,7 @@
             </RouterLink>
           </template>
           <template v-else>
-            <button @click="goToClubs" class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-2xl font-bold text-lg hover:from-orange-600 hover:to-red-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+            <button @click="goToClubs" class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-2xl font-bold text-lg hover:from-orange-600 hover:to-red-700 transition-all duration-300 shadow-lg hover:shadow-xl">
               <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>
@@ -531,7 +531,7 @@
       <div class="max-w-7xl mx-auto px-4">
         <div class="text-center mb-16">
           <div class="inline-flex items-center gap-2 bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-sm border border-green-400/30 text-white px-4 py-2 rounded-full text-sm font-semibold mb-4">
-            <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+            <span class="w-2 h-2 bg-green-400 rounded-full"></span>
             God's Own Country
           </div>
           <h2 class="text-4xl font-black mb-4">Cricket Across Kerala</h2>
@@ -542,7 +542,7 @@
           <div 
             v-for="(district, index) in keralaDistricts" 
             :key="district" 
-            class="group relative premium-card rounded-2xl p-6 transition-all duration-500 transform hover:-translate-y-2 cursor-pointer text-center"
+            class="group relative premium-card rounded-2xl p-6 transition-all duration-300 cursor-pointer text-center"
             :style="{ transitionDelay: (index * 50) + 'ms' }"
             @click="goToDistrictClubs(district)"
           >
@@ -562,7 +562,7 @@
             
             <!-- Active Clubs Indicator -->
             <div class="flex items-center justify-center gap-1 text-xs text-gray-300 mt-2">
-              <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+              <span class="w-2 h-2 bg-green-400 rounded-full"></span>
               <span>Active Clubs</span>
             </div>
           </div>
@@ -571,7 +571,7 @@
         <div class="text-center mt-12">
           <button 
             @click="goToClubs" 
-            class="btn-primary inline-flex items-center px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:-translate-y-1"
+            class="btn-primary inline-flex items-center px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300"
           >
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -593,7 +593,7 @@
         <div v-if="loading" class="text-center text-gray-300">Loading clubs...</div>
         <div v-else>
           <div v-if="clubs.length" class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            <div v-for="club in clubs" :key="club.id || club._id" class="premium-card rounded-3xl overflow-hidden transition-all duration-500 transform hover:-translate-y-2 cursor-pointer group">
+            <div v-for="club in clubs" :key="club.id || club._id" class="premium-card rounded-3xl overflow-hidden transition-all duration-300 cursor-pointer group">
               <!-- Club Logo Section -->
               <div class="h-28 bg-gradient-to-br from-green-400/10 to-emerald-400/10 backdrop-blur-sm flex items-center justify-center border-b border-white/10">
                 <img v-if="club.logoUrl" :src="club.logoUrl" alt="Club Logo" class="h-20 w-20 rounded-full object-cover shadow-lg ring-2 ring-green-400/40 group-hover:ring-green-400 transition-all" />
@@ -969,58 +969,6 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-/* Premium Stadium Theme - Custom Animations */
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-}
-
-@keyframes neonPulse {
-  0%, 100% { 
-    box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
-  }
-  50% { 
-    box-shadow: 0 0 40px rgba(0, 255, 136, 0.6);
-  }
-}
-
-@keyframes borderPulse {
-  0%, 100% {
-    border-color: rgba(0, 255, 136, 0.3);
-  }
-  50% {
-    border-color: rgba(0, 255, 136, 0.8);
-  }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes glow {
-  0%, 100% {
-    text-shadow: 0 0 10px rgba(0, 255, 136, 0.3),
-                 0 0 20px rgba(0, 255, 136, 0.2),
-                 0 2px 4px rgba(0, 0, 0, 0.3);
-  }
-  50% {
-    text-shadow: 0 0 20px rgba(0, 255, 136, 0.5),
-                 0 0 30px rgba(0, 255, 136, 0.3),
-                 0 2px 4px rgba(0, 0, 0, 0.3);
-  }
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
 /* Enhanced Glassmorphism Panel Styles */
 :deep(.glass-panel) {
   background: rgba(255, 255, 255, 0.08);
@@ -1033,7 +981,6 @@ onUnmounted(() => {
     0 0 1px rgba(0, 255, 136, 0.6),
     inset 0 1px 0 rgba(255, 255, 255, 0.15);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  animation: fadeInUp 0.6s ease-out;
 }
 
 :deep(.glass-panel-strong) {
@@ -1072,7 +1019,6 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(0, 255, 136, 0.65);
   border-top: 2px solid rgba(0, 255, 136, 0.8);
-  transform: translateY(-2px);
   box-shadow: 
     0 15px 50px rgba(0, 0, 0, 0.25),
     0 0 25px rgba(0, 255, 136, 0.35),
@@ -1118,7 +1064,7 @@ onUnmounted(() => {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: glow 3s ease-in-out infinite;
+  text-shadow: none;
 }
 
 /* Premium Buttons */
@@ -1134,7 +1080,6 @@ onUnmounted(() => {
 }
 
 :deep(.btn-primary:hover) {
-  transform: translateY(-2px);
   box-shadow: 
     0 8px 30px rgba(0, 255, 136, 0.6),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
@@ -1158,7 +1103,6 @@ onUnmounted(() => {
 /* Neon Badges */
 :deep(.badge-live) {
   background: linear-gradient(135deg, #ff0000, #ff6b00);
-  animation: neonPulse 1.5s ease-in-out infinite;
   box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
 }
 
@@ -1187,7 +1131,6 @@ onUnmounted(() => {
 :deep(.premium-card:hover) {
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(0, 255, 136, 0.6);
-  transform: translateY(-8px) scale(1.02);
   box-shadow: 
     0 12px 40px rgba(0, 0, 0, 0.3),
     0 0 20px rgba(0, 255, 136, 0.3);
@@ -1218,7 +1161,6 @@ onUnmounted(() => {
   box-shadow: 
     0 8px 30px rgba(0, 0, 0, 0.3),
     0 0 15px rgba(0, 255, 136, 0.3);
-  transform: scale(1.05);
 }
 
 /* Browser fallback */

@@ -1,5 +1,10 @@
 <template>
-  <div class="min-h-screen flex flex-col" :class="isFullWidthRoute ? 'bg-slate-900' : 'bg-[rgb(var(--bg))]'">
+  <div class="min-h-screen flex flex-col bg-transparent">
+    <!-- Global Cricket Stadium Background -->
+    <AnimatedCricketBackground />
+    
+    <!-- Main Content Wrapper (above background) -->
+    <div class="relative z-10 min-h-screen flex flex-col">
     <template v-if="!isAdminRoute">
       <Navbar />
       <main class="flex-1" :class="{ 'pt-6': !isAuthRoute && !isFullWidthRoute }">
@@ -37,6 +42,7 @@
     
     <!-- Global Confirm Dialog -->
     <ConfirmDialog />
+    </div><!-- End Content Wrapper -->
   </div>
 </template>
 
@@ -46,6 +52,7 @@ import { useRoute } from 'vue-router';
 import Navbar from './components/Navbar.vue';
 import NotificationPopup from './components/NotificationPopup.vue';
 import ConfirmDialog from './components/ConfirmDialog.vue';
+import AnimatedCricketBackground from './components/AnimatedCricketBackground.vue';
 
 const route = useRoute();
 const isAdminRoute = computed(() => route.matched.some(r => r.meta && (r.meta.requiresAdmin || r.meta.requiresClubManager || r.meta.requiresCoach || r.meta.requiresPlayer)));

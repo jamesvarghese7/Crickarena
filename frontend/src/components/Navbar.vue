@@ -14,7 +14,7 @@
               <path d="M12 2v5m0 10v5M22 12h-5M7 12H2" stroke-linecap="round" />
             </svg>
           </div>
-          <span class="absolute -top-1 -right-1 w-3 h-3 bg-orange-400 rounded-full animate-pulse"></span>
+          <span class="absolute -top-1 -right-1 w-3 h-3 bg-orange-400 rounded-full"></span>
         </div>
         <div class="flex flex-col">
           <span class="text-xl font-black tracking-tight leading-none text-emerald-700 group-hover:text-emerald-600 dark:text-emerald-300 dark:group-hover:text-emerald-200 transition-colors">
