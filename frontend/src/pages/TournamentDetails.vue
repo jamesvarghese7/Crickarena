@@ -1,52 +1,27 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
+  <div class="min-h-screen relative overflow-hidden">
     <!-- Dynamic Field Grid Background Animation -->
-    <div class="absolute inset-0 -z-10 overflow-hidden">
-      <!-- Cricket field wireframe elements -->
-      <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-full">
-        <!-- Boundary circle -->
-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] h-[90%] rounded-full border border-emerald-200/20 animate-pulse-slow"></div>
-        
-        <!-- Pitch rectangle -->
-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1/3 h-2/3 border border-emerald-300/20"></div>
-        
-        <!-- Creases -->
-        <div class="absolute top-1/4 left-1/2 transform -translate-x-1/2 w-1/3 h-0.5 bg-emerald-200/20"></div>
-        <div class="absolute top-3/4 left-1/2 transform -translate-x-1/2 w-1/3 h-0.5 bg-emerald-200/20"></div>
-        
-        <!-- Wickets -->
-        <div class="absolute top-1/4 left-1/3 transform -translate-x-1/2 w-1 h-6 bg-emerald-300/30"></div>
-        <div class="absolute top-1/4 left-2/3 transform -translate-x-1/2 w-1 h-6 bg-emerald-300/30"></div>
-        <div class="absolute top-3/4 left-1/3 transform -translate-x-1/2 w-1 h-6 bg-emerald-300/30"></div>
-        <div class="absolute top-3/4 left-2/3 transform -translate-x-1/2 w-1 h-6 bg-emerald-300/30"></div>
-        
-        <!-- Animated moving dots (representing ball movement) -->
-        <div class="absolute top-1/3 left-1/4 w-2 h-2 rounded-full bg-emerald-400/40 animate-move-dot-1"></div>
-        <div class="absolute top-2/3 right-1/4 w-2 h-2 rounded-full bg-emerald-400/40 animate-move-dot-2"></div>
-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-emerald-300/30 animate-ping-slow"></div>
-      </div>
-      
-      <!-- Subtle grid pattern -->
-      <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(110,255,180,0.05)_0%,rgba(255,255,255,0)_70%)]"></div>
+    <div class="absolute inset-0 -z-10 overflow-hidden hidden">
+      <!-- Hidden - using global stadium background instead -->
     </div>
     
     <!-- Loading / Not Found -->
     <div v-if="loading" class="flex items-center justify-center min-h-screen">
       <div class="text-center">
-        <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent mb-4"></div>
-        <p class="text-gray-600 font-medium">Loading tournament...</p>
+        <div class="inline-block rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent mb-4"></div>
+        <p class="text-gray-300 font-medium">Loading tournament...</p>
       </div>
     </div>
     
     <div v-else-if="!tournament" class="flex items-center justify-center min-h-screen">
-      <div class="text-center">
-        <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-red-100 to-pink-100 flex items-center justify-center">
-          <svg class="w-12 h-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="text-center glass-panel rounded-2xl p-8 border border-white/20">
+        <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-rose-500/20 flex items-center justify-center">
+          <svg class="w-12 h-12 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
         </div>
-        <h3 class="text-xl font-semibold text-gray-900 mb-2">Tournament not found</h3>
-        <p class="text-gray-600">The tournament you're looking for doesn't exist or has been removed.</p>
+        <h3 class="text-xl font-semibold text-white mb-2">Tournament not found</h3>
+        <p class="text-gray-400">The tournament you're looking for doesn't exist or has been removed.</p>
       </div>
     </div>
 
@@ -54,8 +29,8 @@
       <!-- Hero Section -->
       <div class="relative overflow-hidden">
         <!-- Background with banner -->
-        <div class="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600">
-          <div v-if="tournament.bannerUrl" class="absolute inset-0 opacity-20">
+        <div class="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-emerald-900/80 to-slate-900/90 backdrop-blur-sm">
+          <div v-if="tournament.bannerUrl" class="absolute inset-0 opacity-30">
             <img :src="tournament.bannerUrl" alt="Banner" class="w-full h-full object-cover" />
           </div>
         </div>
@@ -232,8 +207,8 @@
       <!-- Main Content -->
       <div class="px-4 sm:px-6 lg:px-8 py-8">
         <!-- Navigation Tabs -->
-        <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-          <div class="border-b border-gray-200">
+        <div class="glass-panel rounded-2xl border border-white/20 overflow-hidden">
+          <div class="border-b border-white/10">
             <nav class="flex flex-wrap gap-1 p-2">
               <button @click="activeTab = 'overview'" 
                       :class="tabClass('overview')" 
@@ -302,46 +277,46 @@
                 <!-- Main Content -->
                 <div class="lg:col-span-2 space-y-8">
                   <!-- About Section -->
-                  <div v-if="tournament.description" class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+                  <div v-if="tournament.description" class="glass-card rounded-2xl p-6 border border-white/20">
                     <div class="flex items-center gap-3 mb-4">
-                      <div class="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                 </div>
-                      <h3 class="text-xl font-bold text-gray-900">About This Tournament</h3>
+                      <h3 class="text-xl font-bold text-white">About This Tournament</h3>
                     </div>
-                    <p class="text-gray-700 leading-relaxed">{{ tournament.description }}</p>
+                    <p class="text-gray-300 leading-relaxed">{{ tournament.description }}</p>
                   </div>
 
                   <!-- Rules Section -->
-                  <div v-if="tournament.rules" class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-100">
+                  <div v-if="tournament.rules" class="glass-card rounded-2xl p-6 border border-white/20">
                     <div class="flex items-center gap-3 mb-4">
-                      <div class="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                         </svg>
                       </div>
-                      <h3 class="text-xl font-bold text-gray-900">Rules & Regulations</h3>
+                      <h3 class="text-xl font-bold text-white">Rules & Regulations</h3>
                     </div>
-                    <div class="prose prose-sm max-w-none text-gray-700">
-                  <p class="whitespace-pre-line">{{ tournament.rules }}</p>
+                    <div class="prose prose-invert max-w-none">
+                  <p class="whitespace-pre-line text-gray-300">{{ tournament.rules }}</p>
                 </div>
                   </div>
 
                   <!-- Venues Section -->
-                  <div v-if="Array.isArray(tournament.venues) && tournament.venues.length" class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
+                  <div v-if="Array.isArray(tournament.venues) && tournament.venues.length" class="glass-card rounded-2xl p-6 border border-white/20">
                     <div class="flex items-center gap-3 mb-4">
-                      <div class="w-10 h-10 rounded-xl bg-green-500 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div class="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                         </svg>
                 </div>
-                      <h3 class="text-xl font-bold text-gray-900">Venues</h3>
+                      <h3 class="text-xl font-bold text-white">Venues</h3>
                       </div>
                     <div class="flex flex-wrap gap-3">
-                      <span v-for="v in tournament.venues" :key="v" class="inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium bg-white text-green-700 border border-green-200 shadow-sm">
+                      <span v-for="v in tournament.venues" :key="v" class="inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                         </svg>
@@ -351,56 +326,56 @@
                   </div>
 
                   <!-- Live Matches Section -->
-                  <div class="bg-gradient-to-br from-red-50 to-pink-50 rounded-2xl p-6 border border-red-100">
+                  <div class="glass-card rounded-2xl p-6 border border-white/20">
                     <div class="flex items-center gap-3 mb-4">
-                      <div class="w-10 h-10 rounded-xl bg-red-500 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div class="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                         </svg>
                       </div>
-                      <h3 class="text-xl font-bold text-gray-900">Live Matches</h3>
-                      <span v-if="liveMatches.length" class="px-3 py-1 bg-red-100 text-red-600 text-sm font-semibold rounded-full">
+                      <h3 class="text-xl font-bold text-white">Live Matches</h3>
+                      <span v-if="liveMatches.length" class="px-3 py-1 bg-rose-500/20 text-rose-400 text-sm font-semibold rounded-full border border-rose-500/30">
                         {{ liveMatches.length }} Live
                       </span>
                     </div>
                     
                     <div v-if="liveMatches.length === 0" class="text-center py-8">
-                      <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                      <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-white/10 flex items-center justify-center">
                         <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                       </div>
-                      <p class="text-gray-500 font-medium">No matches live at the moment</p>
+                      <p class="text-gray-400 font-medium">No matches live at the moment</p>
                     </div>
                     
                     <div v-else class="grid md:grid-cols-2 gap-4">
                       <div v-for="m in liveMatches" :key="m._id" 
-                           class="group bg-white rounded-xl border border-gray-200 p-4 hover:shadow-lg transition-all duration-200 cursor-pointer" 
+                           class="group bg-white/5 rounded-xl border border-white/10 p-4 hover:bg-white/10 transition-all duration-200 cursor-pointer" 
                            @click="$router.push({ name: 'match-details', params: { id: route.params.id, matchId: m._id } })">
                         <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                            <span class="text-sm font-bold text-red-600">LIVE</span>
+                            <div class="w-3 h-3 bg-rose-500 rounded-full"></div>
+                            <span class="text-sm font-bold text-rose-400">LIVE</span>
                         </div>
-                          <div class="text-sm text-gray-500">{{ m.venue || 'TBA' }}</div>
+                          <div class="text-sm text-gray-400">{{ m.venue || 'TBA' }}</div>
                       </div>
                         
                         <div class="flex items-center justify-between">
                           <div class="flex items-center gap-3">
-                            <img v-if="m.homeClub?.logoUrl" :src="m.homeClub.logoUrl" class="w-8 h-8 rounded-full object-cover border-2 border-gray-200" />
-                            <div v-else class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                              <span class="text-xs font-bold text-gray-500">{{ clubName(m.homeClub).charAt(0) }}</span>
+                            <img v-if="m.homeClub?.logoUrl" :src="m.homeClub.logoUrl" class="w-8 h-8 rounded-full object-cover border-2 border-white/20" />
+                            <div v-else class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                              <span class="text-xs font-bold text-gray-300">{{ clubName(m.homeClub).charAt(0) }}</span>
                     </div>
-                            <span class="font-semibold text-gray-900">{{ clubName(m.homeClub) }}</span>
+                            <span class="font-semibold text-white">{{ clubName(m.homeClub) }}</span>
                   </div>
                           
-                          <span class="text-gray-400 font-bold">VS</span>
+                          <span class="text-gray-500 font-bold">VS</span>
                           
                           <div class="flex items-center gap-3">
-                            <span class="font-semibold text-gray-900">{{ clubName(m.awayClub) }}</span>
-                            <img v-if="m.awayClub?.logoUrl" :src="m.awayClub.logoUrl" class="w-8 h-8 rounded-full object-cover border-2 border-gray-200" />
-                            <div v-else class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                              <span class="text-xs font-bold text-gray-500">{{ clubName(m.awayClub).charAt(0) }}</span>
+                            <span class="font-semibold text-white">{{ clubName(m.awayClub) }}</span>
+                            <img v-if="m.awayClub?.logoUrl" :src="m.awayClub.logoUrl" class="w-8 h-8 rounded-full object-cover border-2 border-white/20" />
+                            <div v-else class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                              <span class="text-xs font-bold text-gray-300">{{ clubName(m.awayClub).charAt(0) }}</span>
                 </div>
               </div>
                 </div>
@@ -412,36 +387,36 @@
                 <!-- Sidebar -->
                 <div class="space-y-6">
                   <!-- Quick Stats -->
-                  <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-100">
-                    <h3 class="text-lg font-bold text-gray-900 mb-4">Quick Stats</h3>
+                  <div class="glass-card rounded-2xl p-6 border border-white/20">
+                    <h3 class="text-lg font-bold text-white mb-4">Quick Stats</h3>
                     <div class="space-y-4">
                       <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-600">Total Matches</span>
-                        <span class="font-bold text-indigo-600">{{ matches.length }}</span>
+                        <span class="text-sm text-gray-400">Total Matches</span>
+                        <span class="font-bold text-emerald-400">{{ matches.length }}</span>
                       </div>
                       <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-600">Participating Teams</span>
-                        <span class="font-bold text-indigo-600">{{ participants.length }}</span>
+                        <span class="text-sm text-gray-400">Participating Teams</span>
+                        <span class="font-bold text-emerald-400">{{ participants.length }}</span>
                       </div>
                       <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-600">Entry Fee</span>
-                        <span class="font-bold text-indigo-600">₹{{ tournament.entryFee || 0 }}</span>
+                        <span class="text-sm text-gray-400">Entry Fee</span>
+                        <span class="font-bold text-emerald-400">₹{{ tournament.entryFee || 0 }}</span>
                       </div>
                       <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-600">Prize Pool</span>
-                        <span class="font-bold text-indigo-600">₹{{ tournament.prizePool || 0 }}</span>
+                        <span class="text-sm text-gray-400">Prize Pool</span>
+                        <span class="font-bold text-emerald-400">₹{{ tournament.prizePool || 0 }}</span>
                       </div>
                       <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-600">Max Teams</span>
-                        <span class="font-bold text-indigo-600">{{ tournament.maxTeams }}</span>
+                        <span class="text-sm text-gray-400">Max Teams</span>
+                        <span class="font-bold text-emerald-400">{{ tournament.maxTeams }}</span>
                       </div>
                       <div v-if="tournament.matchFormat" class="flex items-center justify-between">
-                        <span class="text-sm text-gray-600">Match Format</span>
-                        <span class="font-bold text-indigo-600">{{ tournament.matchFormat }} ({{ tournament.oversLimit || 20 }} overs)</span>
+                        <span class="text-sm text-gray-400">Match Format</span>
+                        <span class="font-bold text-emerald-400">{{ tournament.matchFormat }} ({{ tournament.oversLimit || 20 }} overs)</span>
                       </div>
                       <div v-if="tournament.restDaysMin !== undefined" class="flex items-center justify-between">
-                        <span class="text-sm text-gray-600">Minimum Rest Days</span>
-                        <span class="font-bold text-indigo-600">{{ tournament.restDaysMin }}</span>
+                        <span class="text-sm text-gray-400">Minimum Rest Days</span>
+                        <span class="font-bold text-emerald-400">{{ tournament.restDaysMin }}</span>
                       </div>
                     </div>
                     <div v-if="isClubManager && Number(tournament.entryFee) > 0" class="mt-4">
@@ -461,53 +436,53 @@
                   </div>
 
                   <!-- Quick Standings Preview -->
-                  <div v-if="showTable" class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
+                  <div v-if="showTable" class="glass-card rounded-2xl p-6 border border-white/20">
                     <div class="flex items-center justify-between mb-4">
-                      <h3 class="text-lg font-bold text-gray-900">Standings</h3>
-                      <button class="text-sm text-green-600 hover:text-green-700 font-semibold" @click="activeTab='table'">
+                      <h3 class="text-lg font-bold text-white">Standings</h3>
+                      <button class="text-sm text-emerald-400 hover:text-emerald-300 font-semibold" @click="activeTab='table'">
                         View All →
                       </button>
                     </div>
                     
                     <div v-if="standingsSorted.length === 0" class="text-center py-4">
-                      <p class="text-sm text-gray-500">No standings yet</p>
+                      <p class="text-sm text-gray-400">No standings yet</p>
                     </div>
                     
                     <div v-else class="space-y-3">
                       <div v-for="(row, idx) in standingsSorted.slice(0, 5)" :key="row.teamId" 
-                           class="flex items-center justify-between p-3 bg-white rounded-xl border border-green-200">
+                           class="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10">
                         <div class="flex items-center gap-3">
-                          <div class="w-6 h-6 rounded-full bg-green-500 text-white text-xs font-bold flex items-center justify-center">
+                          <div class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center border border-emerald-500/30">
                             {{ idx + 1 }}
                           </div>
-                          <span class="font-semibold text-gray-900">{{ row.teamName }}</span>
+                          <span class="font-semibold text-white">{{ row.teamName }}</span>
                         </div>
-                        <div class="text-sm font-bold text-green-600">{{ row.points }} pts</div>
+                        <div class="text-sm font-bold text-emerald-400">{{ row.points }} pts</div>
                       </div>
                     </div>
                   </div>
 
                   <!-- Sponsors Section -->
-                  <div v-if="tournamentSponsors.length > 0" class="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-2xl p-6 border border-amber-100">
+                  <div v-if="tournamentSponsors.length > 0" class="glass-card rounded-2xl p-6 border border-white/20">
                     <div class="flex items-center gap-3 mb-4">
-                      <div class="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                         </svg>
                       </div>
-                      <h3 class="text-lg font-bold text-gray-900">Sponsors</h3>
+                      <h3 class="text-lg font-bold text-white">Sponsors</h3>
                     </div>
                     <div class="space-y-3">
                       <div v-for="sponsor in tournamentSponsors.slice(0, 5)" :key="sponsor._id" 
-                           class="flex items-center gap-3 p-3 bg-white rounded-xl border border-amber-200">
-                        <div class="w-10 h-10 rounded-lg overflow-hidden bg-amber-100 flex items-center justify-center flex-shrink-0">
+                           class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10">
+                        <div class="w-10 h-10 rounded-lg overflow-hidden bg-amber-500/20 flex items-center justify-center flex-shrink-0">
                           <img v-if="sponsor.logoUrl" :src="getSponsorLogoUrl(sponsor.logoUrl)" 
                                :alt="sponsor.companyName" class="w-full h-full object-cover" />
-                          <span v-else class="text-amber-600 font-bold">{{ sponsor.companyName?.charAt(0) }}</span>
+                          <span v-else class="text-amber-400 font-bold">{{ sponsor.companyName?.charAt(0) }}</span>
                         </div>
                         <div class="min-w-0">
-                          <div class="font-semibold text-gray-900 text-sm truncate">{{ sponsor.companyName }}</div>
-                          <div class="text-xs text-amber-600">{{ sponsor.tier || 'Sponsor' }}</div>
+                          <div class="font-semibold text-white text-sm truncate">{{ sponsor.companyName }}</div>
+                          <div class="text-xs text-amber-400">{{ sponsor.tier || 'Sponsor' }}</div>
                         </div>
                       </div>
                     </div>
@@ -519,7 +494,7 @@
           <!-- FIXTURES TAB -->
           <div v-if="activeTab === 'fixtures'" id="fixtures" class="p-6">
             <!-- Enhanced Filters -->
-            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 mb-8 border border-blue-100">
+            <div class="glass-card rounded-2xl p-6 mb-8 border border-white/20">
               <div class="flex flex-col lg:flex-row lg:items-center gap-4">
                 <div class="flex-1">
                   <div class="relative">
@@ -529,21 +504,21 @@
                     <input v-model.trim="searchTerm" 
                            type="text" 
                            placeholder="Search teams, venues, or matches..." 
-                           class="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
+                           class="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" />
                   </div>
                 </div>
                 <div class="flex flex-wrap items-center gap-3">
-                  <select v-model="statusFilter" class="px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
-                    <option value="all">All Status</option>
-                <option value="Scheduled">Scheduled</option>
-                <option value="Live">Live</option>
-                <option value="Completed">Completed</option>
-                <option value="Cancelled">Cancelled</option>
+                  <select v-model="statusFilter" class="px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
+                    <option value="all" class="bg-slate-800">All Status</option>
+                <option value="Scheduled" class="bg-slate-800">Scheduled</option>
+                <option value="Live" class="bg-slate-800">Live</option>
+                <option value="Completed" class="bg-slate-800">Completed</option>
+                <option value="Cancelled" class="bg-slate-800">Cancelled</option>
               </select>
-                  <select v-model="timeFilter" class="px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
-                <option value="upcoming">Upcoming</option>
-                <option value="past">Past</option>
-                    <option value="all">All Time</option>
+                  <select v-model="timeFilter" class="px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
+                <option value="upcoming" class="bg-slate-800">Upcoming</option>
+                <option value="past" class="bg-slate-800">Past</option>
+                    <option value="all" class="bg-slate-800">All Time</option>
               </select>
                 </div>
               </div>
@@ -551,20 +526,20 @@
 
             <!-- No Fixtures State -->
             <div v-if="fixturesGrouped.length === 0" class="text-center py-16">
-              <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+              <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-white/10 flex items-center justify-center">
                 <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>
                 </div>
-              <h3 class="text-xl font-semibold text-gray-900 mb-2">No fixtures found</h3>
-              <p class="text-gray-600">Try adjusting your filters or check back later for updates.</p>
+              <h3 class="text-xl font-semibold text-white mb-2">No fixtures found</h3>
+              <p class="text-gray-400">Try adjusting your filters or check back later for updates.</p>
                       </div>
 
             <!-- Fixtures List -->
             <div v-else class="space-y-8">
-              <div v-for="group in fixturesGrouped" :key="group.dateKey" class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+              <div v-for="group in fixturesGrouped" :key="group.dateKey" class="glass-card rounded-2xl border border-white/20 overflow-hidden">
                 <!-- Date Header -->
-                <div class="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-4">
+                <div class="bg-gradient-to-r from-emerald-600/80 to-teal-600/80 px-6 py-4">
                   <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
                       <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -573,7 +548,7 @@
                         </div>
                     <div>
                       <h3 class="text-lg font-bold text-white">{{ group.label }}</h3>
-                      <p class="text-indigo-100 text-sm">{{ group.items.length }} matches</p>
+                      <p class="text-emerald-100 text-sm">{{ group.items.length }} matches</p>
                       </div>
                     </div>
                       </div>
@@ -582,7 +557,7 @@
                 <div class="p-6">
                   <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
                     <div v-for="fx in group.items" :key="fx._id" 
-                         class="group relative bg-white rounded-2xl shadow-lg border border-gray-100 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
+                         class="group relative glass-card rounded-2xl border border-white/20 hover:border-emerald-500/40 transition-all duration-300 cursor-pointer overflow-hidden"
                          @click="!isAdmin ? viewMatchDetails(fx) : null">
                       
                       <!-- Status Badge -->
@@ -1011,15 +986,15 @@
           <div v-if="activeTab === 'table'" class="p-4 md:p-6">
             <template v-if="groupKeys.length > 1">
               <div class="grid grid-cols-1 gap-6">
-                <div v-for="g in groupKeys" :key="g" class="rounded-2xl border shadow-sm overflow-hidden bg-white">
-                  <div class="px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white flex items-center justify-between">
+                <div v-for="g in groupKeys" :key="g" class="rounded-2xl border border-white/20 overflow-hidden glass-card">
+                  <div class="px-4 py-3 bg-gradient-to-r from-emerald-600/80 to-teal-600/80 text-white flex items-center justify-between">
                     <div class="text-sm font-semibold">{{ g || 'Group' }} Standings</div>
                     <div class="text-xs bg-white/20 px-2 py-0.5 rounded-full">{{ getStandingsSorted(g).length }} teams</div>
                   </div>
                   <div class="overflow-x-auto">
                     <table class="min-w-full">
-                      <thead class="bg-gray-50 sticky top-0 z-10">
-                        <tr class="text-left text-[11px] md:text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                      <thead class="bg-white/5 sticky top-0 z-10">
+                        <tr class="text-left text-[11px] md:text-xs font-semibold text-gray-400 uppercase tracking-wide">
                           <th class="px-3 md:px-4 py-2">Pos</th>
                           <th class="px-3 md:px-4 py-2">Team</th>
                           <th class="px-3 md:px-4 py-2">P</th>
@@ -1031,8 +1006,8 @@
                           <th class="px-3 md:px-4 py-2">Form</th>
                         </tr>
                       </thead>
-                      <tbody class="divide-y divide-gray-100">
-                        <tr v-for="(row, idx) in getStandingsSorted(g)" :key="row.teamId" class="text-sm hover:bg-emerald-50/40">
+                      <tbody class="divide-y divide-white/10">
+                        <tr v-for="(row, idx) in getStandingsSorted(g)" :key="row.teamId" class="text-sm text-gray-300 hover:bg-white/5">
                           <td class="px-3 md:px-4 py-2 text-gray-500">
                             <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold"
                                   :class="idx===0 ? 'bg-amber-100 text-amber-700' : idx===1 ? 'bg-slate-100 text-slate-700' : idx===2 ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600'">
@@ -1069,15 +1044,15 @@
               </div>
             </template>
             <template v-else>
-              <div class="rounded-2xl border shadow-sm overflow-hidden bg-white">
-                <div class="px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white flex items-center justify-between">
+              <div class="rounded-2xl border border-white/20 overflow-hidden glass-card">
+                <div class="px-4 py-3 bg-gradient-to-r from-emerald-600/80 to-teal-600/80 text-white flex items-center justify-between">
                   <div class="text-sm font-semibold">Standings</div>
                   <div class="text-xs bg-white/20 px-2 py-0.5 rounded-full">{{ standingsByGroup.length }} teams</div>
                 </div>
                 <div class="overflow-x-auto">
                   <table class="min-w-full">
-                    <thead class="bg-gray-50 sticky top-0 z-10">
-                      <tr class="text-left text-[11px] md:text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                    <thead class="bg-white/5 sticky top-0 z-10">
+                      <tr class="text-left text-[11px] md:text-xs font-semibold text-gray-400 uppercase tracking-wide">
                         <th class="px-3 md:px-4 py-2">Pos</th>
                         <th class="px-3 md:px-4 py-2">Team</th>
                         <th class="px-3 md:px-4 py-2">P</th>
@@ -1089,8 +1064,8 @@
                         <th class="px-3 md:px-4 py-2">Form</th>
                       </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
-                      <tr v-for="(row, idx) in standingsByGroup" :key="row.teamId" class="text-sm hover:bg-emerald-50/40">
+                    <tbody class="divide-y divide-white/10">
+                      <tr v-for="(row, idx) in standingsByGroup" :key="row.teamId" class="text-sm text-gray-300 hover:bg-white/5">
                         <td class="px-3 md:px-4 py-2 text-gray-500">
                           <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold"
                                 :class="idx===0 ? 'bg-amber-100 text-amber-700' : idx===1 ? 'bg-slate-100 text-slate-700' : idx===2 ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600'">
@@ -1129,14 +1104,14 @@
 
           <!-- PARTICIPANTS TAB -->
           <div v-if="activeTab === 'participants'" class="p-4 md:p-6">
-            <div v-if="participants.length === 0" class="text-sm text-gray-500">No participants available yet.</div>
+            <div v-if="participants.length === 0" class="text-sm text-gray-400">No participants available yet.</div>
             <div v-else class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              <div v-for="p in participants" :key="p._id || p.id" class="bg-white rounded-xl border p-4 hover:shadow transition">
+              <div v-for="p in participants" :key="p._id || p.id" class="glass-card rounded-xl border border-white/20 p-4 hover:border-emerald-500/40 transition">
                 <div class="flex items-center gap-3">
-                  <img v-if="p.logoUrl" :src="p.logoUrl" class="w-10 h-10 rounded-full object-cover" />
+                  <img v-if="p.logoUrl" :src="p.logoUrl" class="w-10 h-10 rounded-full object-cover border-2 border-white/20" />
                   <div>
-                    <div class="font-semibold text-gray-900">{{ p.clubName || p.name }}</div>
-                    <div class="text-xs text-gray-500">{{ p.district || 'Kerala' }}</div>
+                    <div class="font-semibold text-white">{{ p.clubName || p.name }}</div>
+                    <div class="text-xs text-gray-400">{{ p.district || 'Kerala' }}</div>
                   </div>
                 </div>
               </div>
@@ -1145,23 +1120,23 @@
 
           <!-- BRACKET TAB -->
           <div v-if="activeTab === 'bracket'" class="p-4 md:p-6">
-            <div v-if="!hasBracket" class="text-sm text-gray-500">No bracket rounds found.</div>
+            <div v-if="!hasBracket" class="text-sm text-gray-400">No bracket rounds found.</div>
             <div v-else class="overflow-x-auto">
               <div class="min-w-[720px] grid grid-cols-3 gap-6">
-                <div v-for="col in bracketColumns" :key="col.round" class="bg-gray-50 rounded-xl p-3 border">
-                  <div class="text-sm font-semibold text-gray-700 mb-2">{{ col.title }}</div>
+                <div v-for="col in bracketColumns" :key="col.round" class="glass-card rounded-xl p-3 border border-white/20">
+                  <div class="text-sm font-semibold text-white mb-2">{{ col.title }}</div>
                   <div class="space-y-3">
-                    <div v-for="m in col.matches" :key="m._id" class="bg-white rounded-lg border p-3 hover:shadow cursor-pointer" @click="$router.push({ name: 'match-details', params: { id: route.params.id, matchId: m._id } })">
-                      <div class="text-[11px] text-gray-500 flex items-center justify-between">
+                    <div v-for="m in col.matches" :key="m._id" class="bg-white/5 rounded-lg border border-white/10 p-3 hover:bg-white/10 cursor-pointer transition" @click="$router.push({ name: 'match-details', params: { id: route.params.id, matchId: m._id } })">
+                      <div class="text-[11px] text-gray-400 flex items-center justify-between">
                         <span>{{ m.matchCode || m.round || col.title }}</span>
                         <span>{{ fmtShortDate(m.date) }} {{ m.time || '' }}</span>
                       </div>
                       <div class="mt-1.5 space-y-1.5">
-                        <div class="flex items-center justify-between" :class="isWinner(m, m.homeClub)? 'font-semibold text-gray-900' : 'text-gray-700'">
+                        <div class="flex items-center justify-between" :class="isWinner(m, m.homeClub)? 'font-semibold text-emerald-400' : 'text-gray-300'">
                           <span>{{ clubName(m.homeClub) }}</span>
                           <span class="text-xs" v-if="winnerId(m)"> {{ isWinner(m, m.homeClub)? 'WIN' : '' }} </span>
                         </div>
-                        <div class="flex items-center justify-between" :class="isWinner(m, m.awayClub)? 'font-semibold text-gray-900' : 'text-gray-700'">
+                        <div class="flex items-center justify-between" :class="isWinner(m, m.awayClub)? 'font-semibold text-emerald-400' : 'text-gray-300'">
                           <span>{{ clubName(m.awayClub) }}</span>
                           <span class="text-xs" v-if="winnerId(m)"> {{ isWinner(m, m.awayClub)? 'WIN' : '' }} </span>
                         </div>
@@ -1618,15 +1593,15 @@ function statusDotClass(status){
          'bg-white/60';
 }
 function statusPillClass(status){
-  return status === 'Live' ? 'px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200' :
-         status === 'Completed' ? 'px-2 py-0.5 rounded bg-gray-50 text-gray-700 border border-gray-200' :
-         status === 'Cancelled' ? 'px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200' :
-         'px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200';
+  return status === 'Live' ? 'px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+         status === 'Completed' ? 'px-2 py-0.5 rounded bg-gray-500/20 text-gray-300 border border-gray-500/30' :
+         status === 'Cancelled' ? 'px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30' :
+         'px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30';
 }
 function tabClass(name){
   return activeTab.value === name
-    ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg'
-    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50';
+    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+    : 'text-gray-400 hover:text-white hover:bg-white/10';
 }
 
 // Formatting
@@ -2432,4 +2407,23 @@ function viewMatchDetails(match) {
   });
 }
 </script>
-```
+
+<style scoped>
+/* Glassmorphism Panel */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Glassmorphism Card */
+.glass-card {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+</style>
