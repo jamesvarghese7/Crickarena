@@ -1,7 +1,8 @@
 <template>
-  <div class="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-gray-50 to-emerald-50">
-    <!-- Cricket-themed header with dynamic elements -->
-    <div class="relative overflow-hidden bg-gradient-to-r from-emerald-800 to-green-700 text-white">
+  <div class="min-h-screen relative">
+    <!-- Cricket-themed header with dark glass effect -->
+    <div class="relative overflow-hidden">
+      <div class="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-emerald-900/80 to-slate-900/90 backdrop-blur-sm"></div>
       <div class="absolute inset-0 opacity-10">
         <div class="absolute top-10 left-10 w-24 h-24 border-4 border-white rounded-full"></div>
         <div class="absolute top-32 right-20 w-16 h-16 border-4 border-white rotate-45"></div>
@@ -13,22 +14,22 @@
         <div class="grid md:grid-cols-3 gap-8 items-center">
           <div class="md:col-span-2">
             <div class="flex items-center gap-2 mb-2">
-              <span class="px-3 py-1 bg-emerald-600/30 rounded-full text-xs font-medium">Live</span>
+              <span class="px-3 py-1 bg-emerald-500/30 rounded-full text-xs font-medium text-emerald-300">Live</span>
               <span class="text-emerald-200 text-sm">Welcome back, {{ auth.userProfile?.name || auth.user?.displayName || auth.user?.email }}</span>
             </div>
-            <h1 class="text-3xl md:text-5xl font-bold mb-4">Crick<span class="text-emerald-300">Hub</span> Dashboard</h1>
-            <p class="text-emerald-100 max-w-2xl mb-6">
+            <h1 class="text-3xl md:text-5xl font-bold mb-4 text-white">Crick<span class="text-emerald-400">Hub</span> Dashboard</h1>
+            <p class="text-emerald-100/80 max-w-2xl mb-6">
               Your personalized cricket command center. Track matches, manage your teams, and stay connected with Kerala's cricket community.
             </p>
             
             <div class="flex flex-wrap gap-3">
-              <RouterLink to="/clubs" class="px-5 py-2.5 bg-white text-emerald-800 rounded-lg font-medium hover:bg-emerald-50 transition flex items-center gap-2">
+              <RouterLink to="/clubs" class="px-5 py-2.5 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-400 transition flex items-center gap-2 shadow-lg shadow-emerald-500/25">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
                 Find Clubs
               </RouterLink>
-              <RouterLink to="/tournaments" class="px-5 py-2.5 bg-emerald-700/50 border border-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-700 transition flex items-center gap-2">
+              <RouterLink to="/tournaments" class="px-5 py-2.5 bg-white/10 backdrop-blur-sm border border-white/30 text-white rounded-lg font-medium hover:bg-white/20 transition flex items-center gap-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
@@ -38,10 +39,10 @@
           </div>
           
           <div class="hidden md:block relative">
-            <div class="bg-emerald-900/30 backdrop-blur-sm rounded-2xl p-6 border border-emerald-700/50">
+            <div class="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl">
               <div class="flex items-center justify-between mb-4">
-                <h3 class="font-bold text-lg">Live Matches</h3>
-                <span class="text-xs bg-red-500 px-2 py-1 rounded-full">LIVE</span>
+                <h3 class="font-bold text-lg text-white">Live Matches</h3>
+                <span class="text-xs bg-red-500 px-2 py-1 rounded-full text-white animate-pulse">LIVE</span>
               </div>
               
               <!-- Carousel Container for Live Matches -->
@@ -49,7 +50,7 @@
                 <!-- Navigation Arrows for Live Matches -->
                 <button 
                   @click="prevLiveMatch" 
-                  class="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-emerald-800/50 backdrop-blur-sm rounded-full p-1 shadow-md hover:bg-emerald-700 transition-all duration-300"
+                  class="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white/20 backdrop-blur-sm rounded-full p-1 shadow-md hover:bg-white/30 transition-all duration-300"
                   :disabled="currentLiveMatchIndex === 0"
                   v-if="liveMatches.length > 1"
                 >
@@ -60,7 +61,7 @@
                 
                 <button 
                   @click="nextLiveMatch" 
-                  class="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-emerald-800/50 backdrop-blur-sm rounded-full p-1 shadow-md hover:bg-emerald-700 transition-all duration-300"
+                  class="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white/20 backdrop-blur-sm rounded-full p-1 shadow-md hover:bg-white/30 transition-all duration-300"
                   :disabled="currentLiveMatchIndex >= liveMatches.length - 1"
                   v-if="liveMatches.length > 1"
                 >
@@ -83,31 +84,31 @@
                       <div class="space-y-3">
                         <div class="flex items-center justify-between">
                           <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-xs font-bold">
+                            <div class="w-8 h-8 rounded-full bg-emerald-500/30 flex items-center justify-center text-xs font-bold text-emerald-300">
                               {{ getInitials(match?.homeClub?.clubName || match?.homeClub?.name || 'HC') }}
                             </div>
-                            <span class="text-sm">{{ match?.homeClub?.clubName || match?.homeClub?.name || 'Home Team' }}</span>
+                            <span class="text-sm text-white">{{ match?.homeClub?.clubName || match?.homeClub?.name || 'Home Team' }}</span>
                           </div>
                           <div class="text-center">
-                            <div class="text-lg font-bold">{{ getCurrentScore(match, 1) }}</div>
-                            <div class="text-xs text-emerald-200">{{ getCurrentOvers(match, 1) }}</div>
+                            <div class="text-lg font-bold text-white">{{ getCurrentScore(match, 1) }}</div>
+                            <div class="text-xs text-emerald-300">{{ getCurrentOvers(match, 1) }}</div>
                           </div>
                         </div>
                         
                         <div class="flex items-center justify-between">
                           <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold">
+                            <div class="w-8 h-8 rounded-full bg-blue-500/30 flex items-center justify-center text-xs font-bold text-blue-300">
                               {{ getInitials(match?.awayClub?.clubName || match?.awayClub?.name || 'AC') }}
                             </div>
-                            <span class="text-sm">{{ match?.awayClub?.clubName || match?.awayClub?.name || 'Away Team' }}</span>
+                            <span class="text-sm text-white">{{ match?.awayClub?.clubName || match?.awayClub?.name || 'Away Team' }}</span>
                           </div>
                           <div class="text-center">
-                            <div class="text-lg font-bold">{{ getCurrentScore(match, 2) }}</div>
-                            <div class="text-xs text-emerald-200">{{ getCurrentOvers(match, 2) }}</div>
+                            <div class="text-lg font-bold text-white">{{ getCurrentScore(match, 2) }}</div>
+                            <div class="text-xs text-emerald-300">{{ getCurrentOvers(match, 2) }}</div>
                           </div>
                         </div>
                         
-                        <div class="text-xs text-emerald-200 mt-1">
+                        <div class="text-xs text-gray-400 mt-1">
                           {{ match?.tournament?.name || 'Tournament' }} • {{ match?.venue || 'Venue' }}
                         </div>
                       </div>
@@ -125,12 +126,12 @@
                   class="w-1.5 h-1.5 rounded-full transition-all"
                   :class="{
                     'bg-emerald-400': currentLiveMatchIndex === index,
-                    'bg-emerald-800': currentLiveMatchIndex !== index
+                    'bg-white/30': currentLiveMatchIndex !== index
                   }"
                 />
               </div>
               
-              <div v-if="liveMatches.length === 0" class="text-center py-4 text-emerald-200">
+              <div v-if="liveMatches.length === 0" class="text-center py-4 text-gray-400">
                 No live matches currently
               </div>
             </div>
@@ -142,49 +143,49 @@
     <div class="max-w-7xl mx-auto px-4 py-8">
       <!-- Role-specific quick actions -->
       <div v-if="isPlayer || isCoach || isClubManager" class="mb-10">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Quick Actions</h2>
+        <h2 class="text-2xl font-bold text-white mb-4">Quick Actions</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div v-if="isPlayer" class="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl border border-orange-200 p-6 hover:shadow-md transition">
+          <div v-if="isPlayer" class="bg-white/10 backdrop-blur-sm rounded-2xl border border-orange-500/30 p-6 hover:bg-white/15 hover:border-orange-400/50 transition-all duration-300">
             <div class="flex items-start gap-4">
-              <div class="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center flex-shrink-0">
+              <div class="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-orange-500/25">
                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                 </svg>
               </div>
               <div>
-                <h3 class="font-bold text-gray-900 mb-1">Player Profile</h3>
-                <p class="text-sm text-gray-600 mb-3">Manage your cricket profile and stats</p>
-                <RouterLink :to="{ name: 'player-panel' }" class="text-sm text-orange-700 font-medium hover:underline">Go to Dashboard</RouterLink>
+                <h3 class="font-bold text-white mb-1">Player Profile</h3>
+                <p class="text-sm text-gray-400 mb-3">Manage your cricket profile and stats</p>
+                <RouterLink :to="{ name: 'player-panel' }" class="text-sm text-orange-400 font-medium hover:text-orange-300 transition">Go to Dashboard →</RouterLink>
               </div>
             </div>
           </div>
           
-          <div v-if="isCoach" class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl border border-purple-200 p-6 hover:shadow-md transition">
+          <div v-if="isCoach" class="bg-white/10 backdrop-blur-sm rounded-2xl border border-purple-500/30 p-6 hover:bg-white/15 hover:border-purple-400/50 transition-all duration-300">
             <div class="flex items-start gap-4">
-              <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+              <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-purple-500/25">
                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                 </svg>
               </div>
               <div>
-                <h3 class="font-bold text-gray-900 mb-1">Coach Dashboard</h3>
-                <p class="text-sm text-gray-600 mb-3">Manage training programs and players</p>
-                <RouterLink to="/coach-panel" class="text-sm text-purple-700 font-medium hover:underline">Go to Dashboard</RouterLink>
+                <h3 class="font-bold text-white mb-1">Coach Dashboard</h3>
+                <p class="text-sm text-gray-400 mb-3">Manage training programs and players</p>
+                <RouterLink to="/coach-panel" class="text-sm text-purple-400 font-medium hover:text-purple-300 transition">Go to Dashboard →</RouterLink>
               </div>
             </div>
           </div>
           
-          <div v-if="isClubManager" class="bg-gradient-to-br from-sky-50 to-blue-50 rounded-2xl border border-sky-200 p-6 hover:shadow-md transition">
+          <div v-if="isClubManager" class="bg-white/10 backdrop-blur-sm rounded-2xl border border-sky-500/30 p-6 hover:bg-white/15 hover:border-sky-400/50 transition-all duration-300">
             <div class="flex items-start gap-4">
-              <div class="w-12 h-12 rounded-full bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center flex-shrink-0">
+              <div class="w-12 h-12 rounded-full bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-sky-500/25">
                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                 </svg>
               </div>
               <div>
-                <h3 class="font-bold text-gray-900 mb-1">Club Management</h3>
-                <p class="text-sm text-gray-600 mb-3">Manage your club and players</p>
-                <RouterLink to="/club-manager" class="text-sm text-sky-700 font-medium hover:underline">Go to Dashboard</RouterLink>
+                <h3 class="font-bold text-white mb-1">Club Management</h3>
+                <p class="text-sm text-gray-400 mb-3">Manage your club and players</p>
+                <RouterLink to="/club-manager" class="text-sm text-sky-400 font-medium hover:text-sky-300 transition">Go to Dashboard →</RouterLink>
               </div>
             </div>
           </div>
@@ -194,13 +195,13 @@
       <!-- Favorites Section -->
       <section class="mb-12">
         <div class="flex items-center justify-between mb-6">
-          <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <svg class="w-6 h-6 text-amber-500" viewBox="0 0 24 24" fill="currentColor">
+          <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+            <svg class="w-6 h-6 text-amber-400" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.786 1.402 8.17L12 18.896l-7.336 3.87 1.402-8.17L.132 9.21l8.2-1.192L12 .587z"/>
             </svg>
             Your Favorites
           </h2>
-          <div class="text-sm text-gray-500" v-if="!favClubs.length && !favTournaments.length">
+          <div class="text-sm text-gray-400" v-if="!favClubs.length && !favTournaments.length">
             No favorites yet. Mark tournaments and clubs as ★ Favorite to see them here.
           </div>
         </div>
@@ -208,13 +209,13 @@
         <!-- Favorite Tournaments -->
         <div v-if="favTournaments.length" class="mb-10">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+              <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
               </svg>
               Tournaments
             </h3>
-            <button v-if="favTournaments.length" @click="clearFavorites('tournaments')" class="text-xs text-emerald-700 hover:underline flex items-center gap-1">
+            <button v-if="favTournaments.length" @click="clearFavorites('tournaments')" class="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M6 18L18 6M6 6l12 12"/>
               </svg>
@@ -222,27 +223,27 @@
             </button>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            <div v-for="t in favTournaments" :key="t._id" class="group relative rounded-2xl overflow-hidden border bg-white shadow-sm hover:shadow-md transition">
-              <div class="h-32 bg-gradient-to-br from-emerald-100 to-emerald-50 relative">
-                <img v-if="t.bannerUrl" :src="t.bannerUrl" class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition" />
+            <div v-for="t in favTournaments" :key="t._id" class="group relative rounded-2xl overflow-hidden border border-white/20 bg-white/10 backdrop-blur-sm shadow-lg hover:bg-white/15 hover:border-emerald-500/40 transition-all duration-300">
+              <div class="h-32 bg-gradient-to-br from-emerald-900/50 to-slate-900/50 relative">
+                <img v-if="t.bannerUrl" :src="t.bannerUrl" class="w-full h-full object-cover opacity-70 group-hover:opacity-90 transition" />
                 <div v-else class="absolute inset-0 flex items-center justify-center">
-                  <svg class="w-12 h-12 text-emerald-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                  <svg class="w-12 h-12 text-emerald-500/50" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                     <path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                   </svg>
                 </div>
-                <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center text-amber-500 hover:bg-amber-100 transition" @click="toggleFavoriteTournament(t._id)">
+                <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-amber-400 hover:bg-amber-500/30 transition" @click="toggleFavoriteTournament(t._id)">
                   ★
                 </button>
               </div>
               <div class="p-5">
                 <div class="flex items-start justify-between gap-2 mb-3">
                   <div>
-                    <h4 class="font-bold text-gray-900 leading-tight">{{ t.name }}</h4>
-                    <div class="text-xs text-gray-500 mt-1">{{ fmtDate(t.startDate) }} - {{ fmtDate(t.endDate) }}</div>
+                    <h4 class="font-bold text-white leading-tight">{{ t.name }}</h4>
+                    <div class="text-xs text-gray-400 mt-1">{{ fmtDate(t.startDate) }} - {{ fmtDate(t.endDate) }}</div>
                   </div>
                 </div>
                 <div class="flex items-center justify-between">
-                  <RouterLink :to="{ name: 'tournament-details', params: { id: t._id } }" class="text-sm text-emerald-700 hover:underline font-medium">View Details</RouterLink>
+                  <RouterLink :to="{ name: 'tournament-details', params: { id: t._id } }" class="text-sm text-emerald-400 hover:text-emerald-300 font-medium transition">View Details →</RouterLink>
                   <span class="text-[10px] px-2 py-1 rounded-full border" :class="statusBadgeClass(t.status)">{{ t.status }}</span>
                 </div>
               </div>
@@ -253,13 +254,13 @@
         <!-- Favorite Clubs -->
         <div v-if="favClubs.length">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+              <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
               </svg>
               Clubs
             </h3>
-            <button v-if="favClubs.length" @click="clearFavorites('clubs')" class="text-xs text-emerald-700 hover:underline flex items-center gap-1">
+            <button v-if="favClubs.length" @click="clearFavorites('clubs')" class="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M6 18L18 6M6 6l12 12"/>
               </svg>
@@ -267,27 +268,27 @@
             </button>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-            <div v-for="c in favClubs" :key="c._id || c.id" class="rounded-2xl overflow-hidden border bg-white shadow-sm hover:shadow-md transition">
-              <div class="h-32 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden relative">
-                <img v-if="c.logoUrl" :src="c.logoUrl" class="w-20 h-20 object-cover rounded-full border-2 border-white shadow-sm" />
-                <div v-else class="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-100 to-emerald-200 border-2 border-white flex items-center justify-center">
-                  <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <div v-for="c in favClubs" :key="c._id || c.id" class="rounded-2xl overflow-hidden border border-white/20 bg-white/10 backdrop-blur-sm shadow-lg hover:bg-white/15 hover:border-emerald-500/40 transition-all duration-300">
+              <div class="h-32 bg-gradient-to-br from-slate-800/50 to-slate-900/50 flex items-center justify-center overflow-hidden relative">
+                <img v-if="c.logoUrl" :src="c.logoUrl" class="w-20 h-20 object-cover rounded-full border-2 border-white/30 shadow-lg" />
+                <div v-else class="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500/30 to-emerald-600/30 border-2 border-white/20 flex items-center justify-center">
+                  <svg class="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                     <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                   </svg>
                 </div>
-                <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center text-amber-500 hover:bg-amber-100 transition" @click="toggleFavoriteClub(c._id || c.id)">
+                <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-amber-400 hover:bg-amber-500/30 transition" @click="toggleFavoriteClub(c._id || c.id)">
                   ★
                 </button>
               </div>
               <div class="p-5">
                 <div class="flex items-start justify-between gap-2 mb-2">
                   <div>
-                    <h4 class="font-bold text-gray-900 leading-tight">{{ c.name || c.clubName }}</h4>
-                    <div class="text-xs text-gray-500">{{ c.district || c.city || 'Kerala' }}</div>
+                    <h4 class="font-bold text-white leading-tight">{{ c.name || c.clubName }}</h4>
+                    <div class="text-xs text-gray-400">{{ c.district || c.city || 'Kerala' }}</div>
                   </div>
                 </div>
                 <div class="mt-3">
-                  <RouterLink :to="{ name: 'club-details', params: { id: c._id || c.id } }" class="text-sm text-emerald-700 hover:underline font-medium">View Club</RouterLink>
+                  <RouterLink :to="{ name: 'club-details', params: { id: c._id || c.id } }" class="text-sm text-emerald-400 hover:text-emerald-300 font-medium transition">View Club →</RouterLink>
                 </div>
               </div>
             </div>
@@ -298,36 +299,36 @@
       <!-- Upcoming Matches Section -->
       <section class="mb-12">
         <div class="flex items-center justify-between mb-6">
-          <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+            <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
             </svg>
             Upcoming Matches
           </h2>
-          <RouterLink to="/tournaments" class="text-sm text-emerald-700 hover:underline font-medium">View All</RouterLink>
+          <RouterLink to="/tournaments" class="text-sm text-emerald-400 hover:text-emerald-300 font-medium transition">View All →</RouterLink>
         </div>
         
         <!-- Carousel Container -->
-        <div class="relative bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="relative bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 shadow-xl overflow-hidden">
           <!-- Navigation Arrows -->
           <button 
             @click="prevMatch" 
-            class="absolute left-2 top-1/2 transform -translate-y-1/2 z-10 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-md hover:bg-white transition-all duration-300"
+            class="absolute left-2 top-1/2 transform -translate-y-1/2 z-10 bg-white/20 backdrop-blur-sm rounded-full p-2 shadow-md hover:bg-white/30 transition-all duration-300"
             :disabled="currentMatchIndex === 0"
             :class="{ 'opacity-50 cursor-not-allowed': currentMatchIndex === 0 }"
           >
-            <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path d="M15 19l-7-7 7-7"/>
             </svg>
           </button>
           
           <button 
             @click="nextMatch" 
-            class="absolute right-2 top-1/2 transform -translate-y-1/2 z-10 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-md hover:bg-white transition-all duration-300"
+            class="absolute right-2 top-1/2 transform -translate-y-1/2 z-10 bg-white/20 backdrop-blur-sm rounded-full p-2 shadow-md hover:bg-white/30 transition-all duration-300"
             :disabled="currentMatchIndex >= Math.max(0, upcomingMatches.length - matchesToShow)"
             :class="{ 'opacity-50 cursor-not-allowed': currentMatchIndex >= Math.max(0, upcomingMatches.length - matchesToShow) }"
           >
-            <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path d="M9 5l7 7-7 7"/>
             </svg>
           </button>
@@ -344,40 +345,40 @@
                 class="flex-shrink-0 px-4"
                 :style="{ width: `${100 / matchesToShow}%` }"
               >
-                <div class="bg-gray-50 rounded-xl border border-gray-200 p-5 h-full hover:shadow-md transition-shadow">
+                <div class="bg-white/5 rounded-xl border border-white/10 p-5 h-full hover:bg-white/10 hover:border-emerald-500/30 transition-all duration-300">
                   <div class="flex items-center justify-between mb-4">
-                    <div class="text-sm font-medium text-gray-500">
+                    <div class="text-sm font-medium text-gray-400">
                       {{ fmtDateTime(match.date) }}
                     </div>
-                    <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">
+                    <span class="px-2 py-1 text-xs rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
                       Scheduled
                     </span>
                   </div>
                   
                   <div class="flex items-center justify-between mb-4">
                     <div class="text-center">
-                      <div class="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-2">
-                        <div class="text-xs font-bold text-emerald-700">
+                      <div class="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-2 border border-emerald-500/30">
+                        <div class="text-xs font-bold text-emerald-400">
                           {{ getInitials(match?.homeClub?.clubName || match?.homeClub?.name || 'HT') }}
                         </div>
                       </div>
-                      <div class="text-sm font-medium text-gray-900 max-w-[100px] truncate">
+                      <div class="text-sm font-medium text-white max-w-[100px] truncate">
                         {{ match?.homeClub?.clubName || match?.homeClub?.name || 'Home Team' }}
                       </div>
                     </div>
                     
                     <div class="text-center">
-                      <div class="text-lg font-bold text-gray-700">VS</div>
+                      <div class="text-lg font-bold text-gray-500">VS</div>
                       <div class="text-xs text-gray-500 mt-1">{{ match?.tournament?.name || 'Tournament' }}</div>
                     </div>
                     
                     <div class="text-center">
-                      <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-2">
-                        <div class="text-xs font-bold text-blue-700">
+                      <div class="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center mx-auto mb-2 border border-blue-500/30">
+                        <div class="text-xs font-bold text-blue-400">
                           {{ getInitials(match?.awayClub?.clubName || match?.awayClub?.name || 'AT') }}
                         </div>
                       </div>
-                      <div class="text-sm font-medium text-gray-900 max-w-[100px] truncate">
+                      <div class="text-sm font-medium text-white max-w-[100px] truncate">
                         {{ match?.awayClub?.clubName || match?.awayClub?.name || 'Away Team' }}
                       </div>
                     </div>
@@ -397,7 +398,7 @@
               
               <!-- Empty state -->
               <div v-if="upcomingMatches.length === 0" class="w-full text-center py-12">
-                <div class="text-gray-500">
+                <div class="text-gray-400">
                   No upcoming matches at the moment. Check back later for new fixtures.
                 </div>
               </div>
@@ -412,8 +413,8 @@
               @click="goToMatch(index * matchesToShow)"
               class="w-2 h-2 rounded-full transition-all"
               :class="{
-                'bg-emerald-600': Math.floor(currentMatchIndex / matchesToShow) === index,
-                'bg-gray-300': Math.floor(currentMatchIndex / matchesToShow) !== index
+                'bg-emerald-400': Math.floor(currentMatchIndex / matchesToShow) === index,
+                'bg-white/30': Math.floor(currentMatchIndex / matchesToShow) !== index
               }"
             />
           </div>
@@ -423,28 +424,28 @@
       <!-- Cricket News Section -->
       <section>
         <div class="flex items-center justify-between mb-6">
-          <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+            <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
             </svg>
             Cricket News
           </h2>
-          <RouterLink to="/" class="text-sm text-emerald-700 hover:underline font-medium">View All</RouterLink>
+          <RouterLink to="/" class="text-sm text-emerald-400 hover:text-emerald-300 font-medium transition">View All →</RouterLink>
         </div>
         
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <article v-for="n in news" :key="n.id" class="rounded-2xl bg-white border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition">
-            <div class="h-40 bg-gradient-to-br from-emerald-100 to-emerald-50 flex items-center justify-center">
-              <svg class="w-12 h-12 text-emerald-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <article v-for="n in news" :key="n.id" class="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 overflow-hidden hover:bg-white/15 hover:border-emerald-500/40 transition-all duration-300 shadow-lg">
+            <div class="h-40 bg-gradient-to-br from-emerald-900/50 to-slate-900/50 flex items-center justify-center">
+              <svg class="w-12 h-12 text-emerald-500/50" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                 <path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
               </svg>
             </div>
             <div class="p-5">
-              <h3 class="font-bold text-lg mb-2">{{ n.title }}</h3>
-              <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ n.summary }}</p>
+              <h3 class="font-bold text-lg mb-2 text-white">{{ n.title }}</h3>
+              <p class="text-gray-400 text-sm mb-4 line-clamp-2">{{ n.summary }}</p>
               <div class="flex items-center justify-between">
                 <div class="text-xs text-gray-500">{{ n.date }}</div>
-                <RouterLink :to="n.link || '#'" class="text-sm text-emerald-700 hover:underline font-medium">Read More</RouterLink>
+                <RouterLink :to="n.link || '#'" class="text-sm text-emerald-400 hover:text-emerald-300 font-medium transition">Read More →</RouterLink>
               </div>
             </div>
           </article>
@@ -563,10 +564,10 @@ function fmtDateTime(d) {
 }
 
 function statusBadgeClass(s){
-  return s === 'completed' || s === 'Completed' ? 'bg-emerald-100 text-emerald-800 border-emerald-200' :
-         s === 'ongoing' || s === 'Live' ? 'bg-amber-100 text-amber-800 border-amber-200' :
-         s === 'cancelled' || s === 'Cancelled' ? 'bg-rose-100 text-rose-800 border-rose-200' :
-         'bg-gray-100 text-gray-800 border-gray-200';
+  return s === 'completed' || s === 'Completed' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
+         s === 'ongoing' || s === 'Live' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+         s === 'cancelled' || s === 'Cancelled' ? 'bg-rose-500/20 text-rose-400 border-rose-500/30' :
+         'bg-white/10 text-gray-400 border-white/20';
 }
 
 // Static placeholder news
@@ -582,7 +583,6 @@ async function fetchUpcomingMatches() {
     const { data } = await api.get('/tournaments/matches/upcoming', { params: { limit: 5 } });
     upcomingMatches.value = Array.isArray(data) ? data : [];
   } catch (error) {
-    console.error('Failed to fetch upcoming matches:', error);
     upcomingMatches.value = [];
   }
 }
@@ -593,7 +593,6 @@ async function fetchLiveMatches() {
     const { data } = await api.get('/tournaments/matches/live');
     liveMatches.value = Array.isArray(data) ? data : [];
   } catch (error) {
-    console.error('Failed to fetch live matches:', error);
     liveMatches.value = [];
   }
 }
@@ -641,49 +640,31 @@ function updateMatchesToShow() {
   } else {
     matchesToShow.value = 3; // Desktop: show 3 matches
   }
-  console.log('Screen size updated, matches to show:', matchesToShow.value);
 }
 
 // Carousel navigation functions
 function nextMatch() {
-  console.log('Next match clicked');
-  console.log('Current index:', currentMatchIndex.value);
-  console.log('Upcoming matches length:', upcomingMatches.value.length);
-  console.log('Matches to show:', matchesToShow.value);
-  
   // Calculate how many "pages" of matches we have
   const totalPages = Math.ceil(upcomingMatches.value.length / matchesToShow.value);
   const currentPage = Math.floor(currentMatchIndex.value / matchesToShow.value);
   
-  console.log('Total pages:', totalPages);
-  console.log('Current page:', currentPage);
-  
   // If we're not on the last page, go to the next page
   if (currentPage < totalPages - 1) {
     currentMatchIndex.value = (currentPage + 1) * matchesToShow.value;
-    console.log('New index after next:', currentMatchIndex.value);
   }
 }
 
 function prevMatch() {
-  console.log('Prev match clicked');
-  console.log('Current index:', currentMatchIndex.value);
-  console.log('Matches to show:', matchesToShow.value);
-  
   // Calculate current page
   const currentPage = Math.floor(currentMatchIndex.value / matchesToShow.value);
-  
-  console.log('Current page:', currentPage);
   
   // If we're not on the first page, go to the previous page
   if (currentPage > 0) {
     currentMatchIndex.value = (currentPage - 1) * matchesToShow.value;
-    console.log('New index after prev:', currentMatchIndex.value);
   }
 }
 
 function goToMatch(index) {
-  console.log('Go to match index:', index);
   currentMatchIndex.value = index;
 }
 
@@ -694,28 +675,17 @@ function startCarousel() {
   }
   
   carouselInterval.value = setInterval(() => {
-    console.log('Auto-scroll triggered');
-    console.log('Upcoming matches length:', upcomingMatches.value.length);
-    console.log('Matches to show:', matchesToShow.value);
-    console.log('Current index:', currentMatchIndex.value);
-    
     if (upcomingMatches.value.length > matchesToShow.value) {
       // Calculate how many "pages" of matches we have
       const totalPages = Math.ceil(upcomingMatches.value.length / matchesToShow.value);
       const currentPage = Math.floor(currentMatchIndex.value / matchesToShow.value);
       
-      console.log('Total pages:', totalPages);
-      console.log('Current page:', currentPage);
-      
       // Go to the next page, or reset to beginning if we're on the last page
       if (currentPage >= totalPages - 1) {
         currentMatchIndex.value = 0; // Reset to beginning
-        console.log('Reset to beginning');
       } else {
         nextMatch();
       }
-    } else {
-      console.log('Not enough matches to scroll');
     }
   }, 10000); // 10 seconds
 }
@@ -748,11 +718,6 @@ onMounted(async () => {
   await loadFavoriteIds();
   await Promise.all([fetchFavoriteTournaments(), fetchFavoriteClubs(), fetchUpcomingMatches(), fetchLiveMatches()]);
   
-  // Debugging
-  console.log('Upcoming matches:', upcomingMatches.value);
-  console.log('Matches to show:', matchesToShow.value);
-  console.log('Current index:', currentMatchIndex.value);
-  
   // Start carousels after data is loaded
   startCarousel();
   startLiveMatchCarousel();
@@ -780,17 +745,8 @@ onMounted(async () => {
   }
 });
 
-// Add debugging for carousel navigation
-watch(currentMatchIndex, (newIndex) => {
-  console.log('Current match index changed to:', newIndex);
-});
-
-watch(matchesToShow, (newMatchesToShow) => {
-  console.log('Matches to show changed to:', newMatchesToShow);
-});
-
-watch(upcomingMatches, (newMatches) => {
-  console.log('Upcoming matches updated:', newMatches);
+// Watch for changes
+watch(upcomingMatches, () => {
   // Reset carousel position when matches change
   currentMatchIndex.value = 0;
 });

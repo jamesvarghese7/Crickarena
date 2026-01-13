@@ -1,88 +1,94 @@
 <template>
   <div class="space-y-6">
     <!-- Match Comparison -->
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-      <h3 class="text-lg font-bold text-gray-900 mb-6">Match Comparison</h3>
-      <div class="space-y-4">
+    <div class="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-6 border border-slate-700/50 shadow-xl">
+      <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
+        <span>📊</span> Match Comparison
+      </h3>
+      <div class="space-y-5">
         <div v-for="stat in comparisonStats" :key="stat.label" class="flex items-center gap-4">
-          <div class="w-12 text-right font-bold text-blue-600">{{ stat.home }}</div>
+          <div class="w-14 text-right font-bold text-blue-400">{{ stat.home }}</div>
           <div class="flex-1">
-            <div class="h-8 bg-gray-100 rounded-full overflow-hidden relative">
-              <div class="absolute left-0 top-0 h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-l-full transition-all" 
+            <div class="h-10 bg-slate-900/50 rounded-full overflow-hidden relative border border-slate-700/50">
+              <div class="absolute left-0 top-0 h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-l-full transition-all duration-500" 
                    :style="{ width: getBarWidth(stat.home, stat.away, 'home') }"></div>
-              <div class="absolute right-0 top-0 h-full bg-gradient-to-l from-purple-500 to-purple-400 rounded-r-full transition-all" 
+              <div class="absolute right-0 top-0 h-full bg-gradient-to-l from-purple-500 to-purple-400 rounded-r-full transition-all duration-500" 
                    :style="{ width: getBarWidth(stat.home, stat.away, 'away') }"></div>
               <div class="absolute inset-0 flex items-center justify-center">
-                <span class="text-xs font-medium text-gray-700 bg-white/80 px-2 py-0.5 rounded-full">{{ stat.label }}</span>
+                <span class="text-xs font-semibold text-white bg-slate-800/90 px-3 py-1 rounded-full border border-slate-600/50">{{ stat.label }}</span>
               </div>
             </div>
           </div>
-          <div class="w-12 text-left font-bold text-purple-600">{{ stat.away }}</div>
+          <div class="w-14 text-left font-bold text-purple-400">{{ stat.away }}</div>
         </div>
       </div>
     </div>
 
     <!-- Partnerships -->
-    <div v-if="partnerships.length" class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
-      <h3 class="text-lg font-bold text-gray-900 mb-4">Partnership Breakdown</h3>
-      <div class="space-y-3">
-        <div v-for="(p, idx) in partnerships" :key="idx" class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">
+    <div v-if="partnerships.length" class="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm rounded-2xl p-6 border border-slate-700/50 shadow-xl">
+      <h3 class="text-lg font-bold text-white mb-5 flex items-center gap-2">
+        <span>📈</span> Partnership Breakdown
+      </h3>
+      <div class="space-y-4">
+        <div v-for="(p, idx) in partnerships" :key="idx" class="flex items-center gap-4">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-sm font-bold shadow-lg shadow-indigo-500/30">
             {{ idx + 1 }}
           </div>
           <div class="flex-1">
-            <div class="h-6 bg-white rounded-full overflow-hidden">
-              <div class="h-full bg-gradient-to-r from-emerald-400 to-green-500 rounded-full transition-all" 
+            <div class="h-7 bg-slate-900/50 rounded-full overflow-hidden border border-slate-700/50">
+              <div class="h-full bg-gradient-to-r from-emerald-400 to-green-500 rounded-full transition-all duration-500" 
                    :style="{ width: getPartnershipWidth(p.runs) }"></div>
             </div>
           </div>
-          <div class="text-sm font-semibold text-gray-700 w-20 text-right">{{ p.runs }} runs</div>
+          <div class="text-sm font-bold text-emerald-400 w-20 text-right">{{ p.runs }} runs</div>
         </div>
       </div>
     </div>
 
     <!-- Top Performers -->
-    <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-100">
-      <h3 class="text-lg font-bold text-gray-900 mb-4">⭐ Top Performers</h3>
+    <div class="bg-gradient-to-br from-slate-800/80 to-amber-900/20 backdrop-blur-sm rounded-2xl p-6 border border-amber-500/20 shadow-xl">
+      <h3 class="text-lg font-bold text-white mb-5 flex items-center gap-2">
+        <span>⭐</span> Top Performers
+      </h3>
       <div class="grid md:grid-cols-2 gap-4">
-        <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-          <div class="flex items-center gap-2 mb-2">
-            <span class="text-lg">🏏</span>
-            <span class="text-sm text-gray-500">Most Runs</span>
+        <div class="bg-slate-900/60 backdrop-blur-sm rounded-xl p-5 border border-slate-700/50">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-xl">🏏</span>
+            <span class="text-sm text-slate-400">Most Runs</span>
           </div>
-          <div class="font-semibold text-gray-900">{{ topScorer.name }}</div>
-          <div class="text-sm text-emerald-600 font-medium">{{ topScorer.value }}</div>
+          <div class="font-bold text-white text-lg">{{ topScorer.name }}</div>
+          <div class="text-sm text-emerald-400 font-semibold mt-1">{{ topScorer.value }}</div>
         </div>
-        <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-          <div class="flex items-center gap-2 mb-2">
-            <span class="text-lg">🎯</span>
-            <span class="text-sm text-gray-500">Most Wickets</span>
+        <div class="bg-slate-900/60 backdrop-blur-sm rounded-xl p-5 border border-slate-700/50">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-xl">🎯</span>
+            <span class="text-sm text-slate-400">Most Wickets</span>
           </div>
-          <div class="font-semibold text-gray-900">{{ topWicketTaker.name }}</div>
-          <div class="text-sm text-red-600 font-medium">{{ topWicketTaker.value }}</div>
+          <div class="font-bold text-white text-lg">{{ topWicketTaker.name }}</div>
+          <div class="text-sm text-red-400 font-semibold mt-1">{{ topWicketTaker.value }}</div>
         </div>
-        <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-          <div class="flex items-center gap-2 mb-2">
-            <span class="text-lg">⚡</span>
-            <span class="text-sm text-gray-500">Best Strike Rate</span>
+        <div class="bg-slate-900/60 backdrop-blur-sm rounded-xl p-5 border border-slate-700/50">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-xl">⚡</span>
+            <span class="text-sm text-slate-400">Best Strike Rate</span>
           </div>
-          <div class="font-semibold text-gray-900">{{ bestStrikeRate.name }}</div>
-          <div class="text-sm text-amber-600 font-medium">{{ bestStrikeRate.value }}</div>
+          <div class="font-bold text-white text-lg">{{ bestStrikeRate.name }}</div>
+          <div class="text-sm text-amber-400 font-semibold mt-1">{{ bestStrikeRate.value }}</div>
         </div>
-        <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-          <div class="flex items-center gap-2 mb-2">
-            <span class="text-lg">💰</span>
-            <span class="text-sm text-gray-500">Best Economy</span>
+        <div class="bg-slate-900/60 backdrop-blur-sm rounded-xl p-5 border border-slate-700/50">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-xl">💰</span>
+            <span class="text-sm text-slate-400">Best Economy</span>
           </div>
-          <div class="font-semibold text-gray-900">{{ bestEconomy.name }}</div>
-          <div class="text-sm text-blue-600 font-medium">{{ bestEconomy.value }}</div>
+          <div class="font-bold text-white text-lg">{{ bestEconomy.name }}</div>
+          <div class="text-sm text-blue-400 font-semibold mt-1">{{ bestEconomy.value }}</div>
         </div>
       </div>
 
       <!-- Player of the Match -->
-      <div v-if="match.summary?.playerOfTheMatch" class="mt-4 bg-gradient-to-r from-amber-400 to-orange-500 rounded-xl p-4 text-center">
-        <div class="text-sm text-white/80 mb-1">🏆 Player of the Match</div>
-        <div class="text-xl font-bold text-white">{{ match.summary.playerOfTheMatch }}</div>
+      <div v-if="match.summary?.playerOfTheMatch" class="mt-5 bg-gradient-to-r from-amber-500/80 to-orange-500/80 backdrop-blur-sm rounded-xl p-5 text-center border border-amber-400/30 shadow-lg shadow-amber-500/20">
+        <div class="text-sm text-white/80 mb-2">🏆 Player of the Match</div>
+        <div class="text-2xl font-black text-white">{{ match.summary.playerOfTheMatch }}</div>
       </div>
     </div>
   </div>

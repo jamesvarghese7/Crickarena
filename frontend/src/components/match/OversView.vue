@@ -7,10 +7,10 @@
         <button v-for="filter in filters" :key="filter.key"
                 @click="activeFilter = filter.key"
                 :class="[
-                  'px-4 py-2 rounded-full text-sm font-medium transition-all',
+                  'px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300',
                   activeFilter === filter.key 
-                    ? 'bg-emerald-500 text-white shadow-md' 
-                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30' 
+                    : 'bg-slate-800/60 text-slate-300 border border-slate-700/50 hover:bg-slate-700/50 backdrop-blur-sm'
                 ]">
           {{ filter.label }}
         </button>
@@ -21,10 +21,10 @@
         <button v-for="(innings, idx) in match?.innings || []" :key="idx"
                 @click="selectedInnings = idx"
                 :class="[
-                  'px-3 py-2 rounded-lg text-sm font-medium transition-all',
+                  'px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300',
                   selectedInnings === idx 
-                    ? 'bg-indigo-500 text-white' 
-                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                    ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/30' 
+                    : 'bg-slate-800/60 text-slate-300 border border-slate-700/50 hover:bg-slate-700/50 backdrop-blur-sm'
                 ]">
           {{ idx === 0 ? '1st' : '2nd' }} Inn
         </button>
@@ -34,61 +34,61 @@
     <!-- Overs List -->
     <div v-if="filteredOvers.length" class="space-y-4">
       <div v-for="over in filteredOvers" :key="over.overNumber" 
-           class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+           class="bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-slate-700/50 shadow-xl overflow-hidden">
         <!-- Over Header -->
-        <div class="flex items-center justify-between px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
+        <div class="flex items-center justify-between px-5 py-4 bg-slate-900/50 cursor-pointer hover:bg-slate-800/50 transition-colors"
              @click="toggleOver(over.overNumber)">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-indigo-500 text-white flex items-center justify-center font-bold">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-lg shadow-lg shadow-indigo-500/30">
               {{ over.overNumber }}
             </div>
             <div>
-              <div class="font-semibold text-gray-900">Over {{ over.overNumber }}</div>
-              <div class="text-sm text-gray-500">{{ over.bowler }}</div>
+              <div class="font-semibold text-white">Over {{ over.overNumber }}</div>
+              <div class="text-sm text-slate-400">{{ over.bowler }}</div>
             </div>
           </div>
           <div class="flex items-center gap-4">
             <div class="text-right">
-              <span class="font-bold text-gray-900">{{ over.totalRuns }} runs</span>
-              <span v-if="over.totalWickets" class="ml-2 text-red-600 font-bold">{{ over.totalWickets }}W</span>
+              <span class="font-bold text-white text-lg">{{ getOverRuns(over) }} runs</span>
+              <span v-if="getOverWickets(over)" class="ml-2 text-red-400 font-bold">{{ getOverWickets(over) }}W</span>
             </div>
-            <svg :class="['w-5 h-5 text-gray-400 transition-transform', expandedOvers.includes(over.overNumber) ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg :class="['w-5 h-5 text-slate-400 transition-transform duration-300', expandedOvers.includes(over.overNumber) ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
           </div>
         </div>
 
         <!-- Over Details -->
-        <div v-if="expandedOvers.includes(over.overNumber)" class="border-t border-gray-200">
+        <div v-if="expandedOvers.includes(over.overNumber)" class="border-t border-slate-700/50">
           <div v-for="ball in over.balls" :key="`${over.overNumber}.${ball.ballNumber}`" 
-               class="flex items-start gap-4 px-4 py-3 border-b border-gray-100 last:border-b-0"
+               class="flex items-start gap-4 px-5 py-4 border-b border-slate-700/30 last:border-b-0 transition-colors"
                :class="{
-                 'bg-red-50': ball.wicket?.how,
-                 'bg-amber-50': ball.runs === 6,
-                 'bg-emerald-50': ball.runs === 4
+                 'bg-red-500/10': ball.wicket?.how,
+                 'bg-amber-500/10': ball.runs === 6,
+                 'bg-emerald-500/10': ball.runs === 4
                }">
-            <div class="w-12 text-sm font-mono text-gray-500">{{ over.overNumber }}.{{ ball.ballNumber }}</div>
-            <div class="w-12 h-8 rounded-full flex items-center justify-center font-bold text-sm"
+            <div class="w-14 text-sm font-mono text-slate-500">{{ over.overNumber }}.{{ ball.ballNumber }}</div>
+            <div class="w-12 h-10 rounded-xl flex items-center justify-center font-bold text-sm shadow-lg"
                  :class="getBallClass(ball)">
               {{ getBallText(ball) }}
             </div>
-            <div class="flex-1 text-sm text-gray-700">{{ getCommentary(ball, over) }}</div>
+            <div class="flex-1 text-sm text-slate-300">{{ getCommentary(ball, over) }}</div>
           </div>
           
-          <div class="px-4 py-2 bg-gray-50 text-center text-sm text-gray-500">
-            End of Over {{ over.overNumber }} | {{ over.totalRuns }} runs | {{ over.totalWickets || 0 }} wickets
+          <div class="px-5 py-3 bg-slate-900/50 text-center text-sm text-slate-400 border-t border-slate-700/50">
+            End of Over {{ over.overNumber }} | <span class="text-white font-medium">{{ getOverRuns(over) }}</span> runs | <span class="text-red-400">{{ getOverWickets(over) }}</span> wickets
           </div>
         </div>
       </div>
     </div>
 
-    <div v-else class="text-center py-16">
-      <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
-        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div v-else class="text-center py-20">
+      <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-800/60 border border-slate-700/50 flex items-center justify-center">
+        <svg class="w-10 h-10 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
       </div>
-      <p class="font-medium text-gray-500">No ball-by-ball data available</p>
+      <p class="font-medium text-slate-400">No ball-by-ball data available</p>
     </div>
   </div>
 </template>
@@ -134,12 +134,30 @@ function toggleOver(overNumber) {
   else expandedOvers.value.push(overNumber);
 }
 
+function getOverRuns(over) {
+  // Always calculate from balls if they exist - more reliable
+  if (over.balls?.length) {
+    return over.balls.reduce((sum, ball) => sum + (ball.runs || 0), 0);
+  }
+  // Fallback to totalRuns if no balls data
+  return over.totalRuns || 0;
+}
+
+function getOverWickets(over) {
+  // Always calculate from balls if they exist - more reliable
+  if (over.balls?.length) {
+    return over.balls.filter(ball => ball.wicket?.how).length;
+  }
+  // Fallback to totalWickets if no balls data
+  return over.totalWickets || 0;
+}
+
 function getBallClass(ball) {
-  if (ball.wicket?.how) return 'bg-red-500 text-white';
-  if (ball.runs === 6) return 'bg-amber-500 text-white';
-  if (ball.runs === 4) return 'bg-emerald-500 text-white';
-  if (ball.extras !== 'none') return 'bg-blue-500 text-white';
-  return 'bg-gray-200 text-gray-900';
+  if (ball.wicket?.how) return 'bg-gradient-to-br from-red-500 to-red-600 text-white';
+  if (ball.runs === 6) return 'bg-gradient-to-br from-amber-400 to-amber-500 text-white';
+  if (ball.runs === 4) return 'bg-gradient-to-br from-emerald-400 to-emerald-500 text-white';
+  if (ball.extras !== 'none') return 'bg-gradient-to-br from-blue-400 to-blue-500 text-white';
+  return 'bg-slate-700 text-white';
 }
 
 function getBallText(ball) {
