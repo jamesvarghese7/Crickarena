@@ -16,10 +16,10 @@
       </main>
       <footer v-if="!isAuthRoute" 
               :class="[
-                'mt-10 border-t',
+                'border-t',
                 isFullWidthRoute 
                   ? 'bg-slate-900 border-slate-700/50' 
-                  : 'border-gray-200/60 dark:border-neutral-800'
+                  : 'mt-10 border-gray-200/60 dark:border-neutral-800'
               ]">
         <div class="max-w-7xl mx-auto px-4 md:px-6 py-8 text-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4"
              :class="isFullWidthRoute ? 'text-slate-400' : 'text-gray-500'">

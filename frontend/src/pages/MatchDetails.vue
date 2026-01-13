@@ -25,11 +25,13 @@
     </div>
 
     <!-- Match Content -->
-    <div v-else-if="match" class="flex-1 w-full">
+    <div v-else-if="match" class="flex-1 w-full flex flex-col">
       <!-- Hero Section -->
       <div class="relative overflow-hidden">
-        <!-- Background Pattern -->
-        <div class="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800"></div>
+        <!-- Premium Background with Glow Effects -->
+        <div class="absolute inset-0 bg-gradient-to-br from-emerald-900/30 via-slate-900/80 to-purple-900/30"></div>
+        <div class="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
         <div class="absolute inset-0 opacity-5" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
         
         <div class="relative px-4 sm:px-6 lg:px-8 py-8">
@@ -181,7 +183,7 @@
       </div>
 
       <!-- Main Content -->
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-12">
+      <div class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-12 w-full">
         <!-- Navigation Tabs -->
         <div class="bg-slate-800/60 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-700/50 overflow-hidden">
           <div class="border-b border-slate-700/50">
