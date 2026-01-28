@@ -87,8 +87,12 @@
             <!-- QR Code Section -->
             <div class="bg-slate-700/30 rounded-xl p-6 text-center">
               <h4 class="text-lg font-semibold text-white mb-4">Entry Pass</h4>
-              <div class="inline-block bg-white p-4 rounded-xl mb-4">
-                <!-- QR Code placeholder - in production, generate actual QR -->
+              <div v-if="booking.qrCodeData" class="inline-block bg-white p-4 rounded-xl mb-4">
+                <img :src="booking.qrCodeData" alt="QR Code" class="w-40 h-40" />
+                <div class="mt-2 text-sm text-gray-600 font-mono">{{ booking.bookingCode }}</div>
+              </div>
+              <div v-else class="inline-block bg-white p-4 rounded-xl mb-4">
+                <!-- Fallback for bookings without QR code -->
                 <div class="w-40 h-40 flex items-center justify-center bg-gray-100">
                   <span class="text-4xl">📱</span>
                 </div>
