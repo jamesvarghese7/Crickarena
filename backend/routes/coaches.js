@@ -108,6 +108,8 @@ router.post('/register', verifyFirebaseToken, validateCoachRegistration, async (
     const coach = new Coach(coachData);
     // Mark profile as completed upon successful registration
     coach.profileCompleted = true;
+    // Set verification status to pending for admin review
+    coach.verificationStatus = 'pending';
     await coach.save();
 
     // Update user role to include coach
@@ -330,6 +332,18 @@ router.post('/apply-to-club/:clubId', verifyFirebaseToken, async (req, res) => {
 
     if (!coach.profileCompleted) {
       return res.status(400).json({ message: 'Please complete your profile before applying to clubs' });
+    }
+
+    // Check if coach is verified by admin
+    if (coach.verificationStatus !== 'verified') {
+      const statusMessages = {
+        'pending': 'Your profile is pending admin verification. You can apply to clubs after verification.',
+        'rejected': `Your verification was rejected: ${coach.rejectionReason || 'Please contact support for details.'}`
+      };
+      return res.status(400).json({
+        message: statusMessages[coach.verificationStatus] || 'Profile verification required before applying to clubs',
+        verificationStatus: coach.verificationStatus
+      });
     }
 
     const club = await Club.findById(req.params.clubId);

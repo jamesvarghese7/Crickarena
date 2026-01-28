@@ -102,6 +102,33 @@ const tournamentSchema = new mongoose.Schema({
   // Standings and grouping (for league/round-robin/league+playoff)
   groups: [groupSchema],
   standings: [standingSchema],
+
+  // === Sponsorship Configuration ===
+  // Control sponsorship workflow phase
+  sponsorshipPhase: {
+    type: String,
+    enum: ['accepting', 'closed', 'skipped'],
+    default: 'skipped'  // Default to skipped for backward compatibility
+  },
+  sponsorshipDeadline: { type: Date },
+  // Link to sponsorship opportunities created for this tournament
+  sponsorshipOpportunities: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'SponsorshipOpportunity'
+  }],
+  // Active/approved sponsors for display
+  activeSponsors: [{
+    sponsor: { type: mongoose.Schema.Types.ObjectId, ref: 'Sponsor' },
+    deal: { type: mongoose.Schema.Types.ObjectId, ref: 'SponsorshipDeal' },
+    tier: { type: String, enum: ['title', 'main', 'associate'] }
+  }],
+  // Visibility control: who can see this tournament
+  visibility: {
+    type: String,
+    enum: ['draft', 'sponsors-only', 'public'],
+    default: 'public'  // Default to public for backward compatibility
+  },
+
   // Scheduling constraints and preferences
   restDaysMin: { type: Number, default: 1 },
   doubleRoundRobin: { type: Boolean, default: false },

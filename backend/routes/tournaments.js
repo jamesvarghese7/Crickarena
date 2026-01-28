@@ -10,9 +10,13 @@ import { logger } from '../utils/logger.js';
 const router = express.Router();
 
 // Public/club-facing listings
+// Only show tournaments with public visibility
 router.get('/open', async (req, res) => {
   try {
-    const list = await Tournament.find({ status: 'open' }).sort({ startDate: 1 });
+    const list = await Tournament.find({
+      status: 'open',
+      visibility: 'public' // Only show publicly visible tournaments
+    }).sort({ startDate: 1 });
     res.json(list);
   } catch (error) {
     console.error('Error fetching open tournaments:', error);
@@ -42,18 +46,18 @@ router.get('/mine', verifyFirebaseToken, requireRole('clubManager'), async (req,
 // Registration endpoint with strict validation
 router.post('/:id/register', verifyFirebaseToken, requireRole('clubManager'), async (req, res) => {
   const fail = (msg) => {
-    logger.warn('Tournament registration failed', { 
-      userId: req.user._id, 
-      tournamentId: req.params.id, 
-      reason: msg 
+    logger.warn('Tournament registration failed', {
+      userId: req.user._id,
+      tournamentId: req.params.id,
+      reason: msg
     });
     return res.status(400).json({ error: msg });
   };
-  
+
   try {
-    logger.info('Tournament registration attempt', { 
-      userId: req.user._id, 
-      tournamentId: req.params.id 
+    logger.info('Tournament registration attempt', {
+      userId: req.user._id,
+      tournamentId: req.params.id
     });
     const t = await Tournament.findById(req.params.id).lean();
     if (!t) return res.status(404).json({ error: 'Tournament not found.' });
@@ -81,25 +85,29 @@ router.post('/:id/register', verifyFirebaseToken, requireRole('clubManager'), as
     if (rejectedReg) {
       const rejectionTime = new Date(rejectedReg.rejectedAt || rejectedReg.appliedAt);
       const hoursSinceRejection = (Date.now() - rejectionTime.getTime()) / (1000 * 60 * 60);
-      
+
       if (hoursSinceRejection < 24) {
         return fail('Registration was rejected. Please wait 24 hours before re-applying.');
       }
-      
+
       // Allow re-registration but mark it for admin review
       console.log(`Club ${myClub._id} re-applying after rejection. Flagging for admin review.`);
     }
 
     // 4) Capacity check with atomic operation to prevent race conditions
     const updateResult = await Tournament.updateOne(
-      { 
+      {
         _id: t._id,
         $expr: {
           $lt: [
-            { $size: { $filter: { 
-              input: '$registrations', 
-              cond: { $in: ['$$this.status', ['pending', 'approved']] }
-            }}},
+            {
+              $size: {
+                $filter: {
+                  input: '$registrations',
+                  cond: { $in: ['$$this.status', ['pending', 'approved']] }
+                }
+              }
+            },
             '$maxTeams'
           ]
         },
@@ -113,31 +121,31 @@ router.post('/:id/register', verifyFirebaseToken, requireRole('clubManager'), as
       const updatedT = await Tournament.findById(t._id).lean();
       const currentRegs = Array.isArray(updatedT.registrations) ? updatedT.registrations : [];
       const taken = currentRegs.filter(r => ['pending', 'approved'].includes(r.status)).length;
-      
+
       if (taken >= t.maxTeams) {
         return fail('Tournament is full.');
       }
-      
+
       const existingReg = currentRegs.find(r => String(r.club) === String(myClub._id));
       if (existingReg) {
         return fail('Already registered.');
       }
-      
+
       return fail('Registration failed. Please try again.');
     }
 
-    logger.info('Tournament registration successful', { 
-      userId: req.user._id, 
+    logger.info('Tournament registration successful', {
+      userId: req.user._id,
       clubId: myClub._id,
       tournamentId: t._id,
       tournamentName: t.name
     });
-    
+
     return res.json({ message: 'Registered successfully', tournamentId: t._id });
   } catch (error) {
-    logger.error('Tournament registration error', { 
-      userId: req.user._id, 
-      tournamentId: req.params.id, 
+    logger.error('Tournament registration error', {
+      userId: req.user._id,
+      tournamentId: req.params.id,
       error: error.message,
       stack: error.stack
     });
@@ -147,11 +155,12 @@ router.post('/:id/register', verifyFirebaseToken, requireRole('clubManager'), as
 
 router.get('/upcoming', async (req, res) => {
   try {
-    const list = await Tournament.find({ 
-      status: { $in: ['upcoming', 'ongoing'] } 
+    const list = await Tournament.find({
+      status: { $in: ['upcoming', 'ongoing'] },
+      visibility: 'public' // Only show publicly visible tournaments
     })
-    .populate('organizer', 'name email')
-    .sort({ startDate: 1 });
+      .populate('organizer', 'name email')
+      .sort({ startDate: 1 });
     res.json(list);
   } catch (error) {
     console.error('Error fetching upcoming tournaments:', error);
@@ -161,11 +170,11 @@ router.get('/upcoming', async (req, res) => {
 
 router.get('/history', async (req, res) => {
   try {
-    const list = await Tournament.find({ 
-      status: 'completed' 
+    const list = await Tournament.find({
+      status: 'completed'
     })
-    .populate('organizer', 'name email')
-    .sort({ endDate: -1 });
+      .populate('organizer', 'name email')
+      .sort({ endDate: -1 });
     res.json(list);
   } catch (error) {
     console.error('Error fetching tournament history:', error);
@@ -173,16 +182,17 @@ router.get('/history', async (req, res) => {
   }
 });
 
-// Get single tournament
 // Public: list tournaments for all users (optional status filter)
+// Only shows tournaments with public visibility
 router.get('/list', async (req, res) => {
   try {
     const { status } = req.query;
-    const filter = {};
+    const filter = { visibility: 'public' }; // Only show publicly visible
     if (status) filter.status = status; // 'open' | 'upcoming' | 'ongoing' | 'completed' | 'cancelled'
     const list = await Tournament.find(filter)
-      .select('name bannerUrl format startDate endDate district status registrationDeadline')
+      .select('name bannerUrl format startDate endDate district status registrationDeadline activeSponsors')
       .populate('organizer', 'name email')
+      .populate('activeSponsors.sponsor', 'companyName logoUrl')
       .sort({ startDate: 1 });
     res.json(list);
   } catch (error) {
@@ -196,12 +206,13 @@ router.get('/:id', async (req, res) => {
     const tournament = await Tournament.findById(req.params.id)
       .populate('organizer', 'name email')
       .populate('participants', 'clubName name logoUrl district')
-      .populate('registrations.club', 'clubName name logoUrl district');
-    
+      .populate('registrations.club', 'clubName name logoUrl district')
+      .populate('activeSponsors.sponsor', 'companyName logoUrl industry contactPerson');
+
     if (!tournament) {
       return res.status(404).json({ message: 'Tournament not found' });
     }
-    
+
     res.json(tournament);
   } catch (error) {
     console.error('Error fetching tournament:', error);
@@ -226,9 +237,9 @@ router.get('/:id/matches', async (req, res) => {
 // Get specific match by ID within a tournament
 router.get('/:id/matches/:matchId', async (req, res) => {
   try {
-    const match = await Match.findOne({ 
-      _id: req.params.matchId, 
-      tournament: req.params.id 
+    const match = await Match.findOne({
+      _id: req.params.matchId,
+      tournament: req.params.id
     })
       .populate('homeClub', 'clubName name logoUrl district')
       .populate('awayClub', 'clubName name logoUrl district')
@@ -236,11 +247,11 @@ router.get('/:id/matches/:matchId', async (req, res) => {
       .populate('homeClubRoster.submittedBy', 'fullName')
       .populate('awayClubRoster.submittedBy', 'fullName')
       .lean();
-    
+
     if (!match) {
       return res.status(404).json({ message: 'Match not found' });
     }
-    
+
     res.json(match);
   } catch (error) {
     console.error('Error fetching match:', error);

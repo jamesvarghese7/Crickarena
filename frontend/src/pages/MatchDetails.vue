@@ -163,19 +163,21 @@
               </div>
 
               <!-- Venue & Time -->
-              <div class="mt-6 pt-5 border-t border-slate-700/50 flex items-center justify-center gap-6 text-sm text-slate-400">
-                <span class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                  </svg>
-                  {{ match.venue || 'Venue TBD' }}
-                </span>
-                <span v-if="match.time" class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
-                  {{ match.time }}
-                </span>
+              <div class="mt-6 pt-5 border-t border-slate-700/50 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <div class="flex items-center gap-6 text-sm text-slate-400">
+                  <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    </svg>
+                    {{ match.venue || 'Venue TBD' }}
+                  </span>
+                  <span v-if="match.time" class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    {{ match.time }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>

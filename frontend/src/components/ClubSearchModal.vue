@@ -14,6 +14,23 @@
           </button>
         </div>
         <p class="text-gray-600 mt-2">Browse approved clubs and submit your application</p>
+        
+        <!-- Verification Warning for Coaches -->
+        <div v-if="isCoachContext && !isVerified" class="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+            <div>
+              <p class="font-medium text-amber-800">Profile Verification Required</p>
+              <p class="text-sm text-amber-700 mt-1">
+                <span v-if="verificationStatus === 'pending'">Your profile is pending admin verification. You can browse clubs but cannot apply until approved.</span>
+                <span v-else-if="verificationStatus === 'rejected'">Your profile verification was rejected. Please update your profile and contact support.</span>
+                <span v-else>Your profile needs to be verified before you can apply to clubs.</span>
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="p-6">
@@ -75,10 +92,14 @@
               </div>
               <button
                 @click.stop="applyToClub(club)"
-                :disabled="applying === club._id"
-                class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                :disabled="applying === club._id || (isCoachContext && !isVerified)"
+                :class="[
+                  'px-4 py-2 rounded-lg transition text-sm disabled:opacity-50 disabled:cursor-not-allowed',
+                  (isCoachContext && !isVerified) ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700'
+                ]"
               >
                 <span v-if="applying === club._id">Applying...</span>
+                <span v-else-if="isCoachContext && !isVerified">Verification Required</span>
                 <span v-else>Apply</span>
               </button>
             </div>
@@ -176,10 +197,14 @@
               </button>
               <button
                 @click="applyToClub(selectedClub)"
-                :disabled="applying === selectedClub._id"
-                class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                :disabled="applying === selectedClub._id || (isCoachContext && !isVerified)"
+                :class="[
+                  'px-6 py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed',
+                  (isCoachContext && !isVerified) ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700'
+                ]"
               >
                 <span v-if="applying === selectedClub._id">Applying...</span>
+                <span v-else-if="isCoachContext && !isVerified">Verification Required</span>
                 <span v-else>Apply to Club</span>
               </button>
             </div>
@@ -203,6 +228,11 @@ const clubs = ref([]);
 const searchQuery = ref('');
 const selectedClub = ref(null);
 const applying = ref(null);
+
+// Verification status for coaches
+const isCoachContext = ref(window.location.pathname.includes('/coach/'));
+const verificationStatus = ref(null);
+const isVerified = computed(() => verificationStatus.value === 'verified');
 
 const filteredClubs = computed(() => {
   if (!searchQuery.value) return clubs.value;
@@ -268,7 +298,21 @@ const applyToClub = async (club) => {
   }
 };
 
+// Fetch coach profile to check verification status
+const checkCoachVerificationStatus = async () => {
+  if (!isCoachContext.value) return;
+  
+  try {
+    const response = await axios.get(`${API}/coaches/profile`, { withCredentials: true });
+    verificationStatus.value = response.data.coach?.verificationStatus || 'pending';
+  } catch (error) {
+    console.error('Error checking coach verification status:', error);
+    verificationStatus.value = 'pending'; // Default to pending if can't fetch
+  }
+};
+
 onMounted(() => {
+  checkCoachVerificationStatus();
   loadClubs();
 });
 </script>

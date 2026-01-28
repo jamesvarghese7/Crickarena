@@ -55,29 +55,99 @@
     </div>
 
     <!-- No Club Assigned -->
-    <div v-else-if="!clubData" class="bg-white rounded-xl shadow-sm p-4 border border-emerald-100">
-      <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
-        <div class="flex items-start gap-3">
-          <div class="w-6 h-6 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
-            <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M12 6v6l4 2"/>
-            </svg>
-          </div>
-          <div>
-            <h3 class="text-sm font-semibold text-amber-800 mb-1">No Club Assigned</h3>
-            <p class="text-amber-700 text-sm">
-              You are not currently assigned to any club. Apply to a club to start coaching.
-            </p>
-            <RouterLink 
-              :to="{ name: 'clubs' }"
-              class="mt-3 inline-flex items-center px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium transition-colors"
-            >
-              Browse Clubs
-              <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+    <div v-else-if="!clubData" class="space-y-4">
+      <!-- Verification Status Banner -->
+      <div v-if="verificationStatus === 'pending'" class="bg-white rounded-xl shadow-sm p-4 border border-amber-200">
+        <div class="bg-amber-50 rounded-lg p-4">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
-            </RouterLink>
+            </div>
+            <div>
+              <h3 class="text-sm font-semibold text-amber-800 mb-1">Verification Pending</h3>
+              <p class="text-amber-700 text-sm">
+                Your coach profile is under review by our administrators. You'll be notified once your verification is complete.
+              </p>
+              <p class="text-amber-600 text-xs mt-2">
+                <strong>Note:</strong> You won't be able to apply to clubs until your profile is verified.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-else-if="verificationStatus === 'rejected'" class="bg-white rounded-xl shadow-sm p-4 border border-red-200">
+        <div class="bg-red-50 rounded-lg p-4">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-sm font-semibold text-red-800 mb-1">Verification Rejected</h3>
+              <p class="text-red-700 text-sm">Unfortunately, your profile verification was not approved.</p>
+              <p v-if="rejectionReason" class="text-red-600 text-xs mt-2 p-2 bg-red-100 rounded">
+                <strong>Reason:</strong> {{ rejectionReason }}
+              </p>
+              <p class="text-red-600 text-xs mt-2">
+                Please update your profile and documents to address the concerns.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-else-if="verificationStatus === 'verified'" class="bg-white rounded-xl shadow-sm p-4 border border-emerald-200">
+        <div class="bg-emerald-50 rounded-lg p-4">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+              <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+              </svg>
+            </div>
+            <div>
+              <span class="text-emerald-800 font-medium text-sm">Profile Verified</span>
+              <span class="text-emerald-600 text-xs ml-2">You can now apply to coach clubs</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- No Club Message - Only show Browse Clubs if verified -->
+      <div class="bg-white rounded-xl shadow-sm p-4 border border-emerald-100">
+        <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <div class="flex items-start gap-3">
+            <div class="w-6 h-6 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 6v6l4 2"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-sm font-semibold text-amber-800 mb-1">No Club Assigned</h3>
+              <p v-if="verificationStatus === 'verified'" class="text-amber-700 text-sm">
+                You are not currently assigned to any club. Apply to a club to start coaching.
+              </p>
+              <p v-else class="text-amber-700 text-sm">
+                You are not currently assigned to any club. Complete verification first to apply.
+              </p>
+              <RouterLink 
+                v-if="verificationStatus === 'verified'"
+                :to="{ name: 'clubs' }"
+                class="mt-3 inline-flex items-center px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium transition-colors"
+              >
+                Browse Clubs
+                <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              </RouterLink>
+              <span v-else class="mt-3 inline-flex items-center px-3 py-1.5 bg-gray-400 text-white rounded-lg text-xs font-medium cursor-not-allowed">
+                Browse Clubs (Verification Required)
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -318,6 +388,10 @@ const tournaments = ref([]);
 const players = ref([]);
 const activities = ref([]);
 
+// Verification status
+const verificationStatus = ref(null);
+const rejectionReason = ref(null);
+
 // Load data on component mount
 onMounted(() => {
   loadData();
@@ -334,6 +408,10 @@ async function loadData() {
     // Get coach data to find the club
     const coachResponse = await axios.get(`${API}/coaches/profile`, { withCredentials: true });
     const coach = coachResponse.data.coach;
+    
+    // Store verification status
+    verificationStatus.value = coach.verificationStatus || 'pending';
+    rejectionReason.value = coach.rejectionReason || null;
     
     if (!coach.currentClub) {
       clubData.value = null;

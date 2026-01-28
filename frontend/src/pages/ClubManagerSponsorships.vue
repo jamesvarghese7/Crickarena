@@ -342,12 +342,13 @@
             <input v-model.number="reviewForm.agreedAmount" type="number" class="form-input" />
           </div>
           <div class="form-group">
-            <label>Start Date</label>
-            <input v-model="reviewForm.startDate" type="date" class="form-input" />
+            <label>Start Date *</label>
+            <input v-model="reviewForm.startDate" type="date" required class="form-input" />
           </div>
           <div class="form-group">
-            <label>End Date</label>
-            <input v-model="reviewForm.endDate" type="date" class="form-input" />
+            <label>Duration (Days) *</label>
+            <input v-model.number="reviewForm.durationDays" type="number" min="1" max="365" placeholder="e.g., 90" required class="form-input" />
+            <span class="helper-text" v-if="computedEndDate">Ends on: <strong>{{ computedEndDate }}</strong></span>
           </div>
           <div class="form-group">
             <label>Notes</label>
@@ -420,9 +421,17 @@ const benefitsText = ref('');
 const reviewForm = reactive({
   agreedAmount: 0,
   startDate: '',
-  endDate: '',
+  durationDays: 90, // Default 90 days
   notes: '',
   rejectionReason: ''
+});
+
+// Computed end date based on start date + duration
+const computedEndDate = computed(() => {
+  if (!reviewForm.startDate || !reviewForm.durationDays) return null;
+  const start = new Date(reviewForm.startDate);
+  start.setDate(start.getDate() + reviewForm.durationDays);
+  return start.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
 });
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
@@ -676,7 +685,7 @@ function reviewDeal(deal, action) {
   reviewAction.value = action;
   reviewForm.agreedAmount = deal.proposedAmount;
   reviewForm.startDate = new Date().toISOString().split('T')[0];
-  reviewForm.endDate = '';
+  reviewForm.durationDays = 90; // Default 90 days
   reviewForm.notes = '';
   reviewForm.rejectionReason = '';
   showReviewModal.value = true;
@@ -691,12 +700,21 @@ async function confirmReview() {
 
   reviewing.value = true;
   try {
+    // Calculate end date from start date + duration
+    let endDate = undefined;
+    if (reviewForm.startDate && reviewForm.durationDays) {
+      const start = new Date(reviewForm.startDate);
+      start.setDate(start.getDate() + reviewForm.durationDays);
+      endDate = start.toISOString().split('T')[0];
+    }
+
     const payload = {
       firebaseUid: auth.user?.uid,
       action: reviewAction.value,
       agreedAmount: reviewForm.agreedAmount,
       startDate: reviewForm.startDate,
-      endDate: reviewForm.endDate || undefined,
+      endDate: endDate,
+      durationDays: reviewForm.durationDays, // Also send duration for reference
       notes: reviewForm.notes,
       rejectionReason: reviewForm.rejectionReason
     };
@@ -1522,6 +1540,16 @@ onMounted(() => {
   outline: none;
   border-color: #3B82F6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.helper-text {
+  font-size: 0.8rem;
+  color: #10B981;
+  margin-top: 0.25rem;
+}
+
+.helper-text strong {
+  font-weight: 600;
 }
 
 .form-row {

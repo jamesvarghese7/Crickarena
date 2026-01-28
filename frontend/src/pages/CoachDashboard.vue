@@ -53,6 +53,66 @@
         </div>
       </div>
 
+      <!-- Verification Status Banners -->
+      <div v-if="coachData?.verificationStatus === 'pending'" class="bg-amber-50 border border-amber-200 rounded-2xl shadow-lg p-6 mb-8">
+        <div class="flex items-start">
+          <div class="flex-shrink-0">
+            <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+              <svg class="w-7 h-7 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="ml-4">
+            <h3 class="text-lg font-semibold text-amber-800">Verification Pending</h3>
+            <p class="text-amber-700 mt-1">
+              Your coach profile is under review by our administrators. You'll be notified once your verification is complete.
+            </p>
+            <p class="text-amber-600 text-sm mt-2">
+              <strong>Note:</strong> You won't be able to apply to clubs until your profile is verified.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div v-else-if="coachData?.verificationStatus === 'rejected'" class="bg-red-50 border border-red-200 rounded-2xl shadow-lg p-6 mb-8">
+        <div class="flex items-start">
+          <div class="flex-shrink-0">
+            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+              <svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="ml-4 flex-1">
+            <h3 class="text-lg font-semibold text-red-800">Verification Rejected</h3>
+            <p class="text-red-700 mt-1">
+              Unfortunately, your profile verification was not approved.
+            </p>
+            <div v-if="coachData.rejectionReason" class="mt-2 p-3 bg-red-100 rounded-lg">
+              <p class="text-sm text-red-700"><strong>Reason:</strong> {{ coachData.rejectionReason }}</p>
+            </div>
+            <p class="text-red-600 text-sm mt-3">
+              Please update your profile and documents to address the concerns, then contact support for re-verification.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div v-else-if="coachData?.verificationStatus === 'verified'" class="bg-emerald-50 border border-emerald-200 rounded-2xl shadow-lg p-4 mb-8">
+        <div class="flex items-center">
+          <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+            <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+            </svg>
+          </div>
+          <div class="ml-3">
+            <span class="text-emerald-800 font-medium">Profile Verified</span>
+            <span class="text-emerald-600 text-sm ml-2">You can now apply to coach clubs</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Club Association Status -->
       <div v-if="coachData" class="bg-white rounded-2xl shadow-lg p-6 mb-8">
         <div class="flex items-center justify-between mb-4">

@@ -400,6 +400,13 @@ watch(() => props.teams, (newTeams) => {
   orderedTeams.value = [...(newTeams || [])];
 }, { immediate: true });
 
+// Watch for tournament changes to sync format with config
+watch(() => props.tournament?.format, (newFormat) => {
+  if (newFormat) {
+    config.value.format = newFormat;
+  }
+}, { immediate: true });
+
 // Computed to get the tournament's format details
 const tournamentFormat = computed(() => {
   const format = props.tournament?.format;

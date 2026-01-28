@@ -41,13 +41,16 @@
         <div class="date-inputs">
           <div class="form-group">
             <label>Start Date *</label>
-            <input type="date" v-model="formData.startDate" required />
+            <input type="date" v-model="formData.startDate" :min="todayDate" required />
+            <span v-if="dateErrors.startDate" class="field-error">{{ dateErrors.startDate }}</span>
           </div>
           <div class="form-group">
-            <label>End Date *</label>
-            <input type="date" v-model="formData.endDate" required />
+            <label>Duration (Days) *</label>
+            <input type="number" v-model.number="formData.durationDays" min="1" max="730" placeholder="e.g., 365" required />
+            <span class="computed-end-date" v-if="computedEndDate">📅 Ends on: <strong>{{ computedEndDate }}</strong></span>
           </div>
         </div>
+        <div v-if="dateErrors.period" class="validation-error">⚠️ {{ dateErrors.period }}</div>
       </section>
 
       <!-- Deliverables -->
@@ -71,7 +74,8 @@
           <div class="form-row">
             <div class="form-group">
               <label>Due Date</label>
-              <input type="date" v-model="del.dueDate" />
+              <input type="date" v-model="del.dueDate" :min="formData.startDate" :max="calculatedEndDate" />
+              <span v-if="del.dueDate && !isDateInContractPeriod(del.dueDate)" class="field-error">Must be within contract period</span>
             </div>
           </div>
         </div>
@@ -101,7 +105,8 @@
             </div>
             <div class="form-group">
               <label>Due Date</label>
-              <input type="date" v-model="payment.dueDate" />
+              <input type="date" v-model="payment.dueDate" :min="formData.startDate" :max="calculatedEndDate" />
+              <span v-if="payment.dueDate && !isDateInContractPeriod(payment.dueDate)" class="field-error">Must be within contract period</span>
             </div>
           </div>
         </div>
@@ -198,7 +203,7 @@ const deal = ref(null);
 
 const formData = ref({
   startDate: '',
-  endDate: '',
+  durationDays: 365, // Default 1 year
   deliverables: [
     { title: '', description: '', dueDate: '' }
   ],
@@ -214,8 +219,76 @@ const formData = ref({
   }
 });
 
+// Computed end date based on start date + duration
+const calculatedEndDate = computed(() => {
+  if (!formData.value.startDate || !formData.value.durationDays) return null;
+  const start = new Date(formData.value.startDate);
+  start.setDate(start.getDate() + formData.value.durationDays);
+  return start.toISOString().split('T')[0];
+});
+
+const computedEndDate = computed(() => {
+  if (!calculatedEndDate.value) return null;
+  return new Date(calculatedEndDate.value).toLocaleDateString('en-IN', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
+  });
+});
+
 const paymentTotal = computed(() => {
   return formData.value.paymentSchedule.reduce((sum, p) => sum + (p.amount || 0), 0);
+});
+
+// Date validation
+const todayDate = computed(() => {
+  return new Date().toISOString().split('T')[0];
+});
+
+// Removed minEndDate - now using duration-based calculation
+
+const dateErrors = computed(() => {
+  const errors = {};
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  if (formData.value.startDate) {
+    const startDate = new Date(formData.value.startDate);
+    if (startDate < today) {
+      errors.startDate = 'Start date cannot be in the past';
+    }
+  }
+  
+  if (formData.value.durationDays && formData.value.durationDays < 1) {
+    errors.period = 'Duration must be at least 1 day';
+  }
+  
+  return errors;
+});
+
+const isDateInContractPeriod = (dateStr) => {
+  if (!formData.value.startDate || !calculatedEndDate.value || !dateStr) return true;
+  const date = new Date(dateStr);
+  const start = new Date(formData.value.startDate);
+  const end = new Date(calculatedEndDate.value);
+  return date >= start && date <= end;
+};
+
+const hasDateErrors = computed(() => {
+  // Check main date errors
+  if (Object.keys(dateErrors.value).length > 0) return true;
+  
+  // Check deliverable dates
+  for (const del of formData.value.deliverables) {
+    if (del.dueDate && !isDateInContractPeriod(del.dueDate)) return true;
+  }
+  
+  // Check payment dates
+  for (const payment of formData.value.paymentSchedule) {
+    if (payment.dueDate && !isDateInContractPeriod(payment.dueDate)) return true;
+  }
+  
+  return false;
 });
 
 const formatAmount = (amount) => {
@@ -253,11 +326,9 @@ const fetchDeal = async () => {
     const today = new Date();
     const nextMonth = new Date(today);
     nextMonth.setMonth(nextMonth.getMonth() + 1);
-    const endDate = new Date(today);
-    endDate.setFullYear(endDate.getFullYear() + 1);
     
     formData.value.startDate = nextMonth.toISOString().split('T')[0];
-    formData.value.endDate = endDate.toISOString().split('T')[0];
+    formData.value.durationDays = 365; // Default 1 year
   } catch (error) {
     console.error('Error fetching deal:', error);
   } finally {
@@ -266,6 +337,12 @@ const fetchDeal = async () => {
 };
 
 const submitAgreement = async () => {
+  // Validate dates before submission
+  if (hasDateErrors.value) {
+    alert('Please fix the date validation errors before submitting.');
+    return;
+  }
+  
   submitting.value = true;
   try {
     // Filter out empty deliverables
@@ -290,7 +367,8 @@ const submitAgreement = async () => {
         firebaseUid: auth.user?.uid,
         dealId: route.params.dealId,
         startDate: formData.value.startDate,
-        endDate: formData.value.endDate,
+        endDate: calculatedEndDate.value,
+        durationDays: formData.value.durationDays,
         deliverables,
         paymentSchedule,
         terms: formData.value.terms
@@ -587,5 +665,33 @@ h1 {
 .submit-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.field-error {
+  display: block;
+  color: #DC2626;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.computed-end-date {
+  display: block;
+  font-size: 13px;
+  color: #10B981;
+  margin-top: 6px;
+}
+
+.computed-end-date strong {
+  font-weight: 600;
+}
+
+.validation-error {
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #DC2626;
+  padding: 10px 16px;
+  border-radius: 8px;
+  margin-top: 12px;
+  font-size: 14px;
 }
 </style>

@@ -28,6 +28,8 @@ const { default: contactRoutes } = await import('./routes/contact.js');
 const { default: sponsorRoutes } = await import('./routes/sponsors.js');
 const { default: sponsorshipRoutes } = await import('./routes/sponsorships.js');
 const { default: agreementRoutes } = await import('./routes/agreements.js');
+const { default: analyticsRoutes } = await import('./routes/analytics.js');
+const { default: ticketsRoutes } = await import('./routes/tickets.js');
 const { errorHandler, logger } = await import('./utils/logger.js');
 
 const app = express();
@@ -139,6 +141,8 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/sponsors', sponsorRoutes);
 app.use('/api/sponsorships', sponsorshipRoutes);
 app.use('/api/agreements', agreementRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api', ticketsRoutes);  // Tickets API (admin + public)
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
