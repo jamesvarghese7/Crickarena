@@ -579,6 +579,32 @@
               </div>
             </div>
           </div>
+
+          <!-- Sponsors Section -->
+          <div v-if="clubSponsors.length > 0" class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow duration-300">
+            <div class="flex items-center gap-3 mb-6">
+              <div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center">
+                <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <h3 class="text-xl font-bold text-gray-900">Our Sponsors</h3>
+            </div>
+            <div class="space-y-3">
+              <div v-for="sponsor in clubSponsors.slice(0, 5)" :key="sponsor._id" 
+                   class="flex items-center gap-3 p-3 bg-amber-50 rounded-xl border border-amber-200">
+                <div class="w-10 h-10 rounded-lg overflow-hidden bg-amber-100 flex items-center justify-center flex-shrink-0">
+                  <img v-if="sponsor.logoUrl" :src="getSponsorLogoUrl(sponsor.logoUrl)" 
+                       :alt="sponsor.companyName" class="w-full h-full object-cover" />
+                  <span v-else class="text-amber-600 font-bold">{{ sponsor.companyName?.charAt(0) }}</span>
+                </div>
+                <div class="min-w-0">
+                  <div class="font-semibold text-gray-900 text-sm truncate">{{ sponsor.companyName }}</div>
+                  <div class="text-xs text-amber-600">{{ sponsor.tier || 'Sponsor' }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
