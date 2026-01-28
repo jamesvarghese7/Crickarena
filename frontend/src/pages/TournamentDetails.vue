@@ -136,6 +136,17 @@
                     Delete
                   </button>
                   
+                  <!-- Seed Knockout Button for multi-stage formats -->
+                  <button v-if="canSeedKnockout" 
+                          @click="seedKnockout" 
+                          :disabled="seedingKnockout"
+                          class="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-lg text-xs font-semibold hover:from-purple-600 hover:to-indigo-600 shadow-md transition-all duration-200 disabled:opacity-50 flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                    {{ seedingKnockout ? 'Seeding...' : 'Seed Knockout' }}
+                  </button>
+                  
                   <button @click="beginEdit" 
                           class="px-2.5 py-1.5 bg-white/20 backdrop-blur-sm text-white rounded-lg text-xs font-medium hover:bg-white/30 transition-colors">
                     Edit
@@ -413,10 +424,6 @@
                       <div v-if="tournament.matchFormat" class="flex items-center justify-between">
                         <span class="text-sm text-gray-400">Match Format</span>
                         <span class="font-bold text-emerald-400">{{ tournament.matchFormat }} ({{ tournament.oversLimit || 20 }} overs)</span>
-                      </div>
-                      <div v-if="tournament.restDaysMin !== undefined" class="flex items-center justify-between">
-                        <span class="text-sm text-gray-400">Minimum Rest Days</span>
-                        <span class="font-bold text-emerald-400">{{ tournament.restDaysMin }}</span>
                       </div>
                     </div>
                     <div v-if="isClubManager && Number(tournament.entryFee) > 0" class="mt-4">
@@ -1530,6 +1537,19 @@ function getSponsorLogoUrl(url) {
 
 async function fetchSponsors() {
   try {
+    // First try to get sponsors from activeSponsors (embedded in tournament)
+    if (tournament.value?.activeSponsors?.length > 0) {
+      tournamentSponsors.value = tournament.value.activeSponsors.map(s => ({
+        _id: s.sponsor?._id || s.sponsor,
+        companyName: s.sponsor?.companyName || 'Sponsor',
+        logoUrl: s.sponsor?.logoUrl,
+        industry: s.sponsor?.industry,
+        tier: s.tier || 'sponsor'
+      }));
+      return;
+    }
+    
+    // Fallback to API call for backward compatibility
     const res = await fetch(`${API_URL}/api/sponsorships/target/tournament/${route.params.id}/sponsors`);
     if (res.ok) {
       const data = await res.json();
@@ -1911,6 +1931,46 @@ async function closeRegs(){
   const id = route.params.id;
   await api.put(`/admin/tournaments/${id}/close-registrations`);
   await loadAll(id);
+}
+
+// Seed Knockout for multi-stage formats
+const seedingKnockout = ref(false);
+
+// Determine if knockout can be seeded
+const canSeedKnockout = computed(() => {
+  if (!isAdmin.value) return false;
+  if (!tournament.value) return false;
+  
+  const format = tournament.value.format;
+  const isMultiStage = ['groups+knockouts', 'league+playoff', 'super-league', 'groups+super8'].includes(format);
+  if (!isMultiStage) return false;
+  
+  // Check if group stage is complete but knockout hasn't started
+  const groupMatches = matches.value.filter(m => m.stage === 'Group');
+  const knockoutMatches = matches.value.filter(m => m.stage === 'Knockout');
+  const allGroupsComplete = groupMatches.length > 0 && groupMatches.every(m => m.status === 'Completed');
+  
+  return allGroupsComplete && knockoutMatches.length === 0;
+});
+
+async function seedKnockout() {
+  if (!confirm('Generate knockout bracket from current group standings?')) return;
+  
+  const id = route.params.id;
+  seedingKnockout.value = true;
+  
+  try {
+    const qualifyPerGroup = tournament.value.qualifyPerGroup || 2;
+    const { data } = await api.post(`/admin/tournaments/${id}/fixtures/seed-knockout`, { qualifyPerGroup });
+    
+    notify.success(`Knockout seeded! ${data.matchesCount} matches created from ${data.qualifiers} qualifiers.`);
+    await loadAll(id);
+  } catch (e) {
+    console.error('Seed knockout failed:', e);
+    notify.error(e?.response?.data?.message || 'Failed to seed knockout bracket');
+  } finally {
+    seedingKnockout.value = false;
+  }
 }
 // V3 Fixture Wizard state (old modal removed)
 const showDeleteFixturesModal = ref(false);

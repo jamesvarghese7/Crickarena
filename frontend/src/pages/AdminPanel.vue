@@ -1,8 +1,8 @@
 <template>
   <div class="admin-page">
-    <div class="flex min-h-screen">
-      <!-- Desktop Sidebar -->
-      <aside class="admin-sidebar hidden md:flex">
+    <!-- Desktop Sidebar - Fixed -->
+    <aside class="admin-sidebar hidden md:flex fixed left-0 top-0 h-screen z-40">
+      <div class="flex flex-col h-full overflow-y-auto admin-scrollbar">
         <div class="sidebar-header">
           <div class="flex items-center gap-3">
             <div class="logo-icon">
@@ -61,13 +61,19 @@
             <span>Sponsors</span>
           </RouterLink>
           
-          <div class="admin-nav-item disabled">
+          <RouterLink :to="{ name: 'admin-analytics' }" class="admin-nav-item" :class="{ active: route.name === 'admin-analytics' }">
             <svg class="admin-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
             <span>Analytics</span>
-            <span class="coming-soon-badge">Soon</span>
-          </div>
+          </RouterLink>
+          
+          <RouterLink :to="{ name: 'admin-tickets' }" class="admin-nav-item" :class="{ active: route.name === 'admin-tickets' }">
+            <svg class="admin-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+            </svg>
+            <span>Tickets</span>
+          </RouterLink>
         </nav>
         
         <div class="sidebar-footer">
@@ -78,8 +84,11 @@
             <span>Back to Site</span>
           </RouterLink>
         </div>
-      </aside>
+      </div>
+    </aside>
 
+    <!-- Main Content Wrapper with left margin for sidebar -->
+    <div class="md:ml-64 min-h-screen flex flex-col">
       <!-- Mobile Sidebar Drawer -->
       <Teleport to="body">
         <Transition name="drawer">
@@ -147,14 +156,28 @@
                   </svg>
                   <span>Sponsors</span>
                 </RouterLink>
+                
+                <RouterLink :to="{ name: 'admin-analytics' }" class="admin-nav-item" :class="{ active: route.name === 'admin-analytics' }" @click="sidebarOpen = false">
+                  <svg class="admin-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  <span>Analytics</span>
+                </RouterLink>
+                
+                <RouterLink :to="{ name: 'admin-tickets' }" class="admin-nav-item" :class="{ active: route.name === 'admin-tickets' }" @click="sidebarOpen = false">
+                  <svg class="admin-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                  </svg>
+                  <span>Tickets</span>
+                </RouterLink>
               </nav>
             </aside>
           </div>
         </Transition>
       </Teleport>
 
-      <!-- Main Content Area -->
-      <div class="flex-1 flex flex-col min-w-0">
+      <!-- Main Content Area (flex-1 to take remaining space) -->
+      <div class="flex-1 flex flex-col min-w-0 w-full">
         <!-- Top Header -->
         <header class="admin-topbar">
           <div class="flex items-center gap-4">
@@ -207,8 +230,8 @@
           </div>
         </header>
 
-        <!-- Content -->
-        <main class="admin-content admin-scrollbar">
+        <!-- Content - Scrollable Main Area -->
+        <main class="admin-content admin-scrollbar flex-1 overflow-y-auto">
           <router-view />
         </main>
       </div>
@@ -233,7 +256,9 @@ const currentPageTitle = computed(() => {
     'admin-clubs': 'Club Management',
     'admin-players': 'Player Management',
     'admin-coaches': 'Coach Management',
-    'admin-sponsors': 'Sponsor Management'
+    'admin-sponsors': 'Sponsor Management',
+    'admin-analytics': 'Analytics',
+    'admin-tickets': 'Ticket Management'
   };
   return titles[route.name] || 'Dashboard';
 });

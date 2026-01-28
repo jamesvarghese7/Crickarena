@@ -37,14 +37,30 @@ export async function syncTournamentAndMatches(now = new Date()) {
   }
 
   // 2) Mark tournaments completed when all matches completed and endDate passed
-  const activeTs = await Tournament.find({ status: { $in: ['upcoming', 'ongoing'] } }).select('_id status startDate endDate fixturesGenerated');
+  // For multi-stage formats, only mark complete if knockout matches exist
+  const activeTs = await Tournament.find({ status: { $in: ['upcoming', 'ongoing'] } }).select('_id status startDate endDate fixturesGenerated format');
   for (const t of activeTs) {
     const total = await Match.countDocuments({ tournament: t._id });
     const completed = await Match.countDocuments({ tournament: t._id, status: 'Completed' });
     const endOk = t.endDate ? now >= new Date(t.endDate) : false;
+
+    // Check for multi-stage formats that require knockout matches to be completed
+    const isMultiStageFormat = ['league+playoff', 'groups+knockouts', 'super-league', 'groups+super8'].includes(t.format);
+
     if (total > 0 && completed === total && t.status !== 'completed') {
-      await Tournament.updateOne({ _id: t._id }, { $set: { status: 'completed' } });
-      updates.tournaments += 1;
+      if (isMultiStageFormat) {
+        // For multi-stage formats, only complete if knockout matches exist
+        const knockoutMatches = await Match.countDocuments({ tournament: t._id, stage: 'Knockout' });
+        if (knockoutMatches > 0) {
+          await Tournament.updateOne({ _id: t._id }, { $set: { status: 'completed' } });
+          updates.tournaments += 1;
+        }
+        // If no knockout matches, don't mark as completed - waiting for knockout seeding
+      } else {
+        // Simple formats (league, knockout, round-robin) - complete when all done
+        await Tournament.updateOne({ _id: t._id }, { $set: { status: 'completed' } });
+        updates.tournaments += 1;
+      }
       continue;
     }
     // 3) If fixtures generated and startDate reached, ensure status at least 'ongoing'

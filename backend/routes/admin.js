@@ -4,6 +4,9 @@ import Match from '../models/Match.js';
 import Club from '../models/Club.js';
 import Player from '../models/Player.js';
 import Coach from '../models/Coach.js';
+import Sponsor from '../models/Sponsor.js';
+import SponsorshipOpportunity from '../models/SponsorshipOpportunity.js';
+import SponsorshipDeal from '../models/SponsorshipDeal.js';
 import { verifyFirebaseToken } from '../middleware/auth.js';
 import { requireRole } from '../middleware/rbac.js';
 import { syncTournamentAndMatches } from '../utils/statusSync.js';
@@ -103,6 +106,19 @@ router.post('/tournaments', verifyFirebaseToken, requireRole('admin'), async (re
       }
     }
 
+    // Determine sponsorship configuration
+    const enableSponsorship = body.enableSponsorship === true || body.enableSponsorship === 'true';
+    let sponsorshipDeadline = null;
+    if (enableSponsorship && body.sponsorshipDeadline) {
+      sponsorshipDeadline = new Date(body.sponsorshipDeadline);
+      if (isNaN(sponsorshipDeadline.getTime())) {
+        return res.status(400).json({ message: 'Invalid sponsorship deadline' });
+      }
+      if (sponsorshipDeadline > start) {
+        return res.status(400).json({ message: 'Sponsorship deadline must be before tournament start date' });
+      }
+    }
+
     const t = await Tournament.create({
       name: body.name,
       description: body.description || '',
@@ -116,12 +132,11 @@ router.post('/tournaments', verifyFirebaseToken, requireRole('admin'), async (re
       oversLimit,
       startDate: start,
       endDate: end,
-      status,
+      status: enableSponsorship ? 'upcoming' : status, // Don't open for registration if sponsorship is enabled
       maxTeams,
       registrationDeadline: body.registrationDeadline ? new Date(body.registrationDeadline) : undefined,
       entryFee,
       prizePool,
-      sponsorInfo: body.sponsorInfo || '',
       restDaysMin,
       organizer: req.user._id,
       // Handle venue slots if provided
@@ -130,8 +145,45 @@ router.post('/tournaments', verifyFirebaseToken, requireRole('admin'), async (re
       // Time slot configuration
       matchTimeSlots: Array.isArray(body.matchTimeSlots) ? body.matchTimeSlots : ['09:00', '14:00', '18:00'],
       allowParallelMatches: body.allowParallelMatches === true || body.allowParallelMatches === 'true',
-      maxParallelMatches: Number.isFinite(Number(body.maxParallelMatches)) ? Math.max(1, Number(body.maxParallelMatches)) : 1
+      maxParallelMatches: Number.isFinite(Number(body.maxParallelMatches)) ? Math.max(1, Number(body.maxParallelMatches)) : 1,
+      // Sponsorship configuration
+      sponsorshipPhase: enableSponsorship ? 'accepting' : 'skipped',
+      sponsorshipDeadline: sponsorshipDeadline,
+      visibility: enableSponsorship ? 'sponsors-only' : 'public'
     });
+
+    // If sponsorship is enabled, auto-create opportunities
+    if (enableSponsorship) {
+      const tiers = ['title', 'main', 'associate'];
+      const defaultPrices = { title: 100000, main: 50000, associate: 25000 };
+      const defaultMax = { title: 1, main: 3, associate: 5 };
+      const opportunities = [];
+
+      for (const tier of tiers) {
+        const opp = await SponsorshipOpportunity.create({
+          targetType: 'tournament',
+          targetId: t._id,
+          tier,
+          title: `${tier.charAt(0).toUpperCase() + tier.slice(1)} Sponsor - ${t.name}`,
+          description: `${tier.charAt(0).toUpperCase() + tier.slice(1)} sponsorship for ${t.name}`,
+          benefits: [
+            tier === 'title' ? 'Logo on all tournament banners' : 'Logo on event materials',
+            tier === 'title' ? 'Naming rights' : 'Brand visibility',
+            'Social media mentions'
+          ],
+          askingPrice: defaultPrices[tier],
+          maxSponsors: defaultMax[tier],
+          status: 'open',
+          validFrom: new Date(),
+          validTo: sponsorshipDeadline || start,
+          createdBy: req.user._id
+        });
+        opportunities.push(opp._id);
+      }
+      t.sponsorshipOpportunities = opportunities;
+      await t.save();
+    }
+
     res.json(t);
   } catch (error) {
     console.error('Error creating tournament:', error);
@@ -378,6 +430,274 @@ router.put('/tournaments/:id/close-registrations', verifyFirebaseToken, requireR
   } catch (error) {
     console.error('Error closing registrations:', error);
     res.status(500).json({ message: 'Failed to close registrations' });
+  }
+});
+
+// ===== Tournament Sponsorship Management =====
+
+/**
+ * PUT /admin/tournaments/:id/enable-sponsorship
+ * Enable sponsorship phase for a tournament (makes it visible only to sponsors)
+ */
+router.put('/tournaments/:id/enable-sponsorship', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
+  try {
+    const { sponsorshipDeadline, createOpportunities } = req.body || {};
+    const t = await Tournament.findById(req.params.id);
+
+    if (!t) return res.status(404).json({ message: 'Tournament not found' });
+    if (['cancelled', 'completed'].includes(t.status)) {
+      return res.status(400).json({ message: 'Cannot enable sponsorship for cancelled or completed tournament' });
+    }
+
+    // Update tournament to sponsorship phase
+    t.sponsorshipPhase = 'accepting';
+    t.visibility = 'sponsors-only';
+
+    if (sponsorshipDeadline) {
+      const deadline = new Date(sponsorshipDeadline);
+      if (isNaN(deadline.getTime())) {
+        return res.status(400).json({ message: 'Invalid sponsorship deadline' });
+      }
+      if (deadline > new Date(t.startDate)) {
+        return res.status(400).json({ message: 'Sponsorship deadline must be before tournament start date' });
+      }
+      t.sponsorshipDeadline = deadline;
+    }
+
+    // Optionally auto-create sponsorship opportunities
+    if (createOpportunities) {
+      const tiers = ['title', 'main', 'associate'];
+      const defaultPrices = { title: 100000, main: 50000, associate: 25000 };
+      const defaultMax = { title: 1, main: 3, associate: 5 };
+
+      const opportunities = [];
+      for (const tier of tiers) {
+        const opp = await SponsorshipOpportunity.create({
+          targetType: 'tournament',
+          targetId: t._id,
+          tier,
+          title: `${tier.charAt(0).toUpperCase() + tier.slice(1)} Sponsor - ${t.name}`,
+          description: `${tier.charAt(0).toUpperCase() + tier.slice(1)} sponsorship for ${t.name}`,
+          benefits: [
+            tier === 'title' ? 'Logo on all tournament banners' : 'Logo on event materials',
+            tier === 'title' ? 'Naming rights' : 'Brand visibility',
+            'Social media mentions'
+          ],
+          askingPrice: defaultPrices[tier],
+          maxSponsors: defaultMax[tier],
+          status: 'open',
+          validFrom: new Date(),
+          validTo: t.sponsorshipDeadline || new Date(t.startDate),
+          createdBy: req.user._id
+        });
+        opportunities.push(opp._id);
+      }
+      t.sponsorshipOpportunities = opportunities;
+    }
+
+    await t.save();
+
+    res.json({
+      message: 'Sponsorship phase enabled',
+      tournament: t,
+      opportunitiesCreated: createOpportunities ? t.sponsorshipOpportunities.length : 0
+    });
+  } catch (error) {
+    console.error('Error enabling sponsorship:', error);
+    res.status(500).json({ message: 'Failed to enable sponsorship' });
+  }
+});
+
+/**
+ * PUT /admin/tournaments/:id/close-sponsorship
+ * Close sponsorship phase and open tournament for public registration
+ */
+router.put('/tournaments/:id/close-sponsorship', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
+  try {
+    const t = await Tournament.findById(req.params.id)
+      .populate('sponsorshipOpportunities');
+
+    if (!t) return res.status(404).json({ message: 'Tournament not found' });
+    if (t.sponsorshipPhase !== 'accepting') {
+      return res.status(400).json({ message: 'Tournament is not currently accepting sponsors' });
+    }
+
+    // Close all open sponsorship opportunities
+    if (t.sponsorshipOpportunities?.length > 0) {
+      await SponsorshipOpportunity.updateMany(
+        { _id: { $in: t.sponsorshipOpportunities.map(o => o._id) }, status: 'open' },
+        { status: 'closed' }
+      );
+    }
+
+    // Fetch approved sponsor deals for this tournament
+    const approvedDeals = await SponsorshipDeal.find({
+      opportunity: { $in: t.sponsorshipOpportunities || [] },
+      status: { $in: ['approved', 'active'] }
+    }).populate('sponsor', 'companyName logoUrl industry');
+
+    // Populate activeSponsors
+    t.activeSponsors = approvedDeals.map(deal => {
+      const opp = t.sponsorshipOpportunities.find(o => String(o._id) === String(deal.opportunity));
+      return {
+        sponsor: deal.sponsor._id,
+        deal: deal._id,
+        tier: opp?.tier || 'associate'
+      };
+    });
+
+    // Update tournament visibility
+    t.sponsorshipPhase = 'closed';
+    t.visibility = 'public';
+    t.status = 'open'; // Open for team registration
+
+    await t.save();
+
+    res.json({
+      message: 'Sponsorship closed, tournament now open for registration',
+      tournament: t,
+      sponsorsApproved: t.activeSponsors.length
+    });
+  } catch (error) {
+    console.error('Error closing sponsorship:', error);
+    res.status(500).json({ message: 'Failed to close sponsorship' });
+  }
+});
+
+/**
+ * PUT /admin/tournaments/:id/skip-sponsorship
+ * Skip sponsorship phase entirely and make tournament public immediately
+ */
+router.put('/tournaments/:id/skip-sponsorship', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
+  try {
+    const t = await Tournament.findById(req.params.id);
+
+    if (!t) return res.status(404).json({ message: 'Tournament not found' });
+    if (['cancelled', 'completed'].includes(t.status)) {
+      return res.status(400).json({ message: 'Cannot modify cancelled or completed tournament' });
+    }
+
+    t.sponsorshipPhase = 'skipped';
+    t.visibility = 'public';
+    t.status = 'open';
+
+    await t.save();
+
+    res.json({
+      message: 'Sponsorship skipped, tournament now open for registration',
+      tournament: t
+    });
+  } catch (error) {
+    console.error('Error skipping sponsorship:', error);
+    res.status(500).json({ message: 'Failed to skip sponsorship' });
+  }
+});
+
+/**
+ * GET /admin/tournaments/:id/sponsorship-applications
+ * Get all sponsor applications for a tournament's opportunities
+ */
+router.get('/tournaments/:id/sponsorship-applications', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
+  try {
+    const t = await Tournament.findById(req.params.id);
+    if (!t) return res.status(404).json({ message: 'Tournament not found' });
+
+    if (!t.sponsorshipOpportunities?.length) {
+      return res.json({ opportunities: [], applications: [] });
+    }
+
+    const opportunities = await SponsorshipOpportunity.find({
+      _id: { $in: t.sponsorshipOpportunities }
+    });
+
+    const applications = await SponsorshipDeal.find({
+      opportunity: { $in: t.sponsorshipOpportunities }
+    })
+      .populate('sponsor', 'companyName logoUrl industry contactPerson contactEmail budget')
+      .populate('opportunity', 'tier title askingPrice')
+      .sort({ appliedAt: -1 });
+
+    res.json({ opportunities, applications });
+  } catch (error) {
+    console.error('Error fetching sponsorship applications:', error);
+    res.status(500).json({ message: 'Failed to fetch applications' });
+  }
+});
+
+/**
+ * PUT /admin/sponsorship-deals/:dealId/approve
+ * Approve a sponsorship application
+ */
+router.put('/sponsorship-deals/:dealId/approve', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
+  try {
+    const deal = await SponsorshipDeal.findById(req.params.dealId)
+      .populate('opportunity')
+      .populate('sponsor');
+
+    if (!deal) return res.status(404).json({ message: 'Deal not found' });
+    if (!['applied', 'under-review'].includes(deal.status)) {
+      return res.status(400).json({ message: 'This application is not pending' });
+    }
+
+    // Update deal status
+    deal.status = 'approved';
+    deal.reviewedBy = req.user._id;
+    deal.reviewedAt = new Date();
+    deal.agreedAmount = deal.proposedAmount;
+    deal.startDate = new Date();
+    await deal.save();
+
+    // Update opportunity counts
+    if (deal.opportunity) {
+      await SponsorshipOpportunity.findByIdAndUpdate(deal.opportunity._id, {
+        $inc: { currentSponsors: 1 }
+      });
+    }
+
+    // If this is for a tournament, update activeSponsors
+    if (deal.opportunity?.targetType === 'tournament') {
+      await Tournament.findByIdAndUpdate(deal.opportunity.targetId, {
+        $push: {
+          activeSponsors: {
+            sponsor: deal.sponsor._id,
+            deal: deal._id,
+            tier: deal.opportunity.tier
+          }
+        }
+      });
+    }
+
+    res.json({ message: 'Sponsor approved successfully', deal });
+  } catch (error) {
+    console.error('Error approving sponsor:', error);
+    res.status(500).json({ message: 'Failed to approve sponsor' });
+  }
+});
+
+/**
+ * PUT /admin/sponsorship-deals/:dealId/reject
+ * Reject a sponsorship application
+ */
+router.put('/sponsorship-deals/:dealId/reject', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
+  try {
+    const { reason } = req.body || {};
+    const deal = await SponsorshipDeal.findById(req.params.dealId);
+
+    if (!deal) return res.status(404).json({ message: 'Deal not found' });
+    if (!['applied', 'under-review'].includes(deal.status)) {
+      return res.status(400).json({ message: 'This application is not pending' });
+    }
+
+    deal.status = 'rejected';
+    deal.reviewedBy = req.user._id;
+    deal.reviewedAt = new Date();
+    deal.rejectionReason = reason || 'Application rejected by admin';
+    await deal.save();
+
+    res.json({ message: 'Sponsor rejected', deal });
+  } catch (error) {
+    console.error('Error rejecting sponsor:', error);
+    res.status(500).json({ message: 'Failed to reject sponsor' });
   }
 });
 
@@ -1292,11 +1612,11 @@ router.post('/tournaments/:id/fixtures/seed-knockout', verifyFirebaseToken, requ
     const venueSlots = tournament.venueSlots && tournament.venueSlots.length > 0
       ? tournament.venueSlots
       : tournament.venues && tournament.venues.length > 0
-    tournament.venues.map(venue => ({
-      name: venue,
-      slotTimes: ['09:00', '14:00', '18:00']
-    }))
-    [{ name: 'Main Ground', slotTimes: ['09:00', '14:00'] }];
+        ? tournament.venues.map(venue => ({
+          name: venue,
+          slotTimes: ['09:00', '14:00', '18:00']
+        }))
+        : [{ name: 'Main Ground', slotTimes: ['09:00', '14:00'] }];
 
     // Schedule knockout matches using V2 advanced scheduler
     const scheduleOptions = {
@@ -1521,11 +1841,26 @@ router.put('/tournaments/:id/matches/:matchId/result', verifyFirebaseToken, requ
       }
     }
 
-    // If all matches are completed and it's not league+playoff group stage, mark tournament completed
+    // If all matches are completed, check if tournament should be marked complete
+    // For formats with multiple stages, only mark complete if knockout matches exist and are done
     const totalMatches = await Match.countDocuments({ tournament: t._id });
     const completedMatches = await Match.countDocuments({ tournament: t._id, status: 'Completed' });
-    if (totalMatches > 0 && completedMatches === totalMatches && t.format !== 'league+playoff') {
-      t.status = 'completed';
+    const knockoutMatches = await Match.countDocuments({ tournament: t._id, stage: 'Knockout' });
+
+    const isMultiStageFormat = ['league+playoff', 'groups+knockouts', 'super-league', 'groups+super8'].includes(t.format);
+
+    if (totalMatches > 0 && completedMatches === totalMatches) {
+      // For multi-stage formats, only complete if knockout matches exist
+      // (meaning the knockout stage has been generated and completed)
+      if (isMultiStageFormat) {
+        if (knockoutMatches > 0) {
+          t.status = 'completed';
+        }
+        // If no knockout matches yet, don't mark as completed - waiting for knockout seeding
+      } else {
+        // Simple formats (league, knockout, round-robin) - complete when all done
+        t.status = 'completed';
+      }
     }
 
     await t.save();
@@ -3123,6 +3458,7 @@ router.get('/coaches', verifyFirebaseToken, requireRole('admin'), async (req, re
       } : null,
       joinedClubAt: coach.joinedClubAt,
       isActive: coach.isActive,
+      verificationStatus: coach.verificationStatus || 'pending',
       profileCompleted: coach.profileCompleted,
       hasProfilePhoto: !!(coach.profilePhoto && coach.profilePhoto.data),
       statistics: coach.statistics,
@@ -3151,8 +3487,14 @@ router.get('/coaches', verifyFirebaseToken, requireRole('admin'), async (req, re
 });
 
 // Get coach details for admin
-router.get('/coaches/:id', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
+router.get('/coaches/:id', verifyFirebaseToken, requireRole('admin'), async (req, res, next) => {
   try {
+    // Skip if id is not a valid ObjectId (let other routes handle it)
+    const mongoose = await import('mongoose');
+    if (!mongoose.default.Types.ObjectId.isValid(req.params.id)) {
+      return next('route');
+    }
+
     const coach = await Coach.findById(req.params.id)
       .populate('user', 'name email')
       .populate('currentClub', 'name clubName district city managerName')
@@ -3294,13 +3636,19 @@ router.put('/coaches/:id/status', verifyFirebaseToken, requireRole('admin'), asy
 // Get coach statistics summary for admin dashboard
 router.get('/coaches/stats', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
   try {
-    const [total, active, inactive, withClubs, withoutClubs, pendingApplications] = await Promise.all([
+    const [total, active, inactive, withClubs, withoutClubs, pendingApplications, pendingVerifications] = await Promise.all([
       Coach.countDocuments({}),
       Coach.countDocuments({ isActive: true }),
       Coach.countDocuments({ isActive: false }),
       Coach.countDocuments({ currentClub: { $exists: true, $ne: null } }),
       Coach.countDocuments({ $or: [{ currentClub: { $exists: false } }, { currentClub: null }] }),
-      Coach.countDocuments({ 'applications.status': 'pending' })
+      Coach.countDocuments({ 'applications.status': 'pending' }),
+      Coach.countDocuments({
+        $or: [
+          { verificationStatus: 'pending' },
+          { verificationStatus: { $exists: false } }
+        ]
+      })
     ]);
 
     // Recent registrations (last 30 days)
@@ -3318,11 +3666,197 @@ router.get('/coaches/stats', verifyFirebaseToken, requireRole('admin'), async (r
         withClubs,
         withoutClubs,
         pendingApplications,
+        pendingVerifications,
         recentRegistrations
       }
     });
   } catch (error) {
     console.error('Error fetching coach stats:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// ==================== COACH VERIFICATION ENDPOINTS ====================
+
+// Get coaches pending verification
+router.get('/coaches/pending-verification', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Include coaches with pending status OR no status set (migration support)
+    const filter = {
+      $or: [
+        { verificationStatus: 'pending' },
+        { verificationStatus: { $exists: false } }
+      ]
+    };
+
+    const [coaches, total] = await Promise.all([
+      Coach.find(filter)
+        .populate('user', 'name email')
+        .select('-profilePhoto.data -documents.data')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Coach.countDocuments(filter)
+    ]);
+
+    console.log('[DEBUG] Pending verification query:', JSON.stringify(filter));
+    console.log('[DEBUG] Found coaches count:', total);
+    console.log('[DEBUG] Coaches found:', coaches.length, coaches.map(c => ({ fullName: c.fullName, verificationStatus: c.verificationStatus })));
+
+    // Transform data for frontend
+    const transformedCoaches = coaches.map(coach => ({
+      id: coach._id,
+      fullName: coach.fullName,
+      email: coach.email,
+      phone: coach.phone,
+      age: coach.age,
+      gender: coach.gender,
+      address: coach.address,
+      coachingExperience: coach.coachingExperience,
+      specializations: coach.specializations,
+      coachingPhilosophy: coach.coachingPhilosophy,
+      methodology: coach.methodology,
+      certifications: coach.certifications || [],
+      coachingHistory: coach.coachingHistory || [],
+      documents: (coach.documents || []).map(doc => ({
+        id: doc._id,
+        name: doc.name,
+        type: doc.type,
+        contentType: doc.contentType,
+        uploadedAt: doc.uploadedAt
+      })),
+      hasProfilePhoto: !!(coach.profilePhoto && coach.profilePhoto.data),
+      verificationStatus: coach.verificationStatus,
+      profileCompleted: coach.profileCompleted,
+      registeredAt: coach.createdAt,
+      user: {
+        name: coach.user?.name,
+        email: coach.user?.email
+      }
+    }));
+
+    res.json({
+      coaches: transformedCoaches,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / parseInt(limit))
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching pending verification coaches:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Verify (approve) a coach
+router.put('/coaches/:id/verify', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
+  try {
+    const { notes } = req.body;
+
+    const coach = await Coach.findById(req.params.id);
+    if (!coach) {
+      return res.status(404).json({ message: 'Coach not found' });
+    }
+
+    if (coach.verificationStatus === 'verified') {
+      return res.status(400).json({ message: 'Coach is already verified' });
+    }
+
+    coach.verificationStatus = 'verified';
+    coach.verifiedAt = new Date();
+    coach.verifiedBy = req.user._id;
+    coach.verificationNotes = notes || '';
+    coach.rejectionReason = null; // Clear any previous rejection reason
+
+    await coach.save();
+
+    console.log(`Admin ${req.user.email} verified coach ${coach.fullName} (ID: ${coach._id})`);
+
+    res.json({
+      message: 'Coach verified successfully',
+      coach: {
+        id: coach._id,
+        fullName: coach.fullName,
+        verificationStatus: coach.verificationStatus,
+        verifiedAt: coach.verifiedAt
+      }
+    });
+  } catch (error) {
+    console.error('Error verifying coach:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Reject coach verification
+router.put('/coaches/:id/reject-verification', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
+  try {
+    const { reason, notes } = req.body;
+
+    if (!reason || reason.trim().length === 0) {
+      return res.status(400).json({ message: 'Rejection reason is required' });
+    }
+
+    const coach = await Coach.findById(req.params.id);
+    if (!coach) {
+      return res.status(404).json({ message: 'Coach not found' });
+    }
+
+    if (coach.verificationStatus === 'verified') {
+      return res.status(400).json({ message: 'Cannot reject an already verified coach' });
+    }
+
+    coach.verificationStatus = 'rejected';
+    coach.rejectionReason = reason.trim();
+    coach.verificationNotes = notes || '';
+    coach.verifiedAt = null;
+    coach.verifiedBy = req.user._id;
+
+    await coach.save();
+
+    console.log(`Admin ${req.user.email} rejected coach ${coach.fullName} (ID: ${coach._id}). Reason: ${reason}`);
+
+    res.json({
+      message: 'Coach verification rejected',
+      coach: {
+        id: coach._id,
+        fullName: coach.fullName,
+        verificationStatus: coach.verificationStatus,
+        rejectionReason: coach.rejectionReason
+      }
+    });
+  } catch (error) {
+    console.error('Error rejecting coach verification:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Get coach document for admin view
+router.get('/coaches/:coachId/document/:documentId', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
+  try {
+    const coach = await Coach.findById(req.params.coachId);
+    if (!coach) {
+      return res.status(404).json({ message: 'Coach not found' });
+    }
+
+    const document = coach.documents.id(req.params.documentId);
+    if (!document) {
+      return res.status(404).json({ message: 'Document not found' });
+    }
+
+    res.set({
+      'Content-Type': document.contentType,
+      'Content-Disposition': `inline; filename="${document.name}"`,
+      'Cache-Control': 'public, max-age=3600'
+    });
+
+    res.send(document.data);
+  } catch (error) {
+    console.error('Error fetching coach document:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

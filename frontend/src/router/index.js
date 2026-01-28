@@ -71,6 +71,7 @@ import AdminPanel from '../pages/AdminPanel.vue';
 import AdminOverview from '../pages/AdminOverview.vue';
 import AdminPlayerManagement from '../components/admin/AdminPlayerManagement.vue';
 import AdminCoachManagement from '../components/admin/AdminCoachManagement.vue';
+import AdminAnalytics from '../components/admin/AdminAnalytics.vue';
 
 // Sponsor imports
 import SponsorRegistration from '../pages/SponsorRegistration.vue';
@@ -125,7 +126,9 @@ const routes = [
       { path: 'clubs', name: 'admin-clubs', component: AdminDashboard },
       { path: 'players', name: 'admin-players', component: AdminPlayerManagement },
       { path: 'coaches', name: 'admin-coaches', component: AdminCoachManagement },
-      { path: 'sponsors', name: 'admin-sponsors', component: AdminSponsorManagement }
+      { path: 'sponsors', name: 'admin-sponsors', component: AdminSponsorManagement },
+      { path: 'analytics', name: 'admin-analytics', component: AdminAnalytics },
+      { path: 'tickets', name: 'admin-tickets', component: () => import('../components/admin/AdminTicketManagement.vue') }
     ]
   },
   // Backward-compatible alias redirect (if any code still links to old path names)
@@ -215,7 +218,11 @@ const routes = [
   // Agreement routes
   { path: '/agreement/create/:dealId', name: 'agreement-create', component: AgreementCreate, meta: { requiresAuth: true, requiresClubManager: true } },
   { path: '/agreement/sign/:agreementId', name: 'agreement-sign', component: AgreementSign, meta: { requiresAuth: true } },
-  { path: '/agreement/:id', name: 'agreement-details', component: AgreementDetails, meta: { requiresAuth: true } }
+  { path: '/agreement/:id', name: 'agreement-details', component: AgreementDetails, meta: { requiresAuth: true } },
+
+  // Ticket booking routes
+  { path: '/tickets', name: 'ticket-booking', component: () => import('../pages/TicketBooking.vue') },
+  { path: '/my-tickets', name: 'my-tickets', component: () => import('../pages/MyTickets.vue'), meta: { requiresAuth: true } }
 ];
 
 const router = createRouter({ history: createWebHistory(), routes });

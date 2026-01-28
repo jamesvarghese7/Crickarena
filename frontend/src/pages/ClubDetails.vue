@@ -720,6 +720,89 @@
         </div>
       </div>
     </Transition>
+
+    <!-- Application Modal (for both Player and Coach) -->
+    <Transition name="fade">
+      <div 
+        v-if="showApplicationModal" 
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        @click.self="closeApplicationModal"
+      >
+        <div class="relative glass-card rounded-3xl shadow-2xl max-w-lg w-full border border-white/20 overflow-hidden">
+          <!-- Modal Header -->
+          <div class="relative bg-gradient-to-br from-emerald-600 via-emerald-500 to-teal-500 px-6 py-6">
+            <!-- Close Button -->
+            <button 
+              @click="closeApplicationModal"
+              class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+            >
+              <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+              </div>
+              <div class="text-white">
+                <h2 class="text-xl font-bold">{{ applicationModalType === 'coach' ? 'Apply to Coach' : 'Apply to Join' }}</h2>
+                <p class="text-emerald-100 text-sm">{{ club?.name || club?.clubName }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="p-6 space-y-5">
+            <div>
+              <label class="block text-sm font-semibold text-gray-300 mb-2">
+                Application Message <span class="text-gray-500 font-normal">(optional)</span>
+              </label>
+              <textarea 
+                v-model="applicationMessage"
+                rows="4"
+                :placeholder="applicationModalType === 'coach' ? 'Tell the club why you\'d be a great coach for their team...' : 'Tell the club why you\'d like to join their team...'"
+                class="w-full px-4 py-3 bg-slate-800/50 border border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all resize-none"
+              ></textarea>
+            </div>
+
+            <!-- Info Box -->
+            <div class="flex items-start gap-3 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
+              <svg class="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <p class="text-sm text-emerald-300">
+                {{ applicationModalType === 'coach' 
+                  ? 'Your coaching profile and experience will be shared with the club manager for review.' 
+                  : 'Your player profile and stats will be shared with the club manager for review.' }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="px-6 py-5 bg-slate-900/50 border-t border-white/10 flex gap-3">
+            <button 
+              @click="closeApplicationModal"
+              class="flex-1 px-4 py-3 rounded-xl bg-white/10 text-gray-300 font-semibold hover:bg-white/20 transition-colors border border-white/10"
+            >
+              Cancel
+            </button>
+            <button 
+              @click="submitApplication"
+              :disabled="isSubmittingApplication"
+              class="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-semibold hover:from-emerald-700 hover:to-emerald-600 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              <svg v-if="isSubmittingApplication" class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+              </svg>
+              <span>{{ isSubmittingApplication ? 'Submitting...' : 'Submit Application' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -755,6 +838,12 @@ const loadingCoaches = ref(false);
 // Coach profile modal
 const showCoachModal = ref(false);
 const selectedCoach = ref(null);
+
+// Application modal (for both player and coach)
+const showApplicationModal = ref(false);
+const applicationModalType = ref(''); // 'player' or 'coach'
+const applicationMessage = ref('');
+const isSubmittingApplication = ref(false);
 
 // Sponsors
 const clubSponsors = ref([]);
@@ -944,26 +1033,10 @@ async function applyToClub() {
     return;
   }
 
-  const message = prompt('Please enter a message with your application (optional):');
-  if (message === null) return; // User cancelled
-
-  isApplying.value = true;
-  try {
-    const clubId = club.value.id || club.value._id;
-    await api.post(`/players/apply-to-club/${clubId}`, {
-      message: message.trim() || 'I would like to join your club.'
-    });
-    
-    alert('Application submitted successfully! The club manager will review your application.');
-    // Refresh player status after successful application
-    await loadPlayerStatus();
-  } catch (error) {
-    console.error('Error applying to club:', error);
-    const errorMessage = error.response?.data?.message || 'Failed to submit application. Please try again.';
-    alert(errorMessage);
-  } finally {
-    isApplying.value = false;
-  }
+  // Show the application modal
+  applicationModalType.value = 'player';
+  applicationMessage.value = '';
+  showApplicationModal.value = true;
 }
 
 // Handle coach apply button click
@@ -1007,25 +1080,51 @@ async function applyToCoachClub() {
     return;
   }
 
-  const message = prompt('Please enter a message with your coaching application (optional):');
-  if (message === null) return; // User cancelled
+  // Show the application modal
+  applicationModalType.value = 'coach';
+  applicationMessage.value = '';
+  showApplicationModal.value = true;
+}
 
-  isCoachApplying.value = true;
+// Close application modal
+function closeApplicationModal() {
+  showApplicationModal.value = false;
+  applicationMessage.value = '';
+  applicationModalType.value = '';
+}
+
+// Submit application (from modal)
+async function submitApplication() {
+  isSubmittingApplication.value = true;
+  
   try {
     const clubId = club.value.id || club.value._id;
-    await api.post(`/coaches/apply-to-club/${clubId}`, {
-      message: message.trim() || 'I would like to coach for your club.'
-    });
+    const message = applicationMessage.value.trim();
     
-    alert('Coaching application submitted successfully! The club manager will review your application.');
-    // Refresh coach status after successful application
-    await loadCoachStatus();
+    if (applicationModalType.value === 'coach') {
+      await api.post(`/coaches/apply-to-club/${clubId}`, {
+        message: message || 'I would like to coach for your club.'
+      });
+      // Refresh coach status after successful application
+      await loadCoachStatus();
+    } else {
+      await api.post(`/players/apply-to-club/${clubId}`, {
+        message: message || 'I would like to join your club.'
+      });
+      // Refresh player status after successful application
+      await loadPlayerStatus();
+    }
+    
+    // Close modal and show success message
+    closeApplicationModal();
+    alert('Application submitted successfully! The club manager will review your application.');
+    
   } catch (error) {
-    console.error('Error applying to coach club:', error);
-    const errorMessage = error.response?.data?.message || 'Failed to submit coaching application. Please try again.';
+    console.error('Error submitting application:', error);
+    const errorMessage = error.response?.data?.message || 'Failed to submit application. Please try again.';
     alert(errorMessage);
   } finally {
-    isCoachApplying.value = false;
+    isSubmittingApplication.value = false;
   }
 }
 

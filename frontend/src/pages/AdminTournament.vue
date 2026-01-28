@@ -82,7 +82,7 @@
                 <h3 class="text-xl font-bold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors">
                   {{ t.name }}
                 </h3>
-                <div class="flex items-center gap-2 mb-3">
+                <div class="flex items-center gap-2 mb-3 flex-wrap">
                   <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold"
                         :class="statusClass(t.status)">
                     <span class="w-2 h-2 rounded-full mr-2" :class="statusDotClass(t.status)"></span>
@@ -93,6 +93,18 @@
                   </span>
                   <span v-if="t.matchFormat" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
                     {{ t.matchFormat }}
+                  </span>
+                  <!-- Sponsorship Phase Badge -->
+                  <span v-if="t.sponsorshipPhase === 'accepting'" 
+                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.04c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.73-2.77-.01-2.2-1.9-2.96-3.66-3.42z"/>
+                    </svg>
+                    Accepting Sponsors
+                  </span>
+                  <span v-if="t.visibility === 'sponsors-only'" 
+                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                    Sponsors Only
                   </span>
                 </div>
               </div>
@@ -161,6 +173,16 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
                 Teams
+              </button>
+              
+              <!-- Manage Sponsors Button -->
+              <button v-if="t.sponsorshipPhase === 'accepting'" 
+                      @click="openSponsorshipModal(t)" 
+                      class="px-4 py-2 bg-amber-50 text-amber-600 rounded-xl text-sm font-medium hover:bg-amber-100 transition-colors">
+                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Sponsors
               </button>
               
               <!-- Generate Fixtures Button -->
@@ -239,7 +261,7 @@
                     </label>
                     <div class="relative">
                       <input v-model="form.name" type="text" required
-                             class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200"
+                             class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200"
                              placeholder="Enter tournament name"/>
                       <svg class="w-5 h-5 text-gray-400 absolute right-3 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10m0 0l1 1v16a2 2 0 01-2 2H6a2 2 0 01-2-2V5l1-1z"/>
@@ -250,7 +272,7 @@
                   <div class="space-y-2">
                     <label class="block text-sm font-semibold text-gray-700">Tournament Format</label>
                     <select v-model="form.format"
-                            class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200 appearance-none">
+                            class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200 appearance-none">
                       <option value="knockout">🏆 Knockout</option>
                       <option value="league">📊 League</option>
                       <option value="round-robin">🔄 Round-robin</option>
@@ -262,7 +284,7 @@
                   <div class="space-y-2">
                     <label class="block text-sm font-semibold text-gray-700">District</label>
                     <select v-model="form.district"
-                            class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200 appearance-none">
+                            class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200 appearance-none">
                       <option v-for="d in districts" :key="d" :value="d">📍 {{ d }}</option>
                     </select>
                   </div>
@@ -270,7 +292,7 @@
                   <div class="space-y-2">
                     <label class="block text-sm font-semibold text-gray-700">Max Teams</label>
                     <input v-model.number="form.maxTeams" type="number" min="2" max="128"
-                           class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200"
+                           class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200"
                            placeholder="16"/>
                   </div>
                   
@@ -278,7 +300,7 @@
                   <div class="space-y-2">
                     <label class="block text-sm font-semibold text-gray-700">Match Format</label>
                     <select v-model="form.matchFormat"
-                            class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200 appearance-none">
+                            class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200 appearance-none">
                       <option value="T20">T20 (20 overs)</option>
                       <option value="ODI">ODI (50 overs)</option>
                       <option value="Test">Test (90 overs)</option>
@@ -291,7 +313,7 @@
                   <div class="space-y-2">
                     <label class="block text-sm font-semibold text-gray-700">Overs Limit</label>
                     <input v-model.number="form.oversLimit" type="number" min="1" max="100"
-                           class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200"
+                           class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200"
                            :placeholder="getOversPlaceholder()"/>
                   </div>
                 </div>
@@ -312,26 +334,26 @@
                   <div class="space-y-2">
                     <label class="block text-sm font-semibold text-gray-700">Start Date <span class="text-red-500">*</span></label>
                     <input v-model="form.startDate" type="date" :min="today" required
-                           class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200"/>
+                           class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200"/>
                   </div>
 
                   <div class="space-y-2">
                     <label class="block text-sm font-semibold text-gray-700">End Date <span class="text-red-500">*</span></label>
                     <input v-model="form.endDate" type="date" :min="form.startDate || today" required
-                           class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200"/>
+                           class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200"/>
                   </div>
 
                   <div class="space-y-2">
                     <label class="block text-sm font-semibold text-gray-700">Registration Deadline</label>
                     <input v-model="form.registrationDeadline" type="date" :min="today"
-                           class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200"/>
+                           class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200"/>
                   </div>
 
                   <div class="space-y-2">
                     <label class="block text-sm font-semibold text-gray-700">Entry Fee (INR)</label>
                     <div class="relative">
                       <input v-model.number="form.entryFee" type="number" min="0" step="1"
-                             class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 pl-12 focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200"
+                             class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 pl-12 text-gray-900 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200"
                              placeholder="0"/>
                       <span class="absolute left-4 top-3.5 text-gray-500 font-medium">₹</span>
                     </div>
@@ -342,7 +364,7 @@
                     <label class="block text-sm font-semibold text-gray-700">Prize Pool (INR)</label>
                     <div class="relative">
                       <input v-model.number="form.prizePool" type="number" min="0" step="1"
-                             class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 pl-12 focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200"
+                             class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 pl-12 text-gray-900 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200"
                              placeholder="0"/>
                       <span class="absolute left-4 top-3.5 text-gray-500 font-medium">₹</span>
                     </div>
@@ -352,16 +374,50 @@
                   <div class="space-y-2">
                     <label class="block text-sm font-semibold text-gray-700">Minimum Rest Days</label>
                     <input v-model.number="form.restDaysMin" type="number" min="0" max="7"
-                           class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200"
+                           class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200"
                            placeholder="1"/>
                   </div>
                   
-                  <!-- Sponsor Information Field -->
-                  <div class="space-y-2 md:col-span-2">
-                    <label class="block text-sm font-semibold text-gray-700">Sponsor Information</label>
-                    <input v-model="form.sponsorInfo" type="text"
-                           class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200"
-                           placeholder="Enter sponsor details"/>
+                  <!-- Sponsorship Configuration Section -->
+                  <div class="space-y-4 md:col-span-2 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                          <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                          </svg>
+                        </div>
+                        <div>
+                          <label class="block text-sm font-semibold text-gray-700">Enable Sponsorship Phase</label>
+                          <p class="text-xs text-gray-500">Tournament will be visible to sponsors first before public registration</p>
+                        </div>
+                      </div>
+                      <label class="relative inline-flex items-center cursor-pointer">
+                        <input v-model="form.enableSponsorship" type="checkbox" class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                      </label>
+                    </div>
+                    
+                    <!-- Sponsorship Deadline (shown when enabled) -->
+                    <div v-if="form.enableSponsorship" class="mt-4 pt-4 border-t border-amber-200 space-y-4">
+                      <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-gray-700">Sponsorship Application Deadline</label>
+                        <input v-model="form.sponsorshipDeadline" type="date" :min="today" :max="form.startDate || undefined"
+                               class="w-full border-2 border-amber-200 rounded-xl px-4 py-3 text-gray-900 bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-200 transition-all duration-200"/>
+                        <p class="text-xs text-gray-500">Sponsors can apply until this date. After closing sponsorship or this deadline, tournament opens for team registration.</p>
+                      </div>
+                      
+                      <div class="bg-amber-100/50 rounded-lg p-3 text-sm text-amber-800">
+                        <div class="flex items-start gap-2">
+                          <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                          </svg>
+                          <div>
+                            <strong>Workflow:</strong> Tournament will be visible to sponsors only. Title, Main, and Associate sponsorship slots will be auto-created. Once you close sponsorship or approve sponsors, the tournament becomes public for team registration.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -382,21 +438,21 @@
                   <div class="space-y-2">
                     <label class="block text-sm font-semibold text-gray-700">Grounds/Venues</label>
                     <textarea v-model="venuesText" rows="2"
-                              class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200 resize-none"
+                              class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200 resize-none"
                               placeholder="Ground A, Ground B, Ground C (comma separated)"></textarea>
                   </div>
 
                   <div class="space-y-2">
                     <label class="block text-sm font-semibold text-gray-700">Tournament Description</label>
                     <textarea v-model="form.description" rows="3"
-                              class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200 resize-none"
+                              class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200 resize-none"
                               placeholder="Provide a brief overview of the tournament, its significance, and what participants can expect..."></textarea>
                   </div>
 
                   <div class="space-y-2">
                     <label class="block text-sm font-semibold text-gray-700">Rules & Regulations <span class="text-red-500">*</span></label>
                     <textarea v-model="form.rules" required rows="4"
-                              class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200 resize-none"
+                              class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200 resize-none"
                               placeholder="Key rules including eligibility criteria, overs per match, player limits, dress code, fees, conduct rules, etc."></textarea>
                   </div>
                 </div>
@@ -434,7 +490,7 @@
                         <input 
                           v-model="slot.time" 
                           type="time" 
-                          class="flex-1 border-2 border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"
+                          class="flex-1 border-2 border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"
                         />
                         <button 
                           v-if="timeSlots.length > 1"
@@ -480,7 +536,7 @@
                           type="number" 
                           min="1" 
                           max="10"
-                          class="w-24 border-2 border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"
+                          class="w-24 border-2 border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"
                         />
                         <span class="text-sm text-gray-600">matches can run simultaneously</span>
                       </div>
@@ -664,6 +720,116 @@
         </div>
       </div>
 
+      <!-- Sponsorship Applications Modal -->
+      <div v-if="openSponsorshipsModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-white w-full max-w-3xl max-h-[80vh] overflow-hidden rounded-2xl shadow-2xl flex flex-col">
+          <!-- Header -->
+          <div class="bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </div>
+                <div class="text-white">
+                  <h3 class="text-lg font-bold">Sponsor Applications</h3>
+                  <p class="text-amber-100 text-sm">{{ currentSponsorTournament?.name }}</p>
+                </div>
+              </div>
+              <button @click="closeSponsorshipModal" class="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div class="flex-1 overflow-y-auto p-6">
+            <!-- Loading state -->
+            <div v-if="sponsorAppsLoading" class="flex items-center justify-center py-12">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
+            </div>
+            
+            <!-- Empty state -->
+            <div v-else-if="sponsorApplications.length === 0" class="text-center py-12">
+              <div class="w-16 h-16 mx-auto mb-4 bg-amber-100 rounded-full flex items-center justify-center">
+                <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                </svg>
+              </div>
+              <h4 class="text-lg font-semibold text-gray-900 mb-2">No applications yet</h4>
+              <p class="text-gray-500">Sponsors can apply through the marketplace</p>
+            </div>
+
+            <!-- Applications list -->
+            <div v-else class="space-y-4">
+              <div v-for="app in sponsorApplications" :key="app._id" 
+                   class="border rounded-xl p-4 hover:shadow-md transition-shadow"
+                   :class="app.status === 'approved' ? 'bg-green-50 border-green-200' : app.status === 'rejected' ? 'bg-red-50 border-red-200' : 'bg-white border-gray-200'">
+                <div class="flex items-start gap-4">
+                  <!-- Sponsor Logo -->
+                  <div class="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    <img v-if="app.sponsor?.logoUrl" :src="app.sponsor.logoUrl" class="w-full h-full object-cover"/>
+                    <span v-else class="text-amber-600 font-bold text-lg">{{ app.sponsor?.companyName?.charAt(0) }}</span>
+                  </div>
+                  
+                  <!-- Info -->
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-1">
+                      <h5 class="font-semibold text-gray-900">{{ app.sponsor?.companyName || 'Unknown Sponsor' }}</h5>
+                      <span class="px-2 py-0.5 text-xs rounded-full font-medium"
+                            :class="app.opportunity?.tier === 'title' ? 'bg-amber-100 text-amber-700' : 
+                                    app.opportunity?.tier === 'main' ? 'bg-blue-100 text-blue-700' : 
+                                    'bg-gray-100 text-gray-700'">
+                        {{ app.opportunity?.tier || 'Sponsor' }}
+                      </span>
+                      <span class="px-2 py-0.5 text-xs rounded-full font-medium"
+                            :class="app.status === 'approved' ? 'bg-green-100 text-green-700' : 
+                                    app.status === 'rejected' ? 'bg-red-100 text-red-700' : 
+                                    'bg-yellow-100 text-yellow-700'">
+                        {{ app.status }}
+                      </span>
+                    </div>
+                    <p class="text-sm text-gray-500">{{ app.sponsor?.industry }} • ₹{{ app.proposedAmount?.toLocaleString() }}</p>
+                    <p v-if="app.applicationMessage" class="text-sm text-gray-600 mt-2 line-clamp-2">{{ app.applicationMessage }}</p>
+                  </div>
+
+                  <!-- Actions -->
+                  <div v-if="app.status === 'applied'" class="flex gap-2">
+                    <button @click="approveSponsor(app)" 
+                            class="px-3 py-1.5 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition-colors">
+                      Approve
+                    </button>
+                    <button @click="rejectSponsor(app)" 
+                            class="px-3 py-1.5 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-colors">
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="px-6 py-4 bg-gray-50 border-t flex items-center justify-between">
+            <button v-if="currentSponsorTournament?.sponsorshipPhase === 'accepting'" 
+                    @click="closeAndOpenRegistration" 
+                    class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Close Sponsorship & Open Registration
+            </button>
+            <div v-else></div>
+            <button @click="closeSponsorshipModal" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- Fixture Wizard Component -->
@@ -697,6 +863,12 @@ const wizardTournament = ref(null);
 const wizardTeams = ref([]);
 const currentTournament = ref(null);
 
+// Sponsorship modal state
+const openSponsorshipsModal = ref(false);
+const sponsorApplications = ref([]);
+const sponsorAppsLoading = ref(false);
+const currentSponsorTournament = ref(null);
+
 const current = ref(null); // kept for creation workflow only
 
 const errorMsg = ref('');
@@ -718,7 +890,8 @@ const districts = [
 
 const form = reactive({
   name: '', format: 'league', district: districts[0], maxTeams: 16,
-  entryFee: 0, prizePool: 0, sponsorInfo: '',
+  entryFee: 0, prizePool: 0,
+  enableSponsorship: false, sponsorshipDeadline: '',
   startDate: '', endDate: '', registrationDeadline: '', description: '', rules: '', bannerUrl: '', venues: [],
   matchFormat: 'T20', oversLimit: 20, restDaysMin: 1,
   allowParallelMatches: false,
@@ -841,6 +1014,72 @@ async function seedKnockout(t){
   }
 }
 
+// ===== Sponsorship Modal Functions =====
+async function openSponsorshipModal(tournament) {
+  currentSponsorTournament.value = tournament;
+  openSponsorshipsModal.value = true;
+  sponsorAppsLoading.value = true;
+  
+  try {
+    const { data } = await api.get(`/admin/tournaments/${tournament._id}/sponsorship-applications`);
+    sponsorApplications.value = data.applications || [];
+  } catch (e) {
+    console.error('Failed to fetch sponsorship applications:', e);
+    sponsorApplications.value = [];
+  } finally {
+    sponsorAppsLoading.value = false;
+  }
+}
+
+function closeSponsorshipModal() {
+  openSponsorshipsModal.value = false;
+  currentSponsorTournament.value = null;
+  sponsorApplications.value = [];
+}
+
+async function approveSponsor(application) {
+  try {
+    await api.put(`/admin/sponsorship-deals/${application._id}/approve`);
+    // Update local state
+    const app = sponsorApplications.value.find(a => a._id === application._id);
+    if (app) app.status = 'approved';
+  } catch (e) {
+    alert(e?.response?.data?.message || 'Failed to approve sponsor');
+  }
+}
+
+async function rejectSponsor(application) {
+  try {
+    await api.put(`/admin/sponsorship-deals/${application._id}/reject`);
+    // Update local state
+    const app = sponsorApplications.value.find(a => a._id === application._id);
+    if (app) app.status = 'rejected';
+  } catch (e) {
+    alert(e?.response?.data?.message || 'Failed to reject sponsor');
+  }
+}
+
+async function closeAndOpenRegistration() {
+  if (!currentSponsorTournament.value) return;
+  
+  const confirmed = await window.$confirm?.({
+    title: 'Close Sponsorship Phase',
+    message: 'This will close sponsorship applications and open the tournament for team registration. Continue?',
+    confirmText: 'Confirm',
+    type: 'warning'
+  }) ?? confirm('Close sponsorship and open registration?');
+  
+  if (!confirmed) return;
+  
+  try {
+    await api.put(`/admin/tournaments/${currentSponsorTournament.value._id}/close-sponsorship`);
+    closeSponsorshipModal();
+    await fetchTournaments();
+  } catch (e) {
+    alert(e?.response?.data?.message || 'Failed to close sponsorship');
+  }
+}
+
 async function deleteTournament(tournament) {
   // Use the global confirm dialog instead of native confirm
   const confirmed = await window.$confirm({
@@ -950,7 +1189,8 @@ async function fetchTournaments(){
 function closeDialog(){
   openCreate.value = false; editing.value = false; current.value = null; errorMsg.value = '';
   Object.assign(form, { name: '', format: 'league', district: districts[0], maxTeams: 16,
-    entryFee: 0, prizePool: 0, sponsorInfo: '',
+    entryFee: 0, prizePool: 0,
+    enableSponsorship: false, sponsorshipDeadline: '',
     startDate: '', endDate: '', registrationDeadline: '', description: '', rules: '', bannerUrl: '', venues: [],
     matchFormat: 'T20', oversLimit: 20, restDaysMin: 1,
     allowParallelMatches: false,
@@ -1012,6 +1252,23 @@ async function saveTournament(){
     }
     const regDeadline = new Date(form.registrationDeadline);
     if (regDeadline < today) { errorMsg.value = 'Registration deadline cannot be in the past'; return; }
+  }
+
+  // Validate sponsorship deadline if sponsorship is enabled
+  if (form.enableSponsorship && form.sponsorshipDeadline) {
+    if (!isValidDateStr(form.sponsorshipDeadline)) {
+      errorMsg.value = 'Sponsorship deadline must be a valid date (YYYY-MM-DD)';
+      return;
+    }
+    const sponsorDeadline = new Date(form.sponsorshipDeadline);
+    if (sponsorDeadline < today) { 
+      errorMsg.value = 'Sponsorship deadline cannot be in the past'; 
+      return; 
+    }
+    if (sponsorDeadline > startDate) {
+      errorMsg.value = 'Sponsorship deadline must be before tournament start date';
+      return;
+    }
   }
 
   const payload = { 
