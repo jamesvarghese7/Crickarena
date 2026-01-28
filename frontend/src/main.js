@@ -3,6 +3,7 @@ import { createPinia } from 'pinia';
 import App from './App.vue';
 import router from './router/index.js';
 import './assets/main.css';
+import './assets/admin-theme.css';
 
 // Create app and pinia explicitly so we can init auth store before mount
 const app = createApp(App);
