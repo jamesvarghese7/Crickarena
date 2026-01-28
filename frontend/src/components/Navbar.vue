@@ -43,6 +43,11 @@
               <a :href="href" :class="navLinkClass('/tournaments')">Tournaments</a>
             </RouterLink>
           </li>
+          <li>
+            <RouterLink :to="'/tickets'" v-slot="{ href }">
+              <a :href="href" :class="navLinkClass('/tickets')">🎟️ Tickets</a>
+            </RouterLink>
+          </li>
           <template v-if="auth.user">
             <li>
               <RouterLink :to="'/crickhub'" v-slot="{ href }">
@@ -243,6 +248,7 @@
             <li><RouterLink @click="openMobile=false" to="/" class="mobileLink">Home</RouterLink></li>
             <li><RouterLink @click="openMobile=false" to="/clubs" class="mobileLink">Clubs</RouterLink></li>
             <li><RouterLink @click="openMobile=false" to="/tournaments" class="mobileLink">Tournaments</RouterLink></li>
+            <li><RouterLink @click="openMobile=false" to="/tickets" class="mobileLink">🎟️ Tickets</RouterLink></li>
             <template v-if="auth.user">
               <li><RouterLink @click="openMobile=false" to="/crickhub" class="mobileLink">CrickHub</RouterLink></li>
               <li v-if="isClubManager"><RouterLink @click="openMobile=false" to="/club-manager" class="mobileLink">Club Manager</RouterLink></li>

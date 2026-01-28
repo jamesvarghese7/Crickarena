@@ -196,6 +196,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter, RouterLink } from 'vue-router';
 import { useAuthStore } from '../store/auth';
+import axios from 'axios';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
@@ -292,31 +293,18 @@ async function initiatePayment() {
   processing.value = true;
   try {
     // Create booking order
-    const res = await fetch(`${API_BASE}/tickets/book`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(auth.user ? { Authorization: `Bearer ${localStorage.getItem('firebaseToken')}` } : {})
-      },
-      body: JSON.stringify({
-        matchId: bookingData.value.matchId,
-        section: bookingData.value.section,
-        quantity: bookingData.value.quantity,
-        user: {
-          name: bookingData.value.name,
-          email: bookingData.value.email,
-          phone: bookingData.value.phone
-        }
-      })
+    const res = await axios.post(`${API_BASE}/tickets/book`, {
+      matchId: bookingData.value.matchId,
+      section: bookingData.value.section,
+      quantity: bookingData.value.quantity,
+      user: {
+        name: bookingData.value.name,
+        email: bookingData.value.email,
+        phone: bookingData.value.phone
+      }
     });
 
-    if (!res.ok) {
-      const err = await res.json();
-      alert(err.message || 'Failed to create booking');
-      return;
-    }
-
-    const data = await res.json();
+    const data = res.data;
 
     // Initialize Razorpay
     const options = {
@@ -351,32 +339,20 @@ async function initiatePayment() {
 
 async function verifyPayment(response, bookingCode) {
   try {
-    const res = await fetch(`${API_BASE}/tickets/verify`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(auth.user ? { Authorization: `Bearer ${localStorage.getItem('firebaseToken')}` } : {})
-      },
-      body: JSON.stringify({
-        bookingCode,
-        razorpay_order_id: response.razorpay_order_id,
-        razorpay_payment_id: response.razorpay_payment_id,
-        razorpay_signature: response.razorpay_signature
-      })
+    const res = await axios.post(`${API_BASE}/tickets/verify`, {
+      bookingCode,
+      razorpay_order_id: response.razorpay_order_id,
+      razorpay_payment_id: response.razorpay_payment_id,
+      razorpay_signature: response.razorpay_signature
     });
 
-    if (res.ok) {
-      const data = await res.json();
-      confirmedBooking.value = data.booking;
-      showBookingModal.value = false;
-      showSuccessModal.value = true;
-    } else {
-      const err = await res.json();
-      alert(err.message || 'Payment verification failed');
-    }
+    confirmedBooking.value = res.data.booking;
+    showBookingModal.value = false;
+    showSuccessModal.value = true;
   } catch (error) {
     console.error('Verification error:', error);
-    alert('Payment verification failed');
+    const message = error.response?.data?.message || 'Payment verification failed';
+    alert(message);
   }
 }
 

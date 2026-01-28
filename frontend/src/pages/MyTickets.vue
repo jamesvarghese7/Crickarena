@@ -132,6 +132,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { RouterLink } from 'vue-router';
 import { useAuthStore } from '../store/auth';
+import axios from 'axios';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
@@ -173,15 +174,14 @@ async function fetchBookings() {
   }
 
   try {
-    const token = localStorage.getItem('firebaseToken');
-    const res = await fetch(`${API_BASE}/tickets/my-bookings`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (res.ok) {
-      bookings.value = await res.json();
-    }
+    const res = await axios.get(`${API_BASE}/tickets/my-bookings`);
+    bookings.value = res.data;
+    console.log('Fetched bookings:', bookings.value);
   } catch (error) {
     console.error('Error fetching bookings:', error);
+    if (error.response?.status === 401) {
+      console.error('Authentication failed - user may need to log in again');
+    }
   } finally {
     loading.value = false;
   }

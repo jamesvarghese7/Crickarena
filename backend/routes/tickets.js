@@ -51,7 +51,7 @@ router.get('/admin/tickets/eligible-matches', verifyFirebaseToken, requireRole('
         const matches = await Match.find(matchQuery)
             .populate('homeClub', 'name shortName logoUrl')
             .populate('awayClub', 'name shortName logoUrl')
-            .populate('tournament', 'name')
+            .populate('tournament', 'name bannerUrl district startDate endDate')
             .sort({ date: 1 })
             .lean();
 
@@ -521,6 +521,9 @@ router.post('/tickets/book', optionalAuth, async (req, res) => {
         });
 
         // Create pending booking
+        const firebaseUid = req.firebase?.uid || undefined;
+        console.log('Creating booking with Firebase UID:', firebaseUid);
+
         const booking = await TicketBooking.create({
             ticketInventory: inventory._id,
             match: matchId,
@@ -529,7 +532,7 @@ router.post('/tickets/book', optionalAuth, async (req, res) => {
                 name: user.name,
                 email: user.email,
                 phone: user.phone,
-                firebaseUid: req.user?._id ? String(req.user._id) : undefined
+                firebaseUid
             },
             section,
             quantity,
@@ -655,14 +658,27 @@ router.post('/tickets/verify', optionalAuth, async (req, res) => {
  */
 router.get('/tickets/my-bookings', verifyFirebaseToken, async (req, res) => {
     try {
+        const firebaseUid = req.firebase.uid;
+        console.log('Fetching bookings for Firebase UID:', firebaseUid);
+
+        // Debug: Check ALL bookings to see what's in the database
+        const allBookings = await TicketBooking.find({}).select('user.firebaseUid user.email paymentStatus status').lean();
+        console.log('All bookings in database:', allBookings.map(b => ({
+            email: b.user.email,
+            firebaseUid: b.user.firebaseUid,
+            paymentStatus: b.paymentStatus,
+            status: b.status
+        })));
+
         const bookings = await TicketBooking.find({
-            'user.firebaseUid': String(req.user._id),
+            'user.firebaseUid': firebaseUid,
             paymentStatus: 'completed'
         })
             .populate('tournament', 'name')
             .sort({ bookedAt: -1 })
             .lean();
 
+        console.log(`Found ${bookings.length} bookings for user ${firebaseUid}`);
         res.json(bookings);
     } catch (error) {
         console.error('Error fetching user bookings:', error);

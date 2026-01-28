@@ -113,27 +113,38 @@
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center overflow-hidden">
                   <img v-if="match.homeClub?.logoUrl" :src="match.homeClub.logoUrl" class="w-full h-full object-cover" />
-                  <span v-else class="text-sm font-bold text-white">{{ match.homeClub?.shortName?.charAt(0) || 'H' }}</span>
+                  <span v-else class="text-sm font-bold text-white">{{ match.homeClub?.shortName?.charAt(0) || '?' }}</span>
                 </div>
-                <span class="font-semibold text-white">{{ match.homeClub?.name || 'TBA' }}</span>
+                <span class="font-semibold" :class="match.homeClub ? 'text-white' : 'text-slate-400 italic'">
+                  {{ match.homeClub?.name || getPlaceholderTeamName(match, 'home') }}
+                </span>
               </div>
               <span class="text-slate-500 font-bold">VS</span>
               <div class="flex items-center gap-3">
-                <span class="font-semibold text-white">{{ match.awayClub?.name || 'TBA' }}</span>
+                <span class="font-semibold" :class="match.awayClub ? 'text-white' : 'text-slate-400 italic'">
+                  {{ match.awayClub?.name || getPlaceholderTeamName(match, 'away') }}
+                </span>
                 <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center overflow-hidden">
                   <img v-if="match.awayClub?.logoUrl" :src="match.awayClub.logoUrl" class="w-full h-full object-cover" />
-                  <span v-else class="text-sm font-bold text-white">{{ match.awayClub?.shortName?.charAt(0) || 'A' }}</span>
+                  <span v-else class="text-sm font-bold text-white">{{ match.awayClub?.shortName?.charAt(0) || '?' }}</span>
                 </div>
               </div>
             </div>
 
             <!-- Match Meta -->
             <div class="flex flex-wrap items-center gap-3">
+              <span v-if="match.tournament?.name" class="px-3 py-1 text-xs font-semibold rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                🏆 {{ match.tournament.name }}
+              </span>
               <span class="px-3 py-1 text-xs font-semibold rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
                 {{ match.round || match.stage }}
               </span>
-              <span class="text-sm text-slate-400">{{ formatDate(match.date) }}</span>
-              <span class="text-sm text-slate-400">{{ match.venue }}</span>
+              <span v-if="match.matchFormat" class="px-2 py-1 text-xs font-medium text-slate-300">
+                {{ match.matchFormat }}
+              </span>
+              <span class="text-sm text-slate-400">📅 {{ formatDate(match.date) }}</span>
+              <span v-if="match.time" class="text-sm text-slate-400">🕐 {{ match.time }}</span>
+              <span class="text-sm text-slate-400">📍 {{ match.venue || 'TBA' }}</span>
               
               <!-- Ticket Status Badge -->
               <span v-if="match.ticketInventory?.salesStatus === 'open'" 
@@ -316,10 +327,13 @@
 <script setup>
 import { ref, computed, onMounted, reactive } from 'vue';
 import { useRouter } from 'vue-router';
+import axios from 'axios';
+import { useAuthStore } from '../../store/auth';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000/api';
 
 const router = useRouter();
+const authStore = useAuthStore();
 const loading = ref(true);
 const tournaments = ref([]);
 const eligibleMatches = ref([]);
@@ -330,12 +344,6 @@ const newSections = reactive({});
 const editingMatch = ref(null);
 const editSections = ref([]);
 const totalRevenue = ref(0);
-
-// Auth header
-function getAuthHeader() {
-  const token = localStorage.getItem('firebaseToken');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
 
 // Computed
 const matchesWithTickets = computed(() => {
@@ -370,6 +378,25 @@ function formatDate(date) {
   });
 }
 
+function getPlaceholderTeamName(match, position) {
+  // Generate descriptive placeholder names for unseeded matches
+  const stage = match.stage || match.round || '';
+  
+  if (stage === 'Final') {
+    return position === 'home' ? 'Winner of Semi-Final 1' : 'Winner of Semi-Final 2';
+  } else if (stage === 'Qualifier2') {
+    return position === 'home' ? 'Loser of Qualifier 1' : 'Winner of Eliminator';
+  } else if (stage.includes('Semi')) {
+    return position === 'home' ? 'Winner of Quarter-Final 1' : 'Winner of Quarter-Final 2';
+  } else if (stage === 'Qualifier1') {
+    return position === 'home' ? '1st Place Team' : '2nd Place Team';
+  } else if (stage === 'Eliminator') {
+    return position === 'home' ? '3rd Place Team' : '4th Place Team';
+  }
+  
+  return 'To Be Determined';
+}
+
 function formatNumber(num) {
   if (num === undefined || num === null) return '0';
   return Number(num).toLocaleString('en-IN');
@@ -379,29 +406,23 @@ async function refreshData() {
   loading.value = true;
   try {
     // Fetch tournaments with knockouts
-    const tournamentsRes = await fetch(`${API_BASE}/admin/tickets/tournaments-with-knockouts`, {
-      headers: getAuthHeader()
-    });
-    if (tournamentsRes.ok) {
-      tournaments.value = await tournamentsRes.json();
-    }
+    const tournamentsRes = await axios.get(`${API_BASE}/admin/tickets/tournaments-with-knockouts`);
+    tournaments.value = tournamentsRes.data;
 
     // Fetch eligible matches
-    const matchesRes = await fetch(`${API_BASE}/admin/tickets/eligible-matches`, {
-      headers: getAuthHeader()
-    });
-    if (matchesRes.ok) {
-      eligibleMatches.value = await matchesRes.json();
+    const matchesRes = await axios.get(`${API_BASE}/admin/tickets/eligible-matches`);
+    eligibleMatches.value = matchesRes.data;
+    
+    // Debug: Log first match to see structure
+    if (eligibleMatches.value.length > 0) {
+      console.log('First match data:', eligibleMatches.value[0]);
+      console.log('Home club:', eligibleMatches.value[0].homeClub);
+      console.log('Away club:', eligibleMatches.value[0].awayClub);
     }
 
     // Fetch revenue stats
-    const bookingsRes = await fetch(`${API_BASE}/admin/tickets/bookings?limit=1`, {
-      headers: getAuthHeader()
-    });
-    if (bookingsRes.ok) {
-      const data = await bookingsRes.json();
-      totalRevenue.value = data.stats?.totalRevenue || 0;
-    }
+    const bookingsRes = await axios.get(`${API_BASE}/admin/tickets/bookings?limit=1`);
+    totalRevenue.value = bookingsRes.data.stats?.totalRevenue || 0;
   } catch (error) {
     console.error('Error fetching data:', error);
   } finally {
@@ -451,28 +472,16 @@ async function saveInventory(match) {
 
   savingMatch.value = match._id;
   try {
-    const res = await fetch(`${API_BASE}/admin/tickets/inventory`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeader()
-      },
-      body: JSON.stringify({
-        matchId: match._id,
-        sections
-      })
+    await axios.post(`${API_BASE}/admin/tickets/inventory`, {
+      matchId: match._id,
+      sections
     });
 
-    if (res.ok) {
-      await refreshData();
-      delete newSections[match._id];
-    } else {
-      const err = await res.json();
-      alert(err.message || 'Failed to save inventory');
-    }
+    await refreshData();
+    delete newSections[match._id];
   } catch (error) {
     console.error('Error saving inventory:', error);
-    alert('Failed to save inventory');
+    alert(error.response?.data?.message || 'Failed to save inventory');
   } finally {
     savingMatch.value = null;
   }
@@ -488,27 +497,15 @@ async function updateInventory() {
 
   savingMatch.value = editingMatch.value._id;
   try {
-    const res = await fetch(`${API_BASE}/admin/tickets/inventory/${editingMatch.value._id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeader()
-      },
-      body: JSON.stringify({
-        sections: editSections.value
-      })
+    await axios.put(`${API_BASE}/admin/tickets/inventory/${editingMatch.value._id}`, {
+      sections: editSections.value
     });
 
-    if (res.ok) {
-      await refreshData();
-      editingMatch.value = null;
-    } else {
-      const err = await res.json();
-      alert(err.message || 'Failed to update');
-    }
+    await refreshData();
+    editingMatch.value = null;
   } catch (error) {
     console.error('Error updating:', error);
-    alert('Failed to update');
+    alert(error.response?.data?.message || 'Failed to update');
   } finally {
     savingMatch.value = null;
   }
@@ -517,20 +514,11 @@ async function updateInventory() {
 async function enableSales(match) {
   savingMatch.value = match._id;
   try {
-    const res = await fetch(`${API_BASE}/admin/tickets/inventory/${match._id}/enable`, {
-      method: 'POST',
-      headers: getAuthHeader()
-    });
-
-    if (res.ok) {
-      await refreshData();
-    } else {
-      const err = await res.json();
-      alert(err.message || 'Failed to enable sales');
-    }
+    await axios.post(`${API_BASE}/admin/tickets/inventory/${match._id}/enable`);
+    await refreshData();
   } catch (error) {
     console.error('Error:', error);
-    alert('Failed to enable sales');
+    alert(error.response?.data?.message || 'Failed to enable sales');
   } finally {
     savingMatch.value = null;
   }
@@ -539,20 +527,11 @@ async function enableSales(match) {
 async function disableSales(match) {
   savingMatch.value = match._id;
   try {
-    const res = await fetch(`${API_BASE}/admin/tickets/inventory/${match._id}/disable`, {
-      method: 'POST',
-      headers: getAuthHeader()
-    });
-
-    if (res.ok) {
-      await refreshData();
-    } else {
-      const err = await res.json();
-      alert(err.message || 'Failed to pause sales');
-    }
+    await axios.post(`${API_BASE}/admin/tickets/inventory/${match._id}/disable`);
+    await refreshData();
   } catch (error) {
     console.error('Error:', error);
-    alert('Failed to pause sales');
+    alert(error.response?.data?.message || 'Failed to pause sales');
   } finally {
     savingMatch.value = null;
   }
