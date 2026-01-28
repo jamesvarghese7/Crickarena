@@ -146,7 +146,17 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-slate-300 mb-2">Phone</label>
-            <input v-model="bookingData.phone" type="tel" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white" placeholder="Enter your phone" />
+            <input 
+              v-model="bookingData.phone" 
+              type="tel" 
+              class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white" 
+              placeholder="Enter your phone"
+              maxlength="10"
+              @input="bookingData.phone = bookingData.phone.replace(/\D/g, '').slice(0, 10)"
+            />
+            <p v-if="bookingData.phone && bookingData.phone.length !== 10" class="text-red-400 text-xs mt-1">
+              Phone number must be exactly 10 digits
+            </p>
           </div>
 
           <!-- Total -->
@@ -227,7 +237,8 @@ const isLoggedIn = computed(() => !!auth.user);
 const isFormValid = computed(() => {
   return bookingData.value.name && 
          bookingData.value.email && 
-         bookingData.value.phone && 
+         bookingData.value.phone &&
+         bookingData.value.phone.length === 10 && // Validate phone length
          bookingData.value.quantity > 0;
 });
 

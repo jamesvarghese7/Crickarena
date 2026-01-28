@@ -1,6 +1,7 @@
 import express from 'express';
 import crypto from 'crypto';
 import Razorpay from 'razorpay';
+import QRCode from 'qrcode';
 import TicketInventory from '../models/TicketInventory.js';
 import TicketBooking from '../models/TicketBooking.js';
 import Match from '../models/Match.js';
@@ -613,8 +614,27 @@ router.post('/tickets/verify', optionalAuth, async (req, res) => {
             });
         }
 
-        // Generate QR code data (simple data URL with booking code)
-        booking.qrCodeData = `CRICKARENA-TICKET:${bookingCode}`;
+        // Generate QR code with booking information
+        const qrData = JSON.stringify({
+            bookingCode: booking.bookingCode,
+            matchId: String(booking.match),
+            email: booking.user.email,
+            section: booking.section,
+            quantity: booking.quantity,
+            timestamp: Date.now()
+        });
+
+        // Generate QR code as base64 data URL
+        booking.qrCodeData = await QRCode.toDataURL(qrData, {
+            width: 300,
+            margin: 2,
+            color: {
+                dark: '#000000',
+                light: '#FFFFFF'
+            }
+        });
+
+        console.log('Generated QR code for booking:', bookingCode);
 
         await booking.save();
 
