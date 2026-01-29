@@ -46,9 +46,11 @@
           <div class="bg-gradient-to-r from-slate-800 to-slate-700 p-6">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <div class="text-sm text-slate-400 mb-1">{{ booking.matchDetails?.round }}</div>
-                <div class="text-xl font-bold text-white">
-                  {{ booking.matchDetails?.homeClub }} vs {{ booking.matchDetails?.awayClub }}
+                <div class="text-sm text-slate-400 mb-1">{{ booking.match?.round || booking.matchDetails?.round }}</div>
+                <div class="text-xl font-bold text-white flex items-center gap-2">
+                  <span>{{ getTeamName(booking, 'home') }}</span>
+                  <span class="text-emerald-400 text-sm">VS</span>
+                  <span>{{ getTeamName(booking, 'away') }}</span>
                 </div>
                 <div class="text-slate-400 mt-1">
                   {{ formatDate(booking.matchDetails?.date) }} • {{ booking.matchDetails?.venue }}
@@ -169,6 +171,45 @@ function statusClass(status) {
     'used': 'bg-slate-500/20 text-slate-400 border border-slate-500/30'
   };
   return classes[status] || classes.pending;
+}
+
+// Helper to get team name from live match data or snapshot
+function getTeamName(booking, type) {
+  // 1. Try to get from live match data (most up-to-date)
+  if (booking.match && typeof booking.match === 'object') {
+    if (type === 'home' && (booking.match.homeClub?.name || booking.match.homeClub?.clubName)) 
+      return booking.match.homeClub.name || booking.match.homeClub.clubName;
+    if (type === 'away' && (booking.match.awayClub?.name || booking.match.awayClub?.clubName)) 
+      return booking.match.awayClub.name || booking.match.awayClub.clubName;
+    
+    // If live match data exists but teams are not set, use smart placeholder
+    if (booking.match.stage === 'knockout' || booking.match.round) {
+      return getPlaceholderTeamName(booking.match, type);
+    }
+  }
+
+  // 2. Fallback to snapshot data stored at booking time
+  const snapshotName = type === 'home' ? booking.matchDetails?.homeClub : booking.matchDetails?.awayClub;
+  if (snapshotName && snapshotName !== 'TBA' && snapshotName !== 'To Be Determined') {
+    return snapshotName;
+  }
+
+  return 'To Be Determined';
+}
+
+function getPlaceholderTeamName(match, type) {
+  const roundName = match.round || match.matchDetails?.round || 'Knockout Match';
+  
+  if (roundName.toLowerCase().includes('semi')) {
+    return type === 'home' ? 'Winner of QF 1' : 'Winner of QF 2'; 
+  }
+  if (roundName.toLowerCase().includes('final') && !roundName.toLowerCase().includes('semi')) {
+    return type === 'home' ? 'Winner of SF 1' : 'Winner of SF 2';
+  }
+  if (roundName.toLowerCase().includes('quarter')) {
+    return type === 'home' ? 'Group A Winner' : 'Group B Runner-up';
+  }
+  return 'To Be Determined';
 }
 
 async function fetchBookings() {

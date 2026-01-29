@@ -23,18 +23,8 @@ const sponsorshipOpportunitySchema = new mongoose.Schema({
     // Opportunity details
     tier: {
         type: String,
-        enum: [
-            // Tournament tiers
-            'title',      // Naming rights
-            'main',       // Primary sponsor
-            'associate',  // Secondary sponsor
-            // Club tiers
-            'jersey',     // Kit sponsor
-            'equipment',  // Equipment sponsor
-            'training-partner',   // Training facility
-            'official-partner'    // General partnership
-        ],
-        required: true
+        required: true,
+        trim: true
     },
 
     title: {
@@ -122,6 +112,12 @@ const sponsorshipOpportunitySchema = new mongoose.Schema({
 // Auto-set targetTypeRef based on targetType
 sponsorshipOpportunitySchema.pre('save', function (next) {
     this.targetTypeRef = this.targetType === 'tournament' ? 'Tournament' : 'Club';
+
+    // Validate dates
+    if (this.validFrom && this.validTo && new Date(this.validTo) <= new Date(this.validFrom)) {
+        return next(new Error('Valid To date must be after Valid From date'));
+    }
+
     next();
 });
 

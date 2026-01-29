@@ -191,7 +191,9 @@ const sponsorshipAgreementSchema = new mongoose.Schema({
             enum: [
                 'created', 'updated', 'sent-to-sponsor', 'sponsor-signed',
                 'sent-to-club', 'club-signed', 'activated', 'deliverable-updated',
-                'payment-recorded', 'terminated', 'completed', 'renewed'
+                'payment-recorded', 'payment-requested', 'payment-approved',
+                'payment-rejected', 'payment-completed', 'receipt-uploaded',
+                'terminated', 'completed', 'renewed'
             ]
         },
         performedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

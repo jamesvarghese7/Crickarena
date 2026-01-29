@@ -42,16 +42,20 @@
                 <div class="flex items-center gap-3">
                   <div class="w-12 h-12 rounded-full bg-slate-600 flex items-center justify-center overflow-hidden">
                     <img v-if="inv.match?.homeClub?.logoUrl" :src="inv.match.homeClub.logoUrl" class="w-full h-full object-cover" />
-                    <span v-else class="text-white font-bold">{{ inv.match?.homeClub?.shortName?.charAt(0) || 'H' }}</span>
+                    <span v-else class="text-white font-bold">{{ inv.match?.homeClub?.shortName?.charAt(0) || '?' }}</span>
                   </div>
-                  <span class="font-semibold text-white">{{ inv.match?.homeClub?.name || 'TBA' }}</span>
+                  <span class="font-semibold" :class="inv.match?.homeClub ? 'text-white' : 'text-slate-400 italic'">
+                    {{ inv.match?.homeClub?.name || inv.match?.homeClub?.clubName || getPlaceholderTeamName(inv.match, 'home') }}
+                  </span>
                 </div>
                 <span class="text-emerald-400 font-bold text-lg">VS</span>
                 <div class="flex items-center gap-3">
-                  <span class="font-semibold text-white">{{ inv.match?.awayClub?.name || 'TBA' }}</span>
+                  <span class="font-semibold" :class="inv.match?.awayClub ? 'text-white' : 'text-slate-400 italic'">
+                    {{ inv.match?.awayClub?.name || inv.match?.awayClub?.clubName || getPlaceholderTeamName(inv.match, 'away') }}
+                  </span>
                   <div class="w-12 h-12 rounded-full bg-slate-600 flex items-center justify-center overflow-hidden">
                     <img v-if="inv.match?.awayClub?.logoUrl" :src="inv.match.awayClub.logoUrl" class="w-full h-full object-cover" />
-                    <span v-else class="text-white font-bold">{{ inv.match?.awayClub?.shortName?.charAt(0) || 'A' }}</span>
+                    <span v-else class="text-white font-bold">{{ inv.match?.awayClub?.shortName?.charAt(0) || '?' }}</span>
                   </div>
                 </div>
               </div>
@@ -250,6 +254,34 @@ function formatDate(date) {
     month: 'short', 
     year: 'numeric' 
   });
+}
+
+function getPlaceholderTeamName(match, type) {
+  if (!match) return 'TBA';
+  
+  // If team exists, return its name (though this function usually called when it doesn't)
+  if (type === 'home' && match.homeClub) return match.homeClub.name || match.homeClub.clubName;
+  if (type === 'away' && match.awayClub) return match.awayClub.name || match.awayClub.clubName;
+
+  // For knockout matches without seeded teams
+  if (match.stage === 'knockout' || match.round) {
+    const roundName = match.round || 'Knockout Match';
+    
+    // Semis
+    if (roundName.toLowerCase().includes('semi')) {
+      return type === 'home' ? 'Winner of QF 1' : 'Winner of QF 2'; 
+    }
+    // Final
+    if (roundName.toLowerCase().includes('final') && !roundName.toLowerCase().includes('semi') && !roundName.toLowerCase().includes('quarter')) {
+      return type === 'home' ? 'Winner of SF 1' : 'Winner of SF 2';
+    }
+    // Quarter Finals
+    if (roundName.toLowerCase().includes('quarter')) {
+      return type === 'home' ? 'Group A Winner' : 'Group B Runner-up'; // Generic placeholder
+    }
+  }
+
+  return 'To Be Determined';
 }
 
 function formatNumber(num) {

@@ -103,6 +103,20 @@ router.post('/', async (req, res) => {
         }
         // ========== END DATE VALIDATIONS ==========
 
+        // ========== PAYMENT SCHEDULE VALIDATION ==========
+        if (paymentSchedule && paymentSchedule.length > 0) {
+            const totalScheduled = paymentSchedule.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+            const agreedAmount = deal.agreedAmount || deal.proposedAmount;
+
+            // Allow a small margin for floating point errors, though usually integers are used
+            if (totalScheduled > agreedAmount + 1) {
+                return res.status(400).json({
+                    error: `Payment schedule total (₹${totalScheduled}) cannot exceed the agreed amount (₹${agreedAmount})`
+                });
+            }
+        }
+        // ========== END PAYMENT SCHEDULE VALIDATION ==========
+
         // Get club
         let club;
         if (deal.opportunity?.targetType === 'club') {
