@@ -236,7 +236,16 @@
 
         <!-- Payment Schedule -->
         <div class="payments-section">
-          <h3>Payment Schedule</h3>
+          <div class="schedule-header">
+            <h3>Payment Schedule</h3>
+            <button 
+              v-if="userRole === 'club' && agreement.status === 'active'"
+              class="add-milestone-btn"
+              @click="addMilestoneModal.show = true"
+            >
+              + Add Milestone
+            </button>
+          </div>
           <div v-if="!agreement.financialTerms?.paymentSchedule?.length" class="empty-state">
             <p>No payment schedule defined</p>
           </div>
@@ -444,6 +453,61 @@
         </div>
       </div>
     </div>
+
+    <!-- Add Milestone Modal -->
+    <div v-if="addMilestoneModal.show" class="modal-overlay" @click="addMilestoneModal.show = false">
+      <div class="modal-content" @click.stop>
+        <h3>➕ Add Payment Milestone</h3>
+        <p class="modal-info">
+          Remaining Budget: <strong>₹{{ formatAmount(unallocatedAmount) }}</strong>
+          <br>
+          <span class="text-xs text-gray-500">Total Agreement Value: ₹{{ formatAmount(agreement.financialTerms?.totalAmount) }}</span>
+        </p>
+        
+        <div class="form-group">
+          <label>Milestone Name *</label>
+          <input type="text" v-model="addMilestoneModal.milestone" placeholder="e.g. Performance Bonus" />
+        </div>
+        
+        <div class="form-group">
+          <label>Amount (₹) *</label>
+          <input 
+            type="number" 
+            v-model.number="addMilestoneModal.amount" 
+            min="1" 
+            :max="unallocatedAmount"
+            placeholder="Amount" 
+          />
+          <span v-if="addMilestoneModal.amount > unallocatedAmount" class="field-error">
+            Amount cannot exceed remaining budget (₹{{ formatAmount(unallocatedAmount) }})
+          </span>
+        </div>
+        
+        <div class="form-group">
+          <label>Due Date (Optional)</label>
+          <input 
+            type="date" 
+            v-model="addMilestoneModal.dueDate" 
+            :min="formatDateInput(agreement.startDate)"
+            :max="formatDateInput(agreement.endDate)"
+          />
+          <span v-if="addMilestoneModal.dueDate && !isDateInContract(addMilestoneModal.dueDate)" class="field-error">
+             Date must be between {{ formatDate(agreement.startDate) }} and {{ formatDate(agreement.endDate) }}
+          </span>
+        </div>
+        
+        <div class="modal-actions">
+          <button class="cancel-btn" @click="addMilestoneModal.show = false">Cancel</button>
+          <button 
+            class="submit-btn" 
+            @click="submitMilestone" 
+            :disabled="!isValidMilestone"
+          >
+            Add Milestone
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -472,6 +536,7 @@ const transactions = ref([]);
 const paymentSummary = ref({ totalCompleted: 0, totalPending: 0, remaining: 0, agreementTotal: 0 });
 const completeModal = ref({ show: false, transaction: null, paymentMethod: 'bank-transfer', reference: '', notes: '' });
 const receiptModal = ref({ show: false, transaction: null, url: '', fileName: '', description: '' });
+const addMilestoneModal = ref({ show: false, milestone: '', amount: '', dueDate: '' });
 
 const deliverablesProgress = computed(() => {
   const deliverables = agreement.value?.deliverables || [];
@@ -495,11 +560,45 @@ const pendingAmount = computed(() => {
   return (agreement.value?.financialTerms?.totalAmount || 0) - paidAmount.value;
 });
 
+const unallocatedAmount = computed(() => {
+  const total = agreement.value?.financialTerms?.totalAmount || 0;
+  const allocated = (agreement.value?.financialTerms?.paymentSchedule || [])
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
+  return total - allocated;
+});
+
 const canSign = computed(() => {
   if (!agreement.value) return false;
   if (userRole.value === 'sponsor' && agreement.value.status === 'pending-sponsor') return true;
   if (userRole.value === 'club' && agreement.value.status === 'pending-club') return true;
   return false;
+});
+
+const formatDateInput = (dateStr) => {
+  if (!dateStr) return '';
+  return new Date(dateStr).toISOString().split('T')[0];
+};
+
+const isDateInContract = (dateStr) => {
+  if (!dateStr || !agreement.value?.startDate || !agreement.value?.endDate) return true;
+  const date = new Date(dateStr);
+  const start = new Date(agreement.value.startDate);
+  const end = new Date(agreement.value.endDate);
+  
+  // Normalize times
+  date.setHours(0,0,0,0);
+  start.setHours(0,0,0,0);
+  end.setHours(0,0,0,0);
+  
+  return date >= start && date <= end;
+};
+
+const isValidMilestone = computed(() => {
+  const m = addMilestoneModal.value;
+  return m.milestone && 
+         m.amount > 0 && 
+         m.amount <= unallocatedAmount.value && 
+         (!m.dueDate || isDateInContract(m.dueDate));
 });
 
 const canDownload = computed(() => {
@@ -552,13 +651,20 @@ const formatDeliverableStatus = (status) => {
 const formatAction = (action) => {
   const map = {
     'created': 'Agreement Created',
+    'updated': 'Agreement Updated',
     'sent-to-sponsor': 'Sent to Sponsor',
     'sponsor-signed': 'Sponsor Signed',
     'sent-to-club': 'Sent to Club',
     'club-signed': 'Club Signed',
     'activated': 'Agreement Activated',
     'deliverable-updated': 'Deliverable Updated',
-    'terminated': 'Agreement Terminated'
+    'payment-requested': 'Fund Requested',
+    'payment-approved': 'Fund Request Approved',
+    'payment-rejected': 'Fund Request Rejected',
+    'payment-completed': 'Payment Completed',
+    'receipt-uploaded': 'Receipt Uploaded',
+    'terminated': 'Agreement Terminated',
+    'completed': 'Agreement Completed'
   };
   return map[action] || action;
 };
@@ -824,6 +930,33 @@ const uploadReceipt = async () => {
     await fetchPayments();
   } catch (error) {
     alert(error.message || 'Failed to upload receipt');
+  }
+};
+
+const submitMilestone = async () => {
+  try {
+    const res = await fetch(`${API}/agreements/${agreement.value._id}/milestones`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        firebaseUid: auth.user?.uid,
+        milestone: addMilestoneModal.value.milestone,
+        amount: addMilestoneModal.value.amount,
+        dueDate: addMilestoneModal.value.dueDate
+      })
+    });
+    
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error);
+    }
+    
+    alert('Milestone added successfully!');
+    addMilestoneModal.value = { show: false, milestone: '', amount: '', dueDate: '' };
+    await fetchAgreement();
+    await fetchPayments();
+  } catch (error) {
+    alert(error.message || 'Failed to add milestone');
   }
 };
 
@@ -1192,7 +1325,29 @@ h1 {
 
 /* Payment Action Buttons */
 .payments-section { margin-top: 24px; }
-.payments-section h3 { margin: 0 0 16px; font-size: 16px; color: #111827; }
+.payments-section h3 { margin: 0; font-size: 16px; color: #111827; }
+
+.schedule-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.add-milestone-btn {
+  padding: 6px 12px;
+  background: #ECFDF5;
+  color: #10B981;
+  border: 1px dashed #10B981;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.add-milestone-btn:hover {
+  background: #D1FAE5;
+}
 
 .payment-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #E5E7EB; }
 
@@ -1265,4 +1420,13 @@ h1 {
   font-size: 13px; 
 }
 .view-receipt-btn:hover { background: #DBEAFE; }
+
+.modal-info {
+  font-size: 13px;
+  color: #6B7280;
+  margin-bottom: 16px;
+  background: #F3F4F6;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
 </style>

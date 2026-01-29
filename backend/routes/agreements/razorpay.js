@@ -173,9 +173,14 @@ router.post('/:id/payments/:txId/verify-payment', async (req, res) => {
         await transaction.save();
 
         // Update milestone status in agreement
-        if (transaction.milestoneIndex >= 0 && agreement.financialTerms?.paymentSchedule?.[transaction.milestoneIndex]) {
-            agreement.financialTerms.paymentSchedule[transaction.milestoneIndex].status = 'paid';
-            agreement.financialTerms.paymentSchedule[transaction.milestoneIndex].paidAt = new Date();
+        // Update milestone status in agreement
+        if (transaction.milestoneIndex !== undefined && transaction.milestoneIndex !== null && transaction.milestoneIndex >= 0) {
+            const index = Number(transaction.milestoneIndex);
+            if (agreement.financialTerms?.paymentSchedule?.[index]) {
+                agreement.financialTerms.paymentSchedule[index].status = 'paid';
+                agreement.financialTerms.paymentSchedule[index].paidAt = new Date();
+                agreement.markModified('financialTerms.paymentSchedule');
+            }
         }
 
         agreement.addHistory('payment-completed', user._id,

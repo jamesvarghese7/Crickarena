@@ -342,6 +342,20 @@ const submitAgreement = async () => {
     alert('Please fix the date validation errors before submitting.');
     return;
   }
+
+  // Validate payment total
+  const agreedAmount = deal.value.agreedAmount || deal.value.proposedAmount;
+  
+  if (paymentTotal.value > agreedAmount + 1) {
+    alert(`Payment schedule total (₹${formatAmount(paymentTotal.value)}) cannot exceed the agreed amount (₹${formatAmount(agreedAmount)})`);
+    return;
+  }
+
+  if (paymentTotal.value < agreedAmount - 1) {
+    if (!confirm(`You have allocated ₹${formatAmount(paymentTotal.value)} out of ₹${formatAmount(agreedAmount)}. The remaining amount can be allocated later. Continue?`)) {
+      return;
+    }
+  }
   
   submitting.value = true;
   try {

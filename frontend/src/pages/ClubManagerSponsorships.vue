@@ -136,10 +136,7 @@
         <div v-for="deal in pendingDeals" :key="deal._id" class="deal-card">
           <div class="deal-header">
             <div class="sponsor-info">
-              <div class="sponsor-logo">
-                <img v-if="deal.sponsor?.logoUrl" :src="getLogoUrl(deal.sponsor.logoUrl)" :alt="deal.sponsor.companyName" />
-                <span v-else>{{ deal.sponsor?.companyName?.charAt(0) || 'S' }}</span>
-              </div>
+
               <div class="sponsor-details">
                 <span class="sponsor-name">{{ deal.sponsor?.companyName || 'Unknown Sponsor' }}</span>
                 <span class="sponsor-industry">{{ formatIndustry(deal.sponsor?.industry) }}</span>
@@ -183,10 +180,7 @@
       <div v-else class="sponsors-grid">
         <div v-for="deal in activeDeals" :key="deal._id" class="sponsor-card enhanced">
           <div class="sponsor-header">
-            <div class="sponsor-logo large">
-              <img v-if="deal.sponsor?.logoUrl" :src="getLogoUrl(deal.sponsor.logoUrl)" :alt="deal.sponsor.companyName" />
-              <span v-else>{{ deal.sponsor?.companyName?.charAt(0) || 'S' }}</span>
-            </div>
+
             <div class="sponsor-identity">
               <h3 class="sponsor-name">{{ deal.sponsor?.companyName }}</h3>
               <span class="sponsor-industry">{{ formatIndustry(deal.sponsor?.industry) }}</span>
@@ -273,13 +267,19 @@
         <form @submit.prevent="saveOpportunity" class="opportunity-form">
           <div class="form-group">
             <label>Tier *</label>
-            <select v-model="form.tier" required class="form-input">
+            <select v-model="form.tierSelect" required class="form-input" @change="handleTierSelect">
               <option value="">Select Tier</option>
               <option value="jersey">Jersey Sponsor</option>
               <option value="equipment">Equipment Sponsor</option>
               <option value="training-partner">Training Partner</option>
               <option value="official-partner">Official Partner</option>
+              <option value="other">Other (Manual Entry)</option>
             </select>
+          </div>
+
+          <div class="form-group" v-if="form.tierSelect === 'other'">
+            <label>Custom Tier Name *</label>
+            <input v-model="form.customTier" type="text" required placeholder="e.g., Hydration Partner" class="form-input" />
           </div>
 
           <div class="form-group">
@@ -312,13 +312,20 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label>Valid Until</label>
-              <input v-model="form.validTo" type="date" class="form-input" />
+              <label>Valid From</label>
+              <input v-model="form.validFrom" type="date" required class="form-input" />
+            </div>
+            <div class="form-group">
+              <label>Duration (Days)</label>
+              <input v-model.number="form.durationDays" type="number" min="1" class="form-input" placeholder="e.g. 30" />
             </div>
             <div class="form-group">
               <label>Max Sponsors</label>
               <input v-model.number="form.maxSponsors" type="number" min="1" max="10" class="form-input" />
             </div>
+          </div>
+          <div class="form-group" v-if="computedOpportunityEndDate">
+             <span class="helper-text">Valid Until: <strong>{{ computedOpportunityEndDate }}</strong></span>
           </div>
 
           <div class="form-actions">
@@ -407,12 +414,14 @@ const stats = reactive({
 });
 
 const form = reactive({
-  tier: '',
+  tierSelect: '',
+  customTier: '',
   title: '',
   description: '',
   askingPrice: 50000,
   negotiable: true,
-  validTo: '',
+  validFrom: '',
+  durationDays: 30,
   maxSponsors: 1
 });
 
@@ -431,6 +440,13 @@ const computedEndDate = computed(() => {
   if (!reviewForm.startDate || !reviewForm.durationDays) return null;
   const start = new Date(reviewForm.startDate);
   start.setDate(start.getDate() + reviewForm.durationDays);
+  return start.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+});
+
+const computedOpportunityEndDate = computed(() => {
+  if (!form.validFrom || !form.durationDays) return null;
+  const start = new Date(form.validFrom);
+  start.setDate(start.getDate() + form.durationDays);
   return start.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
 });
 
@@ -582,14 +598,43 @@ async function loadData() {
   loading.value = false;
 }
 
+function handleTierSelect() {
+  if (form.tierSelect !== 'other') {
+    form.customTier = '';
+  }
+}
+
 function editOpportunity(opp) {
   editingOpportunity.value = opp;
-  form.tier = opp.tier;
+  
+  // Check if tier is one of the standard options
+  const standardTiers = ['jersey', 'equipment', 'training-partner', 'official-partner'];
+  if (standardTiers.includes(opp.tier)) {
+    form.tierSelect = opp.tier;
+    form.customTier = '';
+  } else {
+    form.tierSelect = 'other';
+    form.customTier = opp.tier;
+  }
+
+
   form.title = opp.title;
   form.description = opp.description || '';
   form.askingPrice = opp.askingPrice;
+  form.askingPrice = opp.askingPrice;
   form.negotiable = opp.negotiable;
-  form.validTo = opp.validTo ? new Date(opp.validTo).toISOString().split('T')[0] : '';
+  form.validFrom = opp.validFrom ? new Date(opp.validFrom).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+  
+  // Calculate duration if validTo exists
+  if (opp.validTo && opp.validFrom) {
+    const start = new Date(opp.validFrom);
+    const end = new Date(opp.validTo);
+    const diffTime = Math.abs(end - start);
+    form.durationDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  } else {
+    form.durationDays = 30;
+  }
+  
   form.maxSponsors = opp.maxSponsors || 1;
   benefitsText.value = (opp.benefits || []).join('\n');
   showCreateModal.value = true;
@@ -602,12 +647,14 @@ function closeModal() {
 }
 
 function resetForm() {
-  form.tier = '';
+  form.tierSelect = '';
+  form.customTier = '';
   form.title = '';
   form.description = '';
   form.askingPrice = 50000;
   form.negotiable = true;
-  form.validTo = '';
+  form.validFrom = new Date().toISOString().split('T')[0];
+  form.durationDays = 30;
   form.maxSponsors = 1;
   benefitsText.value = '';
 }
@@ -625,13 +672,19 @@ async function saveOpportunity() {
       firebaseUid: auth.user?.uid,
       targetType: 'club',
       targetId: clubId.value,
-      tier: form.tier,
+      tier: form.tierSelect === 'other' ? form.customTier : form.tierSelect,
       title: form.title,
       description: form.description,
       askingPrice: form.askingPrice,
       negotiable: form.negotiable,
       benefits,
-      validTo: form.validTo || undefined,
+      validFrom: form.validFrom,
+      validTo: (() => {
+          if (!form.validFrom || !form.durationDays) return undefined;
+          const d = new Date(form.validFrom);
+          d.setDate(d.getDate() + form.durationDays);
+          return d.toISOString();
+      })(),
       maxSponsors: form.maxSponsors
     };
 
@@ -684,8 +737,22 @@ function reviewDeal(deal, action) {
   dealToReview.value = deal;
   reviewAction.value = action;
   reviewForm.agreedAmount = deal.proposedAmount;
-  reviewForm.startDate = new Date().toISOString().split('T')[0];
-  reviewForm.durationDays = 90; // Default 90 days
+  
+  // Inherit dates from opportunity if available
+  if (deal.opportunity && deal.opportunity.validFrom && deal.opportunity.validTo) {
+    reviewForm.startDate = new Date(deal.opportunity.validFrom).toISOString().split('T')[0];
+    
+    // Calculate duration
+    const start = new Date(deal.opportunity.validFrom);
+    const end = new Date(deal.opportunity.validTo);
+    const diffTime = Math.abs(end - start);
+    reviewForm.durationDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  } else {
+    // Fallback defaults
+    reviewForm.startDate = new Date().toISOString().split('T')[0];
+    reviewForm.durationDays = 90; 
+  }
+
   reviewForm.notes = '';
   reviewForm.rejectionReason = '';
   showReviewModal.value = true;

@@ -320,9 +320,14 @@ router.put('/:id/payments/:txId/complete', async (req, res) => {
         await transaction.save();
 
         // Update milestone status in agreement if applicable
-        if (transaction.milestoneIndex >= 0 && agreement.financialTerms?.paymentSchedule?.[transaction.milestoneIndex]) {
-            agreement.financialTerms.paymentSchedule[transaction.milestoneIndex].status = 'paid';
-            agreement.financialTerms.paymentSchedule[transaction.milestoneIndex].paidAt = new Date();
+        // Update milestone status in agreement if applicable
+        if (transaction.milestoneIndex !== undefined && transaction.milestoneIndex !== null && transaction.milestoneIndex >= 0) {
+            const index = Number(transaction.milestoneIndex);
+            if (agreement.financialTerms?.paymentSchedule?.[index]) {
+                agreement.financialTerms.paymentSchedule[index].status = 'paid';
+                agreement.financialTerms.paymentSchedule[index].paidAt = new Date();
+                agreement.markModified('financialTerms.paymentSchedule');
+            }
         }
 
         agreement.addHistory('payment-completed', user._id,
@@ -434,6 +439,100 @@ router.get('/:id/payments/summary', async (req, res) => {
     } catch (error) {
         console.error('Get payment summary error:', error);
         res.status(500).json({ error: 'Failed to get payment summary' });
+    }
+});
+
+/**
+ * POST /api/agreements/:id/milestones
+ * Add a new payment milestone to an existing agreement
+ */
+router.post('/:id/milestones', async (req, res) => {
+    try {
+        const { firebaseUid, milestone, amount, dueDate } = req.body;
+
+        if (!firebaseUid) {
+            return res.status(401).json({ error: 'Authentication required' });
+        }
+
+        const user = await User.findOne({ firebaseUid });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Only club managers can add milestones (to request more funds)
+        const club = await Club.findOne({ manager: user._id });
+        if (!club) {
+            return res.status(403).json({ error: 'Only club managers can add milestones' });
+        }
+
+        const agreement = await SponsorshipAgreement.findById(req.params.id);
+        if (!agreement) {
+            return res.status(404).json({ error: 'Agreement not found' });
+        }
+
+        // Verify club owns this agreement
+        if (agreement.club.clubRef.toString() !== club._id.toString()) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+
+        // Validate inputs
+        if (!milestone || !amount || amount <= 0) {
+            return res.status(400).json({ error: 'Valid milestone name and positive amount are required' });
+        }
+
+        // Validate due date if provided
+        if (dueDate) {
+            const date = new Date(dueDate);
+            const start = new Date(agreement.startDate);
+            const end = new Date(agreement.endDate);
+
+            // Reset times to ignore time component
+            date.setHours(0, 0, 0, 0);
+            start.setHours(0, 0, 0, 0);
+            end.setHours(0, 0, 0, 0);
+
+            if (date < start || date > end) {
+                return res.status(400).json({
+                    error: `Due date must be within the contract period (${start.toLocaleDateString()} - ${end.toLocaleDateString()})`
+                });
+            }
+        }
+
+        // Check if adding this milestone exceeds the total agreement amount
+        const currentTotal = agreement.financialTerms.paymentSchedule.reduce((sum, p) => sum + (p.amount || 0), 0);
+        const agreementTotal = agreement.financialTerms.totalAmount;
+
+        if (currentTotal + Number(amount) > agreementTotal) {
+            const remaining = agreementTotal - currentTotal;
+            return res.status(400).json({
+                error: `Cannot exceed total agreement amount. Remaining budget: ₹${remaining.toLocaleString()}`
+            });
+        }
+
+        // Add new milestone
+        const newMilestone = {
+            milestone,
+            amount: Number(amount),
+            dueDate: dueDate ? new Date(dueDate) : undefined,
+            status: 'pending'
+        };
+
+        agreement.financialTerms.paymentSchedule.push(newMilestone);
+
+        // Add history
+        agreement.addHistory('updated', user._id,
+            `Added new payment milestone: "${milestone}" (₹${amount.toLocaleString()})`
+        );
+
+        await agreement.save();
+
+        res.status(201).json({
+            message: 'Milestone added successfully',
+            agreement
+        });
+    } catch (error) {
+        console.error('Add milestone error:', error);
+        res.status(500).json({ error: 'Failed to add milestone' });
     }
 });
 

@@ -389,8 +389,8 @@ router.get('/tickets/available', async (req, res) => {
             .populate({
                 path: 'match',
                 populate: [
-                    { path: 'homeClub', select: 'name shortName logoUrl' },
-                    { path: 'awayClub', select: 'name shortName logoUrl' }
+                    { path: 'homeClub', select: 'name clubName shortName logoUrl' },
+                    { path: 'awayClub', select: 'name clubName shortName logoUrl' }
                 ]
             })
             .populate('tournament', 'name bannerUrl')
@@ -403,6 +403,17 @@ router.get('/tickets/available', async (req, res) => {
             const matchDate = new Date(inv.match.date);
             return matchDate > now;
         });
+
+        // Debug: Log populated matches
+        if (available.length > 0) {
+            console.log('Available matches debug:', available.map(inv => ({
+                matchId: inv.match._id,
+                homeClub: inv.match.homeClub,
+                awayClub: inv.match.awayClub,
+                round: inv.match.round,
+                stage: inv.match.stage
+            })));
+        }
 
         res.json(available);
     } catch (error) {
@@ -424,8 +435,8 @@ router.get('/tickets/match/:matchId', async (req, res) => {
             .populate({
                 path: 'match',
                 populate: [
-                    { path: 'homeClub', select: 'name shortName logoUrl' },
-                    { path: 'awayClub', select: 'name shortName logoUrl' }
+                    { path: 'homeClub', select: 'name clubName shortName logoUrl' },
+                    { path: 'awayClub', select: 'name clubName shortName logoUrl' }
                 ]
             })
             .populate('tournament', 'name bannerUrl')
@@ -695,6 +706,14 @@ router.get('/tickets/my-bookings', verifyFirebaseToken, async (req, res) => {
             paymentStatus: 'completed'
         })
             .populate('tournament', 'name')
+            .populate({
+                path: 'match',
+                select: 'homeClub awayClub date time venue round stage',
+                populate: [
+                    { path: 'homeClub', select: 'name clubName shortName logoUrl' },
+                    { path: 'awayClub', select: 'name clubName shortName logoUrl' }
+                ]
+            })
             .sort({ bookedAt: -1 })
             .lean();
 

@@ -209,6 +209,24 @@
               </div>
             </div>
           </div>
+
+          <div class="detail-section" v-if="selectedOpportunity.validFrom || selectedOpportunity.validTo">
+            <h4>Validity Period</h4>
+            <div class="validity-grid">
+              <div class="validity-item">
+                <span class="v-label">Start Date</span>
+                <span class="v-value">{{ formatDate(selectedOpportunity.validFrom) }}</span>
+              </div>
+              <div class="validity-item">
+                <span class="v-label">End Date</span>
+                <span class="v-value">{{ formatDate(selectedOpportunity.validTo) }}</span>
+              </div>
+              <div class="validity-item">
+                <span class="v-label">Duration</span>
+                <span class="v-value">{{ getDuration(selectedOpportunity.validFrom, selectedOpportunity.validTo) }} Days</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="modal-footer">
@@ -358,6 +376,23 @@ function formatAmount(value) {
     return (value / 1000).toFixed(0) + 'K';
   }
   return value.toLocaleString();
+}
+
+function formatDate(dateString) {
+  if (!dateString) return 'N/A';
+  return new Date(dateString).toLocaleDateString('en-IN', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
+  });
+}
+
+function getDuration(start, end) {
+  if (!start || !end) return 0;
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  const diffTime = Math.abs(endDate - startDate);
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
 }
 
 function truncate(text, length) {
@@ -756,6 +791,40 @@ onMounted(() => {
 .target-location svg {
   width: 14px;
   height: 14px;
+}
+
+.target-location svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Modal Validity Grid */
+.validity-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  background: #F9FAFB;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+}
+
+.validity-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.v-label {
+  font-size: 0.75rem;
+  color: #6B7280;
+  font-weight: 500;
+}
+
+.v-value {
+  font-size: 0.875rem;
+  color: #1F2937;
+  font-weight: 600;
 }
 
 .card-description {
