@@ -357,7 +357,10 @@ router.get('/matches/upcoming', async (req, res) => {
     const tIds = upcomingTs.map(t => t._id);
     if (!tIds.length) return res.json([]);
 
-    const matches = await Match.find({ tournament: { $in: tIds } })
+    const matches = await Match.find({
+      tournament: { $in: tIds },
+      status: 'Scheduled'
+    })
       .populate('homeClub', 'clubName name logoUrl district')
       .populate('awayClub', 'clubName name logoUrl district')
       .sort({ date: 1 })

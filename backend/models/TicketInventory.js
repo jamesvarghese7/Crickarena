@@ -72,7 +72,6 @@ ticketInventorySchema.virtual('availableTickets').get(function () {
 
 // Index for efficient queries
 ticketInventorySchema.index({ tournament: 1, salesStatus: 1 });
-ticketInventorySchema.index({ match: 1 });
 
 // Ensure virtuals are included in JSON output
 ticketInventorySchema.set('toJSON', { virtuals: true });

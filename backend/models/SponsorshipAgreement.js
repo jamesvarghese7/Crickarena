@@ -265,11 +265,9 @@ sponsorshipAgreementSchema.methods.getDeliverablesProgress = function () {
 };
 
 // Indexes
-sponsorshipAgreementSchema.index({ deal: 1 });
 sponsorshipAgreementSchema.index({ 'sponsor.sponsorRef': 1, status: 1 });
 sponsorshipAgreementSchema.index({ 'club.clubRef': 1, status: 1 });
 sponsorshipAgreementSchema.index({ status: 1, startDate: 1, endDate: 1 });
-sponsorshipAgreementSchema.index({ agreementNumber: 1 });
 sponsorshipAgreementSchema.index({ createdBy: 1 });
 
 export default mongoose.model('SponsorshipAgreement', sponsorshipAgreementSchema);
