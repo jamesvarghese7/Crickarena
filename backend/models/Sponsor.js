@@ -115,7 +115,6 @@ const sponsorSchema = new mongoose.Schema({
 
 // Indexes for better query performance
 sponsorSchema.index({ status: 1, createdAt: -1 });
-sponsorSchema.index({ user: 1 });
 sponsorSchema.index({ 'address.district': 1 });
 sponsorSchema.index({ industry: 1 });
 

@@ -98,7 +98,6 @@ ticketBookingSchema.statics.generateTicketNumber = function (bookingCode, index)
 };
 
 // Indexes for efficient queries
-ticketBookingSchema.index({ bookingCode: 1 });
 ticketBookingSchema.index({ 'user.email': 1 });
 ticketBookingSchema.index({ 'user.firebaseUid': 1 });
 ticketBookingSchema.index({ match: 1, status: 1 });
