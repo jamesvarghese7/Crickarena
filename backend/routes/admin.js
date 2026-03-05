@@ -2654,6 +2654,32 @@ router.put('/tournaments/:id/matches/:matchId/details', verifyFirebaseToken, req
     }
 
     await match.save();
+    
+    // Broadcast analytics update via WebSocket if match is live
+    if (match.status === 'Live' && match.innings && match.innings.length > 0) {
+      try {
+        const websocketService = (await import('../services/websocket.js')).default;
+        const currentInnings = match.innings[match.innings.length - 1];
+        
+        // Broadcast match update
+        websocketService.broadcastMatchUpdate(match._id.toString(), {
+          score: currentInnings.runs || 0,
+          wickets: currentInnings.wickets || 0,
+          overs: currentInnings.oversString || '0.0'
+        });
+        
+        // Broadcast analytics if there's data
+        if (currentInnings.balls && currentInnings.balls > 0) {
+          websocketService.broadcastAnalytics(match._id.toString(), match, currentInnings);
+        }
+        
+        console.log('✅ WebSocket broadcasts sent for match:', match._id);
+      } catch (wsError) {
+        console.error('Error broadcasting WebSocket updates:', wsError);
+        // Don't fail the request if WebSocket broadcast fails
+      }
+    }
+    
     res.json({ message: 'Match details saved', match });
   } catch (error) {
     console.error('Error saving match details:', error);

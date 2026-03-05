@@ -1,22 +1,22 @@
 <template>
-  <div class="space-y-8">
+  <div class="space-y-4">
     <!-- Welcome Header with Gradient -->
-    <div class="relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-3xl p-8 text-white shadow-2xl">
+    <div class="relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-xl p-5 text-white shadow-xl">
       <div class="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"></div>
       <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-32 translate-x-32"></div>
       <div class="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-24 -translate-x-24"></div>
       
       <div class="relative z-10 flex items-center justify-between">
         <div>
-          <h1 class="text-3xl md:text-4xl font-bold mb-3 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+          <h1 class="text-xl md:text-2xl font-bold mb-1 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
             Welcome back, {{ auth.userProfile?.name || 'Club Manager' }}!
           </h1>
-          <p class="text-blue-100 text-lg font-medium">
+          <p class="text-blue-100 text-sm font-medium">
             {{ clubData?.clubName || 'Your Club' }} Management Dashboard
           </p>
-          <div v-if="clubData" class="mt-4">
+          <div v-if="clubData" class="mt-2">
             <span :class="[
-              'inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold shadow-lg',
+              'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-lg',
               clubData.status === 'approved' ? 'bg-green-500 text-white' :
               clubData.status === 'pending' ? 'bg-yellow-500 text-white' :
               'bg-red-500 text-white'
@@ -35,8 +35,8 @@
           </div>
         </div>
         <div class="hidden lg:block">
-          <div class="w-24 h-24 bg-white/10 backdrop-blur-sm rounded-3xl flex items-center justify-center shadow-2xl">
-            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="w-14 h-14 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-xl">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
             </svg>
           </div>
@@ -45,64 +45,64 @@
     </div>
 
     <!-- Quick Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-      <div class="bg-white rounded-3xl p-6 shadow-xl shadow-blue-500/10 border border-blue-100/50 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 group">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div class="bg-white rounded-xl p-4 shadow-lg shadow-blue-500/10 border border-blue-100/50 hover:shadow-xl hover:shadow-blue-500/20 transition-all duration-300 group">
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-3xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{{ stats.players || 0 }}</div>
-            <div class="text-sm font-medium text-slate-600 mt-1">Active Players</div>
-            <div class="text-xs text-green-600 font-semibold mt-2">+12% this month</div>
+            <div class="text-2xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{{ stats.players || 0 }}</div>
+            <div class="text-xs font-medium text-slate-600 mt-0.5">Active Players</div>
+            <div class="text-xs text-green-600 font-semibold mt-1">+12% this month</div>
           </div>
-          <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m0 0a5.002 5.002 0 0 1 9.75 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
             </svg>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-3xl p-6 shadow-xl shadow-green-500/10 border border-green-100/50 hover:shadow-2xl hover:shadow-green-500/20 transition-all duration-300 group">
+      <div class="bg-white rounded-xl p-4 shadow-lg shadow-green-500/10 border border-green-100/50 hover:shadow-xl hover:shadow-green-500/20 transition-all duration-300 group">
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-3xl font-bold text-slate-900 group-hover:text-green-600 transition-colors">{{ stats.tournaments || 0 }}</div>
-            <div class="text-sm font-medium text-slate-600 mt-1">Tournament Applications</div>
-            <div class="text-xs text-green-600 font-semibold mt-2">
+            <div class="text-2xl font-bold text-slate-900 group-hover:text-green-600 transition-colors">{{ stats.tournaments || 0 }}</div>
+            <div class="text-xs font-medium text-slate-600 mt-0.5">Tournament Applications</div>
+            <div class="text-xs text-green-600 font-semibold mt-1">
               {{ stats.approvedTournaments || 0 }} approved
               <span v-if="stats.pendingTournaments" class="text-yellow-600 ml-2">{{ stats.pendingTournaments }} pending</span>
             </div>
           </div>
-          <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-3xl p-6 shadow-xl shadow-orange-500/10 border border-orange-100/50 hover:shadow-2xl hover:shadow-orange-500/20 transition-all duration-300 group">
+      <div class="bg-white rounded-xl p-4 shadow-lg shadow-orange-500/10 border border-orange-100/50 hover:shadow-xl hover:shadow-orange-500/20 transition-all duration-300 group">
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-3xl font-bold text-slate-900 group-hover:text-orange-600 transition-colors">{{ stats.pendingApplications || 0 }}</div>
-            <div class="text-sm font-medium text-slate-600 mt-1">Pending Applications</div>
-            <div class="text-xs text-orange-600 font-semibold mt-2">Needs review</div>
+            <div class="text-2xl font-bold text-slate-900 group-hover:text-orange-600 transition-colors">{{ stats.pendingApplications || 0 }}</div>
+            <div class="text-xs font-medium text-slate-600 mt-0.5">Pending Applications</div>
+            <div class="text-xs text-orange-600 font-semibold mt-1">Needs review</div>
           </div>
-          <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-3xl p-6 shadow-xl shadow-purple-500/10 border border-purple-100/50 hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 group">
+      <div class="bg-white rounded-xl p-4 shadow-lg shadow-purple-500/10 border border-purple-100/50 hover:shadow-xl hover:shadow-purple-500/20 transition-all duration-300 group">
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-3xl font-bold text-slate-900 group-hover:text-purple-600 transition-colors">{{ stats.upcomingMatches || 0 }}</div>
-            <div class="text-sm font-medium text-slate-600 mt-1">Upcoming Matches</div>
-            <div class="text-xs text-blue-600 font-semibold mt-2">Next: Tomorrow</div>
+            <div class="text-2xl font-bold text-slate-900 group-hover:text-purple-600 transition-colors">{{ stats.upcomingMatches || 0 }}</div>
+            <div class="text-xs font-medium text-slate-600 mt-0.5">Upcoming Matches</div>
+            <div class="text-xs text-blue-600 font-semibold mt-1">Next: Tomorrow</div>
           </div>
-          <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>
           </div>
@@ -111,65 +111,65 @@
     </div>
 
     <!-- Quick Actions & Recent Activity Row -->
-    <div class="grid lg:grid-cols-2 gap-8">
+    <div class="grid lg:grid-cols-2 gap-4">
       <!-- Quick Actions -->
-      <div class="bg-white rounded-3xl p-8 shadow-xl shadow-slate-500/10 border border-slate-100/50">
-        <div class="flex items-center gap-3 mb-6">
-          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="bg-white rounded-xl p-5 shadow-lg shadow-slate-500/10 border border-slate-100/50">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>
           </div>
-          <h2 class="text-xl font-bold text-slate-900">Quick Actions</h2>
+          <h2 class="text-base font-bold text-slate-900">Quick Actions</h2>
         </div>
         
-        <div class="grid gap-4">
-          <RouterLink :to="{ name: 'club-manager-profile' }" class="group block p-5 rounded-2xl border-2 border-slate-100 hover:border-blue-200 hover:bg-blue-50/50 transition-all duration-300">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="grid gap-2">
+          <RouterLink :to="{ name: 'club-manager-profile' }" class="group block p-3 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50/50 transition-all duration-300">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center group-hover:scale-105 transition-transform shadow-md">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                 </svg>
               </div>
-              <div>
-                <div class="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">Manage Club Profile</div>
-                <div class="text-sm text-slate-600">Update club information and settings</div>
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">Manage Club Profile</div>
+                <div class="text-xs text-slate-500">Update club information and settings</div>
               </div>
-              <svg class="w-5 h-5 text-slate-400 group-hover:text-blue-500 ml-auto transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 text-slate-400 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
               </svg>
             </div>
           </RouterLink>
 
-          <RouterLink :to="{ name: 'club-manager-tournaments' }" class="group block p-5 rounded-2xl border-2 border-slate-100 hover:border-green-200 hover:bg-green-50/50 transition-all duration-300">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <RouterLink :to="{ name: 'club-manager-tournaments' }" class="group block p-3 rounded-xl border border-slate-100 hover:border-green-200 hover:bg-green-50/50 transition-all duration-300">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center group-hover:scale-105 transition-transform shadow-md">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
               </div>
-              <div>
-                <div class="font-bold text-slate-900 group-hover:text-green-600 transition-colors">Tournament Registration</div>
-                <div class="text-sm text-slate-600">Join upcoming tournaments and events</div>
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold text-slate-900 group-hover:text-green-600 transition-colors">Tournament Registration</div>
+                <div class="text-xs text-slate-500">Join upcoming tournaments and events</div>
               </div>
-              <svg class="w-5 h-5 text-slate-400 group-hover:text-green-500 ml-auto transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 text-slate-400 group-hover:text-green-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
               </svg>
             </div>
           </RouterLink>
 
-          <RouterLink :to="{ name: 'club-manager-players' }" class="group block p-5 rounded-2xl border-2 border-slate-100 hover:border-orange-200 hover:bg-orange-50/50 transition-all duration-300">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <RouterLink :to="{ name: 'club-manager-players' }" class="group block p-3 rounded-xl border border-slate-100 hover:border-orange-200 hover:bg-orange-50/50 transition-all duration-300">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center group-hover:scale-105 transition-transform shadow-md">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m0 0a5.002 5.002 0 0 1 9.75 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
                 </svg>
               </div>
-              <div>
-                <div class="font-bold text-slate-900 group-hover:text-orange-600 transition-colors">Player Applications</div>
-                <div class="text-sm text-slate-600">Review and manage player requests</div>
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold text-slate-900 group-hover:text-orange-600 transition-colors">Player Applications</div>
+                <div class="text-xs text-slate-500">Review and manage player requests</div>
               </div>
-              <svg class="w-5 h-5 text-slate-400 group-hover:text-orange-500 ml-auto transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 text-slate-400 group-hover:text-orange-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
               </svg>
             </div>
@@ -178,42 +178,42 @@
       </div>
 
       <!-- Recent Activity -->
-      <div class="bg-white rounded-3xl p-8 shadow-xl shadow-slate-500/10 border border-slate-100/50">
-        <div class="flex items-center gap-3 mb-6">
-          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
-            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="bg-white rounded-xl p-5 shadow-lg shadow-slate-500/10 border border-slate-100/50">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
           </div>
-          <h2 class="text-xl font-bold text-slate-900">Recent Activity</h2>
+          <h2 class="text-base font-bold text-slate-900">Recent Activity</h2>
         </div>
         
-        <div v-if="recentActivity.length === 0" class="text-center py-12">
-          <div class="w-20 h-20 mx-auto mb-4 rounded-3xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
-            <svg class="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div v-if="recentActivity.length === 0" class="text-center py-8">
+          <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
+            <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
             </svg>
           </div>
-          <p class="text-slate-500 font-medium">No recent activity</p>
-          <p class="text-sm text-slate-400 mt-1">Activity will appear here as you manage your club</p>
+          <p class="text-sm text-slate-500 font-medium">No recent activity</p>
+          <p class="text-xs text-slate-400 mt-0.5">Activity will appear here as you manage your club</p>
         </div>
         
-        <div v-else class="space-y-4">
-          <div v-for="activity in recentActivity" :key="activity.id" class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 hover:bg-slate-100 transition-colors">
+        <div v-else class="space-y-2">
+          <div v-for="activity in recentActivity" :key="activity.id" class="flex items-center gap-3 p-3 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors">
             <div :class="[
-              'w-12 h-12 rounded-2xl flex items-center justify-center text-white text-sm font-bold shadow-lg',
+              'w-9 h-9 rounded-lg flex items-center justify-center text-white text-xs font-bold shadow-md',
               getActivityIconClass(activity.type)
             ]">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getActivityIconPath(activity.icon)"/>
               </svg>
             </div>
             <div class="flex-1 min-w-0">
-              <p class="font-medium text-slate-900 truncate">{{ activity.message }}</p>
-              <p class="text-sm text-slate-500">{{ formatDate(activity.timestamp) }}</p>
+              <p class="text-sm font-medium text-slate-900 truncate">{{ activity.message }}</p>
+              <p class="text-xs text-slate-500">{{ formatDate(activity.timestamp) }}</p>
             </div>
             <div v-if="getActivityBadge(activity.type)" :class="[
-              'px-3 py-1 rounded-full text-xs font-semibold',
+              'px-2 py-0.5 rounded-full text-xs font-semibold',
               getActivityBadge(activity.type).class
             ]">
               {{ getActivityBadge(activity.type).text }}
@@ -224,32 +224,32 @@
     </div>
 
     <!-- Performance Chart Placeholder -->
-    <div class="bg-white rounded-3xl p-8 shadow-xl shadow-slate-500/10 border border-slate-100/50">
-      <div class="flex items-center justify-between mb-6">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="bg-white rounded-xl p-5 shadow-lg shadow-slate-500/10 border border-slate-100/50">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
             </svg>
           </div>
-          <h2 class="text-xl font-bold text-slate-900">Club Performance</h2>
+          <h2 class="text-base font-bold text-slate-900">Club Performance</h2>
         </div>
-        <select class="px-4 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <select class="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option>Last 30 days</option>
           <option>Last 3 months</option>
           <option>Last year</option>
         </select>
       </div>
       
-      <div class="h-64 bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl flex items-center justify-center border-2 border-dashed border-slate-200">
+      <div class="h-48 bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl flex items-center justify-center border-2 border-dashed border-slate-200">
         <div class="text-center">
-          <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center">
-            <svg class="w-8 h-8 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="w-10 h-10 mx-auto mb-2 rounded-lg bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center">
+            <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
             </svg>
           </div>
-          <p class="text-slate-600 font-medium">Performance Analytics</p>
-          <p class="text-sm text-slate-500 mt-1">Charts and insights coming soon</p>
+          <p class="text-sm text-slate-600 font-medium">Performance Analytics</p>
+          <p class="text-xs text-slate-500 mt-0.5">Charts and insights coming soon</p>
         </div>
       </div>
     </div>
@@ -388,19 +388,19 @@ function getActivityBadge(type) {
   }
 }
 
-.space-y-8 > * {
-  animation: fadeInUp 0.6s ease-out;
+.space-y-4 > * {
+  animation: fadeInUp 0.5s ease-out;
 }
 
-.space-y-8 > *:nth-child(2) {
+.space-y-4 > *:nth-child(2) {
   animation-delay: 0.1s;
 }
 
-.space-y-8 > *:nth-child(3) {
-  animation-delay: 0.2s;
+.space-y-4 > *:nth-child(3) {
+  animation-delay: 0.15s;
 }
 
-.space-y-8 > *:nth-child(4) {
-  animation-delay: 0.3s;
+.space-y-4 > *:nth-child(4) {
+  animation-delay: 0.2s;
 }
 </style>

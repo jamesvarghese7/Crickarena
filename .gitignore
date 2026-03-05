@@ -4,3 +4,5 @@ frontend/node_modules/
 
 # Do not commit environment files
 backend/.env
+docs/
+selenium-tests/

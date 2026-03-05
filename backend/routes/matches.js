@@ -7,6 +7,27 @@ import { body, validationResult, param } from 'express-validator';
 
 const router = express.Router();
 
+// GET /api/matches/:matchId - Get single match by ID (for analytics page)
+router.get('/:matchId', async (req, res) => {
+  try {
+    const { matchId } = req.params;
+    
+    const match = await Match.findById(matchId)
+      .populate('homeClub', 'name clubName logoUrl')
+      .populate('awayClub', 'name clubName logoUrl')
+      .populate('tournament', 'name title');
+    
+    if (!match) {
+      return res.status(404).json({ message: 'Match not found' });
+    }
+    
+    res.json(match);
+  } catch (error) {
+    console.error('Error fetching match:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // Validation middleware for roster submission
 const validateRoster = [
   param('matchId').isMongoId().withMessage('Valid match ID is required'),

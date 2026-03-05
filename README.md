@@ -1,55 +1,236 @@
 # CrickArena
 
-A full‑stack cricket club and tournaments platform with Firebase authentication, an Express/MongoDB backend, and a Vue 3 (Vite) frontend.
+A comprehensive full-stack cricket club and tournament management platform with Firebase authentication, Express/MongoDB backend, and Vue 3 (Vite) frontend.
 
 ## Abstract
-CrickArena is an advanced, intelligent web-based platform engineered to modernize and unify grassroots cricket management in Kerala through a scalable, role-based, and data-driven digital ecosystem. The platform expands beyond basic administrative digitization to function as an end-to-end cricket operations suite that optimizes registration, scheduling, performance analytics, and stakeholder collaboration. CrickArena aims to replace fragmented, paper-based processes with a centralized, cloud-enabled environment where clubs, players, coaches, tournament organizers, and the public interact seamlessly through structured workflows and real-time information services.
 
-The enhanced system architecture broadens the platform’s capabilities by integrating predictive analytics, automated scheduling, and an insights-driven decision support engine. Administrators gain a powerful control dashboard featuring tournament lifecycle management, automated fixture generation using constraint-based algorithms, disciplinary tracking, real-time insights on participation trends, and platform-wide monitoring through analytics pipelines. Club Managers can manage multi-team rosters, transfer players between squads, track club finances, submit tournament applications, and maintain verified club credentials. Coaches receive a dedicated performance intelligence module with training session planning, individualized skill-progress heatmaps, injury monitoring, and AI-assisted lineup optimization that ensures compliant team balance.
+CrickArena is an advanced, intelligent web-based platform engineered to modernize and unify grassroots cricket management in Kerala through a scalable, role-based, and data-driven digital ecosystem. The platform functions as an end-to-end cricket operations suite that optimizes registration, scheduling, performance analytics, ticket booking, sponsorship management, and stakeholder collaboration. CrickArena replaces fragmented, paper-based processes with a centralized, cloud-enabled environment where clubs, players, coaches, sponsors, tournament organizers, and the public interact seamlessly through structured workflows and real-time information services.
 
-Players are provided with personalized development dashboards that consolidate match statistics, skill metrics, training feedback, and longitudinal performance graphs generated through in-app analytics. They can showcase their verified profiles to clubs and selectors, creating opportunities for transparent grassroots talent identification. Public Users and cricket enthusiasts gain access to a real-time information hub offering match centers, live scorecards, automated points table generation, player rankings, and a social engagement layer that enables followers, comments, and club updates.
+The enhanced system architecture integrates automated scheduling, sponsorship management with digital agreements, ticket booking with QR code generation, and an insights-driven analytics dashboard. Administrators gain a powerful control dashboard featuring tournament lifecycle management, automated fixture generation using constraint-based algorithms, disciplinary tracking, real-time insights on participation trends, and platform-wide monitoring through analytics pipelines. Club Managers can manage multi-team rosters, transfer players between squads, manage sponsorships, submit tournament applications, and maintain verified club credentials. Coaches receive a dedicated performance intelligence module with training session planning, player skill tracking, and lineup optimization.
 
-CrickArena incorporates machine learning and data engineering components to elevate the system from a management platform to an intelligent cricket analytics environment. Key additions include automated performance evaluation models, anomaly detection for fraudulent score entries, player potential prediction using historical data, and recommendation engines for training focus areas. The platform is built using the MongoDB–Express–Vue–Node stack with modular, extensible services, Firebase-based authenticated sessions with role-based access control, encrypted communication channels (HTTPS), and robust access policies to ensure security, reliability, and scalability.
+Players are provided with personalized development dashboards that consolidate match statistics, skill metrics, training feedback, and performance tracking. They can showcase their verified profiles to clubs and selectors, creating opportunities for transparent grassroots talent identification. Sponsors can browse opportunities, create sponsorship deals, and manage digital agreements with clubs. Public Users and cricket enthusiasts gain access to a real-time information hub offering match centers, live scorecards, automated points table generation, player rankings, and ticket booking facilities.
 
-This final-year project not only delivers a robust digital governance system for local cricket ecosystems but also demonstrates applied research in sports analytics, automated administration, and intelligent workflow design. By bridging technology with grassroots sports development, CrickArena positions itself as a sustainable digital infrastructure capable of supporting Kerala’s community cricket ecosystem at scale.
+CrickArena is built using the MEVN stack (MongoDB–Express–Vue–Node) with modular, extensible services, Firebase-based authenticated sessions with role-based access control, encrypted communication channels (HTTPS), QR-based ticket validation, Razorpay payment integration, and robust security policies to ensure reliability and scalability.
 
 ## Tech Stack
-- **Frontend**: Vue 3, Vite, Pinia, Vue Router, Tailwind CSS
-- **Auth (Web)**: Firebase Web SDK (Email/Password, Google), session cookies to backend
-- **Backend**: Node.js, Express 5, Mongoose (MongoDB), Firebase Admin, Helmet, CORS, Rate limiting, Joi validation
-- **Database**: MongoDB
-- **Email**: Nodemailer (SMTP) — currently reserved for future use
+
+### Frontend
+- **Framework**: Vue 3 with Composition API
+- **Build Tool**: Vite 5
+- **State Management**: Pinia
+- **Routing**: Vue Router 4
+- **Styling**: Tailwind CSS 3
+- **Charts**: Chart.js
+- **Real-time**: Socket.IO Client for live updates
+- **Authentication**: Firebase Web SDK (Email/Password, Google OAuth)
+
+### Backend
+- **Runtime**: Node.js (ES Modules)
+- **Framework**: Express 5
+- **Database**: MongoDB with Mongoose 8
+- **Real-time**: Socket.IO for WebSocket communication
+- **Authentication**: Firebase Admin SDK
+- **Security**: Helmet, CORS, Rate Limiting, Joi Validation
+- **File Uploads**: Multer
+- **Email**: Nodemailer (SMTP)
+- **Payments**: Razorpay
+- **QR Codes**: qrcode
+- **PDF Generation**: Puppeteer
+
+## Key Features
+
+### 🏏 Tournament Management
+- Create and manage tournaments with multiple formats (League, Knockout, Groups + Knockouts)
+- Automated fixture generation with constraint-based algorithms
+- Real-time match updates and live scorecards
+- Points table generation and standings
+- Team registration and approval workflow
+
+### 🎫 Ticket Booking System
+- Interactive stadium section selection
+- Multiple ticket categories with dynamic pricing
+- QR code generation for ticket validation
+- Email confirmation with embedded QR codes
+- Real-time seat availability tracking
+- Booking history and ticket management
+
+### 🤝 Sponsorship Module
+- Sponsor marketplace for opportunity discovery
+- Digital sponsorship agreements with e-signatures
+- Multi-tier sponsorship packages (Title, Gold, Silver, Bronze)
+- Agreement PDF generation
+- Payment tracking and transaction history
+- Sponsor-club messaging system
+
+### 👥 Role-Based Dashboards
+
+| Role | Features |
+|------|----------|
+| **Admin** | Platform analytics, club/user management, tournament creation, ticket configuration, sponsor oversight |
+| **Club Manager** | Team roster management, player/coach assignments, tournament registration, sponsorship deals, training sessions |
+| **Coach** | Training session planning, player performance tracking, match lineup management, skill assessments |
+| **Player** | Performance dashboard, match statistics, training feedback, profile showcase |
+| **Sponsor** | Opportunity browsing, deal creation, agreement signing, payment management |
+
+### 📊 Analytics & Insights
+- **Real-time Match Analytics** with WebSocket-powered live updates
+  - Win probability calculation (ML-based)
+  - Match momentum tracking
+  - Final score prediction with confidence intervals
+  - AI-powered match insights
+  - Scoring pattern analysis
+- Platform-wide statistics dashboard
+- Club performance metrics
+- Player statistics and rankings
+- Tournament participation trends
+- Revenue and transaction tracking
+
+### 💬 Communication
+- In-app messaging system
+- Sponsor-club negotiations
+- Contact form submissions
+- Email notifications
 
 ## Repository Structure
+
 ```
 crickarena/
-├─ backend/
-│  ├─ server.js              # Express bootstrapping, security, routing
-│  ├─ routes/                # auth, users, clubs, tournaments, admin
-│  ├─ models/                # User, Club, Tournament, Match
-│  ├─ middleware/            # auth (Firebase), rbac, validation
-│  ├─ config/                # db, firebaseAdmin, mailer
-│  └─ utils/logger.js        # logger + error handler
-├─ frontend/
-│  ├─ index.html
-│  ├─ vite.config.js
-│  ├─ .env                   # Vite app env (example included)
-│  └─ src/
-│     ├─ main.js             # App bootstrap + auth init
-│     ├─ router/             # Route guards (auth/admin/clubManager)
-│     ├─ store/auth.js       # Firebase auth, API session cookie, profile
-│     ├─ firebase/client.js  # Firebase client initialization
-│     ├─ pages/              # Views
-│     └─ assets/, components/, utils/
-└─ README.md (this file)
+├── backend/
+│   ├── server.js              # Express bootstrapping, security, routing
+│   ├── routes/                # API route handlers
+│   │   ├── admin.js           # Admin operations (150KB+ comprehensive)
+│   │   ├── auth.js            # Authentication & session management
+│   │   ├── clubs.js           # Club CRUD & management
+│   │   ├── tournaments.js     # Tournament operations
+│   │   ├── tickets.js         # Ticket booking & inventory
+│   │   ├── sponsors.js        # Sponsor management
+│   │   ├── sponsorships.js    # Sponsorship deals & opportunities
+│   │   ├── agreements.js      # Digital agreement workflows
+│   │   ├── coaches.js         # Coach operations
+│   │   ├── players.js         # Player management
+│   │   ├── matches.js         # Match operations
+│   │   ├── analytics.js       # Platform analytics
+│   │   ├── payments.js        # Payment processing
+│   │   ├── messages.js        # Messaging system
+│   │   ├── matchAnalysis.js   # Player match analysis & stats
+│   │   ├── liveAnalytics.js   # Real-time match analytics API
+│   │   ├── contact.js         # Contact submissions
+│   │   └── users.js           # User profile operations
+│   ├── models/                # Mongoose schemas (18 models)
+│   │   ├── User.js            # User accounts
+│   │   ├── Club.js            # Cricket clubs
+│   │   ├── Tournament.js      # Tournaments
+│   │   ├── Match.js           # Match details & scores
+│   │   ├── Player.js          # Player profiles
+│   │   ├── Coach.js           # Coach profiles
+│   │   ├── Sponsor.js         # Sponsor companies
+│   │   ├── SponsorshipDeal.js # Active sponsorships
+│   │   ├── SponsorshipAgreement.js # Digital contracts
+│   │   ├── SponsorshipOpportunity.js # Available opportunities
+│   │   ├── TicketBooking.js   # Ticket purchases
+│   │   ├── TicketInventory.js # Seat inventory
+│   │   ├── Payment.js         # Payment records
+│   │   ├── PaymentTransaction.js # Transaction logs
+│   │   ├── Message.js         # Direct messages
+│   │   ├── Conversation.js    # Message threads
+│   │   └── ContactSubmission.js # Contact form entries
+│   ├── middleware/            # Express middleware
+│   │   ├── auth.js            # Firebase token verification
+│   │   ├── rbac.js            # Role-based access control
+│   │   ├── validation.js      # Request validation
+│   │   └── agreementMiddleware.js # Agreement-specific checks
+│   ├── services/              # Business logic services
+│   │   ├── matchAnalytics.js  # ML algorithms for analytics
+│   │   └── websocket.js       # WebSocket service (Socket.IO)
+│   ├── utils/                 # Utility functions
+│   │   ├── fixturesV3.js      # Fixture generation algorithms
+│   │   ├── razorpay.js        # Payment gateway integration
+│   │   ├── ticketEmails.js    # Ticket confirmation emails
+│   │   ├── sponsorEmails.js   # Sponsor notification emails
+│   │   ├── agreementPdf.js    # PDF generation
+│   │   ├── statusSync.js      # Status synchronization
+│   │   └── logger.js          # Logging utilities
+│   └── config/                # Configuration files
+├── frontend/
+│   ├── index.html
+│   ├── vite.config.js
+│   ├── tailwind.config.js
+│   └── src/
+│       ├── main.js            # App bootstrap
+│       ├── App.vue            # Root component
+│       ├── router/            # Route definitions & guards
+│       ├── store/             # Pinia stores (auth, etc.)
+│       ├── firebase/          # Firebase client config
+│       ├── pages/             # View components (59+ pages)
+│       │   ├── HomePage.vue          # Landing page
+│       │   ├── Login.vue             # Authentication
+│       │   ├── Register.vue          # User registration
+│       │   ├── AdminPanel.vue        # Admin dashboard wrapper
+│       │   ├── AdminDashboard.vue    # Admin statistics
+│       │   ├── AdminTournament.vue   # Tournament management
+│       │   ├── ClubManagerPanel.vue  # Club dashboard wrapper
+│       │   ├── ClubManagerDashboard.vue # Club overview
+│       │   ├── ClubManagerPlayers.vue   # Player management
+│       │   ├── ClubManagerCoaches.vue   # Coach management
+│       │   ├── ClubManagerSponsorships.vue # Sponsorship deals
+│       │   ├── CoachPanel.vue        # Coach dashboard
+│       │   ├── PlayerPanel.vue       # Player dashboard
+│       │   ├── SponsorPanel.vue      # Sponsor dashboard
+│       │   ├── SponsorMarketplace.vue # Browse opportunities
+│       │   ├── TournamentsList.vue   # Tournament listings
+│       │   ├── TournamentDetails.vue # Tournament info & matches
+│       │   ├── MatchDetails.vue      # Match details with analytics
+│       │   ├── LiveMatchAnalytics.vue # Real-time analytics page
+│       │   ├── TicketBooking.vue     # Ticket purchase flow
+│       │   ├── MyTickets.vue         # Booked tickets
+│       │   └── ...                   # Additional pages
+│       ├── components/        # Reusable components
+│       │   ├── Navbar.vue            # Navigation bar
+│       │   ├── Messaging.vue         # Chat interface
+│       │   ├── match/                # Match-specific components
+│       │   │   └── LiveAnalyticsDashboard.vue # Real-time analytics UI
+│       │   ├── admin/                # Admin-specific components
+│       │   │   ├── AdminDashboard.vue
+│       │   │   ├── AdminTournamentManagement.vue
+│       │   │   ├── AdminTicketManagement.vue
+│       │   │   ├── AdminClubManagement.vue
+│       │   │   ├── AdminPlayerManagement.vue
+│       │   │   ├── AdminCoachManagement.vue
+│       │   │   ├── AdminSponsorManagement.vue
+│       │   │   ├── AdminAnalytics.vue
+│       │   │   └── FixtureWizard.vue
+│       │   └── ...                   # Other components
+│       ├── assets/            # Static assets
+│       └── utils/             # Frontend utilities
+└── README.md
 ```
 
+## Data Models
+
+| Model | Description |
+|-------|-------------|
+| **User** | User accounts with Firebase UID, roles (admin, clubManager, coach, player, sponsor, public) |
+| **Club** | Cricket clubs with registration workflow, manager assignment, logo storage |
+| **Tournament** | Tournament configuration, format, registration, participants |
+| **Match** | Match details, teams, scores, venue, status, results |
+| **Player** | Player profiles, statistics, club affiliation, skills |
+| **Coach** | Coach profiles, certifications, assigned clubs |
+| **Sponsor** | Sponsor company profiles, contact info |
+| **SponsorshipDeal** | Active sponsorship relationships |
+| **SponsorshipAgreement** | Digital contracts with e-signatures |
+| **SponsorshipOpportunity** | Available sponsorship packages |
+| **TicketBooking** | Ticket purchases with QR codes |
+| **TicketInventory** | Stadium section configuration and availability |
+| **PaymentTransaction** | Razorpay transaction records |
+
 ## Backend Setup
+
 1. Install dependencies
    ```bash
    cd backend
    npm install
    ```
+
 2. Create `backend/.env`
    ```ini
    # Server
@@ -58,121 +239,191 @@ crickarena/
    CORS_ORIGIN=http://localhost:5173
 
    # MongoDB
-   MONGO_URI=mongodb://localhost:27017
+   MONGO_URI=mongodb://localhost:27017/crickarena
 
    # Firebase Admin (Service Account)
    FIREBASE_PROJECT_ID=your-project-id
    FIREBASE_CLIENT_EMAIL=your-service-account@your-project-id.iam.gserviceaccount.com
-   # You can paste the raw PEM or a base64 body with \n newlines; code normalizes both
    FIREBASE_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n
-   # SMTP (optional, for future email features)
-   SMTP_HOST=localhost
+
+   # Razorpay (for payments)
+   RAZORPAY_KEY_ID=your-key-id
+   RAZORPAY_KEY_SECRET=your-key-secret
+
+   # SMTP (for emails)
+   SMTP_HOST=smtp.gmail.com
    SMTP_PORT=587
-   SMTP_USER=
-   SMTP_PASS=
-   MAIL_FROM="CrickArena <no-reply@crickarena.local>"
+   SMTP_USER=your-email@gmail.com
+   SMTP_PASS=your-app-password
+   MAIL_FROM="CrickArena <no-reply@crickarena.com>"
    ```
+
 3. Run the API
    ```bash
-   npm run dev
-   # API: http://localhost:4000
-   # Health check: http://localhost:4000/health
+   npm run dev    # Development with watch mode
+   # or
+   npm start      # Production
    ```
-
-### Security and Middleware
-- **CORS**: Only origins in `CORS_ORIGIN` are allowed (comma‑separated list supported)
-- **Helmet**: Basic CSP + security headers
-- **Rate Limiting**: Global limiter and stricter limiter for auth routes
-- **Cookies**: Session cookie `session` (HTTP‑only; `secure`+`SameSite=None` in production)
+   - API: http://localhost:4000
+   - Health check: http://localhost:4000/health
 
 ## Frontend Setup
+
 1. Install dependencies
    ```bash
    cd frontend
    npm install
    ```
-2. Configure `frontend/.env` (example present in repo)
+
+2. Configure `frontend/.env`
    ```ini
    VITE_API_BASE=http://localhost:4000/api
 
-   VITE_FIREBASE_API_KEY=...your...
-   VITE_FIREBASE_AUTH_DOMAIN=...your...
-   VITE_FIREBASE_PROJECT_ID=...your...
-   VITE_FIREBASE_APP_ID=...your...
-   VITE_FIREBASE_STORAGE_BUCKET=...your...
-   VITE_FIREBASE_MESSAGING_SENDER_ID=...your...
+   VITE_FIREBASE_API_KEY=your-api-key
+   VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+   VITE_FIREBASE_PROJECT_ID=your-project-id
+   VITE_FIREBASE_APP_ID=your-app-id
+   VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+   VITE_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
    ```
+
 3. Run the app
    ```bash
    npm run dev
-   # App: http://localhost:5173
    ```
-
-## Authentication Flow
-- Frontend uses Firebase Web Auth (Google or Email/Password).
-- After sign‑in, frontend obtains ID token and calls `POST /api/auth/session/login` to create a secure session cookie.
-- Backend verifies session cookie or bearer token on protected routes.
-
-## Data Models (simplified)
-- **User**: `{ firebaseUid, name, email, role: 'admin'|'clubManager'|'public', club?, emailVerified }`
-- **Club**: Registration fields (clubName, district, city, contact, etc.), status workflow (`pending|approved|rejected`), logo (binary or URL), manager relation
-- **Tournament**: `{ name, description, format, status, startDate, endDate, maxTeams, registrationDeadline, organizer, participants[], registrations[] }`
-- **Match**: `{ tournament, homeClub, awayClub, date, time, venue, result }`
+   - App: http://localhost:5173
 
 ## API Overview
+
 Base URL: `http://localhost:4000/api`
 
-- **Auth** (`/auth`)
-  - `POST /session/login` → Exchange Firebase ID token for session cookie
-  - `POST /session/logout` → Clear session cookie
-  - `POST /register` → Create/Update user profile (requires valid Firebase token; blocks disposable emails; validates input)
-  - `GET /profile` → Get current user profile
+### Authentication (`/auth`)
+- `POST /session/login` - Exchange Firebase ID token for session cookie
+- `POST /session/logout` - Clear session cookie
+- `POST /register` - Create/Update user profile
+- `GET /profile` - Get current user profile
 
-- **Users** (`/users`)
-  - `GET /me` → Current user (protected)
-  - `PUT /me` → Update profile (protected)
+### Clubs (`/clubs`)
+- `POST /register` - Submit club registration
+- `GET /my-club` - Fetch manager's club
+- `PUT /my-club` - Update club details
+- `GET /public` - List approved clubs
+- `GET /public/:id` - Club details
 
-- **Clubs** (`/clubs`)
-  - `POST /register` → Submit club registration (role: clubManager)
-  - `GET /my-club` → Fetch manager’s club
-  - `PUT /my-club` → Update club; if approved, transitions back to pending for re‑approval
-  - `GET /public` → List approved clubs (public)
-  - `GET /public/:id` → Approved club details (public)
-  - `GET /:id/logo` → Serve logo binary (if stored)
-  - Admin legacy: `PUT /:id/approve`, `PUT /:id/reject`
+### Tournaments (`/tournaments`)
+- `GET /open` - Public open tournaments
+- `GET /upcoming` - Upcoming/ongoing tournaments
+- `GET /history` - Completed tournaments
+- `GET /:id` - Tournament details
+- `GET /:id/matches` - Tournament matches
+- `POST /:id/register` - Register for tournament
 
-- **Tournaments** (`/tournaments`)
-  - `GET /open` → Public open tournaments
-  - `GET /upcoming` → Upcoming/ongoing
-  - `GET /history` → Completed
-  - `GET /:id` → Details
-  - `GET /:id/matches` → Matches
-  - Club manager: `GET /mine`, `POST /:id/register`
+### Tickets (`/tickets`)
+- `GET /matches/:matchId/availability` - Check seat availability
+- `POST /bookings` - Create booking
+- `GET /my-bookings` - User's tickets
+- `GET /bookings/:id/qr` - Get ticket QR code
 
-- **Admin** (`/admin`) — role: admin
-  - `GET /clubs` → List club registrations (optional `?status=`)
-  - `GET /stats` → Aggregated stats
-  - `PUT /clubs/:id/approve` / `PUT /clubs/:id/reject` → Moderate registrations
-  - Tournaments: `POST /tournaments`, `GET /tournaments`, `PUT /tournaments/:id`, `PUT /tournaments/:id/cancel`, `GET /tournaments/:id/registrations`, `PUT /tournaments/:id/registrations/:regId/:action`
+### Sponsorships (`/sponsorships`)
+- `GET /opportunities` - Available sponsorship packages
+- `POST /deals` - Create sponsorship deal
+- `GET /deals/my` - User's deals
 
-## Role‑Based Access
-- Roles: `public`, `clubManager`, `admin` (stored on User model)
-- Frontend route guards ensure only authorized roles reach admin/club manager pages.
-- Backend enforces with `verifyFirebaseToken` + `requireRole` middleware.
+### Agreements (`/agreements`)
+- `POST /` - Create agreement
+- `GET /:id` - Agreement details
+- `POST /:id/sign` - Sign agreement
+- `GET /:id/pdf` - Download agreement PDF
 
-## Development Tips
-- If CORS errors occur, set `CORS_ORIGIN=http://localhost:5173` (or your dev URL) and restart the backend.
-- For Firebase Admin private key, preserve newlines. If using env with escaped `\n`, the backend normalizes it.
-- In production, use HTTPS so `secure` cookies work with `SameSite=None`.
-- Ensure MongoDB is running and `MONGO_URI` is reachable.
+### Live Analytics (`/live-analytics`)
+- `GET /:matchId` - Comprehensive match analytics
+- `GET /:matchId/win-probability` - Win probability calculation
+- `GET /:matchId/momentum` - Match momentum tracking
+- `GET /:matchId/prediction` - Score prediction
+- `GET /:matchId/insights` - AI-powered insights
+- `GET /active/matches` - Active matches with viewer count
+- `POST /:matchId/broadcast` - Manual analytics broadcast
+
+### Admin (`/admin`)
+- `GET /stats` - Platform statistics
+- `GET /clubs` - All club registrations
+- `PUT /clubs/:id/approve` - Approve club
+- `PUT /clubs/:id/reject` - Reject club
+- `POST /tournaments` - Create tournament
+- `PUT /tournaments/:id/fixtures` - Generate fixtures
+- Ticket management, player management, etc.
+
+## Security & Middleware
+
+- **CORS**: Configurable origins (comma-separated list supported)
+- **Helmet**: CSP + security headers
+- **Rate Limiting**: Global limiter + stricter auth limiter
+- **Cookies**: HTTP-only session cookies (`secure` + `SameSite=None` in production)
+- **RBAC**: Role-based access control on protected routes
+- **Validation**: Joi schemas for request validation
+
+## Role-Based Access
+
+| Role | Access Level |
+|------|--------------|
+| `admin` | Full platform control |
+| `clubManager` | Club-specific operations |
+| `coach` | Coaching & training features |
+| `player` | Player dashboard & profile |
+| `sponsor` | Sponsorship features |
+| `public` | Read-only public access |
+
+## Real-Time Match Analytics
+
+The platform includes a sophisticated real-time analytics system powered by WebSockets and machine learning:
+
+### Features
+- **Win Probability**: ML-based calculation considering runs needed, wickets, run rate, and form
+- **Match Momentum**: Weighted analysis of recent overs to track match flow
+- **Score Prediction**: Linear regression-based final score projection with confidence intervals
+- **AI Insights**: Rule-based expert system providing contextual match analysis
+- **Live Updates**: Sub-50ms latency WebSocket updates for real-time experience
+
+### Access Analytics
+1. Navigate to any live match details page
+2. Click "Live Analytics" button or "Analytics" tab
+3. Or visit directly: `/match/:matchId/analytics`
+
+### Documentation
+Comprehensive documentation available in `docs/`:
+- `START_HERE.md` - Quick overview and setup
+- `SEMINAR_DOCUMENTATION.md` - Complete technical guide
+- `QUICK_START_GUIDE.md` - 5-minute setup guide
+- `PRESENTATION_SLIDES_OUTLINE.md` - 35 presentation slides
+- `FUTURE_TECHNOLOGIES.md` - Enhancement ideas
 
 ## Scripts
-- Backend: `npm run dev` (watch), `npm start`
-- Frontend: `npm run dev`, `npm run build`, `npm run preview`
 
-## Notes
-- OTP flow is removed for registration; email transport is kept for future features.
-- Some legacy fields are kept for backward compatibility (e.g., `Club.name`, `Tournament.date`, `participants`).
+**Backend:**
+```bash
+npm run dev              # Development with hot reload
+npm start                # Production server
+npm run seed:club-managers  # Seed club manager data
+node test-analytics.js   # Test analytics algorithms
+```
 
-## Missing Repo Metadata (Optional)
-The helper file `.zencoder/rules/repo.md` is not present. Creating it enables richer automated assistance for future maintenance. If you want, I can generate it based on this analysis.
+**Frontend:**
+```bash
+npm run dev      # Development server
+npm run build    # Production build
+npm run preview  # Preview production build
+```
+
+## Development Tips
+
+1. **CORS Issues**: Ensure `CORS_ORIGIN` matches your frontend URL
+2. **Firebase Key**: Preserve newlines in private key; escaped `\n` is auto-normalized
+3. **Production**: Use HTTPS for secure cookies with `SameSite=None`
+4. **MongoDB**: Ensure MongoDB is running and `MONGO_URI` is accessible
+5. **Razorpay**: Configure keys for payment testing (use test mode keys)
+6. **WebSocket**: Socket.IO is configured for real-time analytics - ensure backend is running
+7. **Analytics**: Install `socket.io-client` in frontend for real-time features
+
+---
+
+**Built with ❤️ for Kerala's grassroots cricket community**

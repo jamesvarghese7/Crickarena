@@ -75,7 +75,40 @@
           <div class="p-6 space-y-4">
             <h3 class="text-lg font-semibold text-white mb-4">Select Tickets</h3>
             
-            <div class="grid md:grid-cols-3 gap-4">
+            <!-- 3D Stadium Mode -->
+            <div v-if="inv.bookingMode === '3d'" class="text-center py-6">
+              <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full mb-4">
+                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                </svg>
+              </div>
+              <h4 class="text-xl font-bold text-white mb-2">🏟️ 3D Stadium Experience</h4>
+              <p class="text-slate-400 mb-4">Select your exact seat with our interactive 3D stadium viewer!</p>
+              <div v-if="inv.stadiumConfig" class="flex items-center justify-center gap-4 text-sm text-slate-400 mb-4">
+                <span>{{ inv.stadiumConfig.modelName || 'Stadium' }}</span>
+                <span>•</span>
+                <span>{{ inv.stadiumConfig.activeCapacity?.toLocaleString() }} seats available</span>
+                <span>•</span>
+                <span>From ₹{{ inv.stadiumConfig.basePrice?.toLocaleString() }}</span>
+              </div>
+              <a 
+                :href="`/tickets/3d/${inv.match._id}`"
+                target="_blank"
+                class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-pink-600 transition shadow-lg shadow-purple-500/25"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+                Choose Your Seat in 3D
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                </svg>
+              </a>
+            </div>
+            
+            <!-- Classic Mode - Ticket Sections -->
+            <div v-else class="grid md:grid-cols-3 gap-4">
               <div v-for="section in inv.sections" :key="section.name"
                    class="bg-slate-700/50 rounded-xl p-4 border border-slate-600 hover:border-emerald-500 transition cursor-pointer"
                    :class="{ 'ring-2 ring-emerald-500': selectedSection === `${inv._id}-${section.name}` }"
@@ -85,11 +118,11 @@
                   <span class="text-emerald-400 font-bold">₹{{ formatNumber(section.price) }}</span>
                 </div>
                 <div class="text-sm text-slate-400">
-                  {{ section.capacity - section.booked }} seats available
+                  {{ section.capacity - section.booked - (section.pending || 0) }} seats available
                 </div>
                 <div class="mt-2 w-full bg-slate-600 rounded-full h-2">
                   <div class="bg-emerald-500 rounded-full h-2" 
-                       :style="{ width: ((section.capacity - section.booked) / section.capacity * 100) + '%' }"></div>
+                       :style="{ width: ((section.capacity - section.booked - (section.pending || 0)) / section.capacity * 100) + '%' }"></div>
                 </div>
               </div>
             </div>
