@@ -84,21 +84,21 @@ const clubRegistrationSchema = Joi.object({
 const validateClubRegistration = (body, files) => {
   // First run the schema validation
   const { value, error } = clubRegistrationSchema.unknown(true).validate(body);
-  
+
   if (error) {
     return { value, error };
   }
-  
+
   // Check if proof document is provided
   if (!files || !files.proof || !files.proof[0]) {
-    return { 
-      value, 
-      error: { 
-        details: [{ message: 'Proof document is required for club registration' }] 
-      } 
+    return {
+      value,
+      error: {
+        details: [{ message: 'Proof document is required for club registration' }]
+      }
     };
   }
-  
+
   return { value, error: null };
 };
 
@@ -109,10 +109,10 @@ router.post('/register', verifyFirebaseToken, requireRole('clubManager'), upload
   { name: 'proof', maxCount: 1 }
 ]), async (req, res) => {
   try {
-    logger.info('Club registration attempt', { 
-      userId: req.user._id, 
+    logger.info('Club registration attempt', {
+      userId: req.user._id,
       email: req.user.email,
-      clubName: req.body.clubName 
+      clubName: req.body.clubName
     });
 
     // Combine text fields from multipart form
@@ -121,15 +121,15 @@ router.post('/register', verifyFirebaseToken, requireRole('clubManager'), upload
     // Use custom validation that checks for proof document
     const { value, error } = validateClubRegistration(body, req.files);
     if (error) {
-      logger.warn('Club registration validation failed', { 
-        userId: req.user._id, 
-        error: error.details[0].message 
+      logger.warn('Club registration validation failed', {
+        userId: req.user._id,
+        error: error.details[0].message
       });
       return res.status(400).json({ message: error.details[0].message });
     }
 
     // Check if user already has a club registration
-    const existingClub = await Club.findOne({ 
+    const existingClub = await Club.findOne({
       $or: [
         { manager: req.user._id },
         { email: value.email }
@@ -147,7 +147,7 @@ router.post('/register', verifyFirebaseToken, requireRole('clubManager'), upload
           const match = value.logoUrl.match(/^data:(.*?);base64,(.*)$/);
           if (match) {
             const [, mime, b64] = match;
-            try { existingClub.logo = { data: Buffer.from(b64, 'base64'), contentType: mime }; } catch {}
+            try { existingClub.logo = { data: Buffer.from(b64, 'base64'), contentType: mime }; } catch { }
           }
         }
 
@@ -159,7 +159,7 @@ router.post('/register', verifyFirebaseToken, requireRole('clubManager'), upload
 
         await existingClub.save();
 
-        return res.status(200).json({ 
+        return res.status(200).json({
           message: 'Club re-submitted successfully. You will receive an email once reviewed.',
           club: {
             id: existingClub._id,
@@ -170,8 +170,8 @@ router.post('/register', verifyFirebaseToken, requireRole('clubManager'), upload
         });
       }
 
-      return res.status(400).json({ 
-        message: 'You already have a club registration. Please contact admin if you need to update it.' 
+      return res.status(400).json({
+        message: 'You already have a club registration. Please contact admin if you need to update it.'
       });
     }
 
@@ -180,13 +180,13 @@ router.post('/register', verifyFirebaseToken, requireRole('clubManager'), upload
     let proof;
     const logoFile = req.files?.logo?.[0];
     const proofFile = req.files?.proof?.[0];
-    
+
     if (logoFile) {
       logo = { data: logoFile.buffer, contentType: logoFile.mimetype };
       // ensure no foreign URL sent
       delete value.logoUrl;
     }
-    
+
     if (proofFile) {
       proof = { data: proofFile.buffer, contentType: proofFile.mimetype };
     }
@@ -206,7 +206,7 @@ router.post('/register', verifyFirebaseToken, requireRole('clubManager'), upload
     }
     await club.save();
 
-    res.status(201).json({ 
+    res.status(201).json({
       message: 'Club registration submitted successfully. You will receive an email once reviewed.',
       club: {
         id: club._id,
@@ -258,7 +258,7 @@ router.get('/my-club/stats', verifyFirebaseToken, requireRole('clubManager'), as
       }).select('registrations status');
 
       tournamentCount = tournaments.length;
-      
+
       tournaments.forEach(tournament => {
         const clubReg = tournament.registrations.find(
           reg => reg.club.toString() === club._id.toString()
@@ -332,7 +332,7 @@ router.get('/my-club/tournaments', verifyFirebaseToken, requireRole('clubManager
       const clubRegistration = tournament.registrations.find(
         reg => reg.club.toString() === club._id.toString()
       );
-      
+
       const paymentInfo = paymentMap[tournament._id.toString()];
       const hasPaid = paymentInfo && paymentInfo.status === 'paid' && paymentInfo.verified;
 
@@ -385,16 +385,16 @@ router.get('/matches', verifyFirebaseToken, requireRole('clubManager'), async (r
         { awayClub: club._id }
       ]
     })
-    .populate('homeClub', 'clubName name logoUrl')
-    .populate('awayClub', 'clubName name logoUrl')
-    .populate('tournament', 'name status format')
-    .sort({ date: 1, time: 1 });
+      .populate('homeClub', 'clubName name logoUrl')
+      .populate('awayClub', 'clubName name logoUrl')
+      .populate('tournament', 'name status format')
+      .sort({ date: 1, time: 1 });
 
     // Transform matches for frontend
     const formattedMatches = matches.map(match => {
       const isHomeTeam = match.homeClub._id.toString() === club._id.toString();
       const opponent = isHomeTeam ? match.awayClub : match.homeClub;
-      
+
       return {
         _id: match._id,
         date: match.date,
@@ -450,7 +450,7 @@ router.get('/my-club/activity', verifyFirebaseToken, requireRole('clubManager'),
 
     // Create activity log based on club data
     const activity = [];
-    
+
     if (club.submittedAt) {
       activity.push({
         id: `club-submitted-${club._id}`,
@@ -484,7 +484,7 @@ router.get('/my-club/activity', verifyFirebaseToken, requireRole('clubManager'),
     // Add player application activities
     try {
       const Player = (await import('../models/Player.js')).default;
-      
+
       const players = await Player.find({ 'applications.club': club._id })
         .populate('user', 'name email')
         .select('fullName applications')
@@ -492,10 +492,10 @@ router.get('/my-club/activity', verifyFirebaseToken, requireRole('clubManager'),
         .limit(10);
 
       players.forEach(player => {
-        const clubApplications = player.applications.filter(app => 
+        const clubApplications = player.applications.filter(app =>
           app.club.toString() === club._id.toString()
         );
-        
+
         clubApplications.forEach(app => {
           // Add application submitted activity
           activity.push({
@@ -511,7 +511,7 @@ router.get('/my-club/activity', verifyFirebaseToken, requireRole('clubManager'),
             activity.push({
               id: `player-${app.status}-${app._id}`,
               type: app.status === 'approved' ? 'player-approved' : 'player-rejected',
-              message: app.status === 'approved' 
+              message: app.status === 'approved'
                 ? `${player.fullName} was approved and joined the club`
                 : `${player.fullName}'s application was rejected`,
               timestamp: app.processedAt,
@@ -527,8 +527,8 @@ router.get('/my-club/activity', verifyFirebaseToken, requireRole('clubManager'),
     // Add coach application activities
     try {
       const Coach = (await import('../models/Coach.js')).default;
-      
-      const coaches = await Coach.find({ 
+
+      const coaches = await Coach.find({
         $or: [
           { 'applications.club': club._id },
           { 'resignHistory.club': club._id }
@@ -540,10 +540,10 @@ router.get('/my-club/activity', verifyFirebaseToken, requireRole('clubManager'),
         .limit(10);
 
       coaches.forEach(coach => {
-        const clubApplications = coach.applications.filter(app => 
+        const clubApplications = coach.applications.filter(app =>
           app.club.toString() === club._id.toString()
         );
-        
+
         clubApplications.forEach(app => {
           // Add application submitted activity
           activity.push({
@@ -559,7 +559,7 @@ router.get('/my-club/activity', verifyFirebaseToken, requireRole('clubManager'),
             activity.push({
               id: `coach-${app.status}-${app._id}`,
               type: app.status === 'approved' ? 'coach-approved' : 'coach-rejected',
-              message: app.status === 'approved' 
+              message: app.status === 'approved'
                 ? `${coach.fullName} was approved and joined the club as coach`
                 : `${coach.fullName}'s application was rejected`,
               timestamp: app.processedAt,
@@ -567,13 +567,13 @@ router.get('/my-club/activity', verifyFirebaseToken, requireRole('clubManager'),
             });
           }
         });
-        
+
         // Add resign activities
         if (coach.resignHistory) {
-          const clubResigns = coach.resignHistory.filter(record => 
+          const clubResigns = coach.resignHistory.filter(record =>
             record.club.toString() === club._id.toString()
           );
-          
+
           clubResigns.forEach(record => {
             activity.push({
               id: `coach-resigned-${record._id}`,
@@ -599,7 +599,7 @@ router.get('/my-club/activity', verifyFirebaseToken, requireRole('clubManager'),
         const clubReg = tournament.registrations.find(
           reg => reg.club.toString() === club._id.toString()
         );
-        
+
         if (clubReg) {
           activity.push({
             id: `tournament-applied-${tournament._id}`,
@@ -623,14 +623,14 @@ router.get('/my-club/activity', verifyFirebaseToken, requireRole('clubManager'),
     } catch (tournamentError) {
       console.warn('Failed to load tournament activities:', tournamentError);
     }
-    
+
     // Add training session activities
     try {
       const Coach = (await import('../models/Coach.js')).default;
-      
+
       // Find the coach for this club
       const coach = await Coach.findOne({ currentClub: club._id });
-      
+
       if (coach) {
         // Collect all sessions and add recent ones to activity
         const allSessions = [];
@@ -645,11 +645,11 @@ router.get('/my-club/activity', verifyFirebaseToken, requireRole('clubManager'),
             });
           });
         });
-        
+
         // Sort by date and take the 5 most recent
         allSessions.sort((a, b) => new Date(b.date) - new Date(a.date));
         const recentSessions = allSessions.slice(0, 5);
-        
+
         recentSessions.forEach(session => {
           activity.push({
             id: `session-${session._id}`,
@@ -663,7 +663,7 @@ router.get('/my-club/activity', verifyFirebaseToken, requireRole('clubManager'),
     } catch (sessionError) {
       console.warn('Failed to load session activities:', sessionError);
     }
-    
+
     // Sort by timestamp descending (most recent first)
     activity.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
@@ -702,7 +702,7 @@ router.put('/my-club', verifyFirebaseToken, requireRole('clubManager'), upload.f
     if (bodyToValidate.logoUrl && bodyToValidate.logoUrl.startsWith('/api/')) {
       delete bodyToValidate.logoUrl;
     }
-    
+
     const { value, error } = clubUpdateSchema.validate(bodyToValidate);
     if (error) return res.status(400).json({ message: error.details?.[0]?.message || 'Invalid input' });
 
@@ -740,10 +740,10 @@ router.put('/my-club', verifyFirebaseToken, requireRole('clubManager'), upload.f
 });
 
 // Legacy club manager creates/updates club (keeping for backward compatibility)
-const legacyClubSchema = Joi.object({ 
-  name: Joi.string().min(3).required(), 
-  logoUrl: Joi.string().uri().allow(''), 
-  district: Joi.string().allow('') 
+const legacyClubSchema = Joi.object({
+  name: Joi.string().min(3).required(),
+  logoUrl: Joi.string().uri().allow(''),
+  district: Joi.string().allow('')
 });
 
 router.post('/', verifyFirebaseToken, requireRole('clubManager'), async (req, res) => {
@@ -764,19 +764,19 @@ router.post('/', verifyFirebaseToken, requireRole('clubManager'), async (req, re
 router.put('/:id/approve', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
   try {
     const club = await Club.findByIdAndUpdate(
-      req.params.id, 
-      { 
+      req.params.id,
+      {
         status: 'approved',
         processedAt: new Date(),
         processedBy: req.user._id
-      }, 
+      },
       { new: true }
     );
-    
+
     if (!club) {
       return res.status(404).json({ message: 'Club not found' });
     }
-    
+
     res.json({ message: 'Club approved successfully', club });
   } catch (error) {
     console.error('Error approving club:', error);
@@ -788,22 +788,22 @@ router.put('/:id/approve', verifyFirebaseToken, requireRole('admin'), async (req
 router.put('/:id/reject', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
   try {
     const { reason } = req.body;
-    
+
     const club = await Club.findByIdAndUpdate(
-      req.params.id, 
-      { 
+      req.params.id,
+      {
         status: 'rejected',
         rejectionReason: reason,
         processedAt: new Date(),
         processedBy: req.user._id
-      }, 
+      },
       { new: true }
     );
-    
+
     if (!club) {
       return res.status(404).json({ message: 'Club not found' });
     }
-    
+
     res.json({ message: 'Club rejected successfully', club });
   } catch (error) {
     console.error('Error rejecting club:', error);
@@ -877,15 +877,15 @@ router.get('/public/:id/players', async (req, res) => {
 
     // Import Player model
     const Player = (await import('../models/Player.js')).default;
-    
+
     // Find all players who are currently members of this club
-    const players = await Player.find({ 
+    const players = await Player.find({
       currentClub: club._id,
-      isActive: true 
+      isActive: true
     })
-    .populate('user', 'name email')
-    .select('fullName age preferredPosition playingExperience battingStyle bowlingStyle joinedClubAt statistics profilePhoto')
-    .sort({ joinedClubAt: -1 }); // Most recent first
+      .populate('user', 'name email')
+      .select('fullName age preferredPosition playingExperience battingStyle bowlingStyle joinedClubAt statistics profilePhoto')
+      .sort({ joinedClubAt: -1 }); // Most recent first
 
     // Format player data for public display
     const formattedPlayers = players.map(player => ({
@@ -907,7 +907,7 @@ router.get('/public/:id/players', async (req, res) => {
       hasProfilePhoto: !!(player.profilePhoto && player.profilePhoto.data)
     }));
 
-    res.json({ 
+    res.json({
       club: {
         id: club._id,
         name: club.clubName || club.name,
@@ -933,14 +933,14 @@ router.get('/public/:id/coaches', async (req, res) => {
 
     // Import Coach model
     const Coach = (await import('../models/Coach.js')).default;
-    
+
     // Find all coaches who are currently members of this club
-    const coaches = await Coach.find({ 
+    const coaches = await Coach.find({
       currentClub: club._id
     })
-    .populate('user', 'name email')
-    .select('fullName age coachingExperience specializations coachingHistory joinedClubAt profilePhoto')
-    .sort({ joinedClubAt: -1 }); // Most recent first
+      .populate('user', 'name email')
+      .select('fullName age coachingExperience specializations coachingHistory joinedClubAt profilePhoto')
+      .sort({ joinedClubAt: -1 }); // Most recent first
 
     // Format coach data for public display
     const formattedCoaches = coaches.map(coach => ({
@@ -954,7 +954,7 @@ router.get('/public/:id/coaches', async (req, res) => {
       hasProfilePhoto: !!(coach.profilePhoto && coach.profilePhoto.data)
     }));
 
-    res.json({ 
+    res.json({
       club: {
         id: club._id,
         name: club.clubName || club.name,
@@ -966,6 +966,81 @@ router.get('/public/:id/coaches', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching club coaches:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Get matches for a specific club (public endpoint)
+router.get('/public/:id/matches', async (req, res) => {
+  try {
+    const club = await Club.findById(req.params.id);
+    if (!club || club.status !== 'approved') {
+      return res.status(404).json({ message: 'Club not found' });
+    }
+
+    // Import Match model
+    const Match = (await import('../models/Match.js')).default;
+
+    // Find all matches where this club is either homeClub or awayClub
+    const matches = await Match.find({
+      $or: [
+        { homeClub: club._id },
+        { awayClub: club._id }
+      ]
+    })
+      .populate('homeClub', 'clubName name logoUrl')
+      .populate('awayClub', 'clubName name logoUrl')
+      .populate('tournament', 'name format')
+      .sort({ date: -1 })
+      .lean();
+
+    // Format matches for public display
+    const formattedMatches = matches.map(match => {
+      // Extract innings scores for display
+      const homeInnings = match.innings?.find(inn => String(inn.battingClub) === String(match.homeClub._id));
+      const awayInnings = match.innings?.find(inn => String(inn.battingClub) === String(match.awayClub._id));
+
+      return {
+        _id: match._id,
+        date: match.date,
+        time: match.time,
+        venue: match.venue,
+        status: match.status,
+        round: match.round,
+        stage: match.stage,
+        matchFormat: match.matchFormat,
+        tournament: match.tournament ? {
+          _id: match.tournament._id,
+          name: match.tournament.name,
+          format: match.tournament.format
+        } : null,
+        homeClub: {
+          _id: match.homeClub._id,
+          name: match.homeClub.clubName || match.homeClub.name,
+          logoUrl: match.homeClub.logoUrl
+        },
+        awayClub: {
+          _id: match.awayClub._id,
+          name: match.awayClub.clubName || match.awayClub.name,
+          logoUrl: match.awayClub.logoUrl
+        },
+        homeScore: homeInnings ? { runs: homeInnings.runs, wickets: homeInnings.wickets, overs: homeInnings.oversString } : null,
+        awayScore: awayInnings ? { runs: awayInnings.runs, wickets: awayInnings.wickets, overs: awayInnings.oversString } : null,
+        result: match.result || null,
+        summary: match.summary || null
+      };
+    });
+
+    res.json({
+      club: {
+        id: club._id,
+        name: club.clubName || club.name
+      },
+      matches: formattedMatches,
+      totalMatches: formattedMatches.length
+    });
+  } catch (error) {
+    console.error('Error fetching club matches:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
@@ -1020,7 +1095,7 @@ router.delete('/remove-player/:playerId', verifyFirebaseToken, requireRole('club
       // Remove the player from the club
       player.currentClub = null;
       player.joinedClubAt = null;
-      
+
       // Also update any approved applications to rejected status
       player.applications.forEach(app => {
         if (app.club.toString() === club._id.toString() && app.status === 'approved') {
@@ -1029,9 +1104,9 @@ router.delete('/remove-player/:playerId', verifyFirebaseToken, requireRole('club
           app.rejectionReason = 'Removed from club by manager';
         }
       });
-      
+
       await player.save();
-      
+
       return res.json({ message: 'Player removed from club successfully' });
     } else {
       return res.status(400).json({ message: 'This player is not associated with your club' });
@@ -1046,12 +1121,12 @@ router.delete('/remove-player/:playerId', verifyFirebaseToken, requireRole('club
 router.delete('/remove-coach/:coachId', verifyFirebaseToken, requireRole('clubManager'), async (req, res) => {
   try {
     const { removalReason } = req.body;
-    
+
     // Validate removal reason
     if (!removalReason || removalReason.trim().length < 10) {
       return res.status(400).json({ message: 'Removal reason must be at least 10 characters long' });
     }
-    
+
     // Find the club managed by this user
     const club = await Club.findOne({ manager: req.user._id });
     if (!club) {
@@ -1069,7 +1144,7 @@ router.delete('/remove-coach/:coachId', verifyFirebaseToken, requireRole('clubMa
       // Remove the coach from the club
       coach.currentClub = null;
       coach.joinedClubAt = null;
-      
+
       // Also update any approved applications to rejected status
       coach.applications.forEach(app => {
         if (app.club.toString() === club._id.toString() && app.status === 'approved') {
@@ -1078,21 +1153,21 @@ router.delete('/remove-coach/:coachId', verifyFirebaseToken, requireRole('clubMa
           app.rejectionReason = removalReason.trim();
         }
       });
-      
+
       // Add to resign history if it doesn't exist
       if (!coach.resignHistory) {
         coach.resignHistory = [];
       }
-      
+
       // Add removal record to resign history
       coach.resignHistory.push({
         club: club._id,
         resignedAt: new Date(),
         reason: removalReason.trim()
       });
-      
+
       await coach.save();
-      
+
       return res.json({ message: 'Coach removed from club successfully' });
     } else {
       return res.status(400).json({ message: 'This coach is not associated with your club' });
@@ -1107,27 +1182,27 @@ router.delete('/remove-coach/:coachId', verifyFirebaseToken, requireRole('clubMa
 router.delete('/remove-player/:playerId', verifyFirebaseToken, requireRole('clubManager'), async (req, res) => {
   try {
     const { playerId } = req.params;
-    
+
     // Find the club managed by this user
     const club = await Club.findOne({ manager: req.user._id });
     if (!club) {
       return res.status(404).json({ message: 'No club found for this manager' });
     }
-    
+
     // Find the player
     const player = await Player.findById(playerId);
     if (!player) {
       return res.status(404).json({ message: 'Player not found' });
     }
-    
+
     // Check if the player is in this club
     if (player.currentClub && player.currentClub.toString() === club._id.toString()) {
       // Remove player from club
       player.currentClub = null;
       player.joinedClubAt = null;
-      
+
       await player.save();
-      
+
       return res.json({ message: 'Player removed from club successfully' });
     } else {
       return res.status(400).json({ message: 'This player is not associated with your club' });

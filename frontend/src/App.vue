@@ -1,10 +1,15 @@
 <template>
   <div class="min-h-screen flex flex-col bg-transparent">
-    <!-- Global Cricket Stadium Background -->
-    <AnimatedCricketBackground />
+    <!-- Global Cricket Stadium Background (hidden for fullscreen routes) -->
+    <AnimatedCricketBackground v-if="!isFullscreenRoute" />
+    
+    <!-- Fullscreen Route (no navbar, no footer, nothing) -->
+    <template v-if="isFullscreenRoute">
+      <router-view />
+    </template>
     
     <!-- Main Content Wrapper (above background) -->
-    <div class="relative z-10 min-h-screen flex flex-col">
+    <div v-else class="relative z-10 min-h-screen flex flex-col">
     <template v-if="!isAdminRoute">
       <Navbar />
       <main class="flex-1" :class="{ 'pt-6': !isAuthRoute && !isFullWidthRoute }">
@@ -58,9 +63,11 @@ const route = useRoute();
 const isAdminRoute = computed(() => route.matched.some(r => r.meta && (r.meta.requiresAdmin || r.meta.requiresClubManager || r.meta.requiresCoach || r.meta.requiresPlayer)));
 const isAuthRoute = computed(() => route.name === 'login' || route.name === 'register');
 const isFullWidthRoute = computed(() => route.meta?.fullWidth === true);
+const isFullscreenRoute = computed(() => route.meta?.fullscreen === true);
 </script>
 
 <style>
 .page-enter-active, .page-leave-active { transition: opacity .15s, transform .15s; }
 .page-enter-from, .page-leave-to { opacity: 0; transform: translateY(4px); }
 </style>
+

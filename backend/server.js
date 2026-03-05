@@ -30,6 +30,9 @@ const { default: sponsorshipRoutes } = await import('./routes/sponsorships.js');
 const { default: agreementRoutes } = await import('./routes/agreements.js');
 const { default: analyticsRoutes } = await import('./routes/analytics.js');
 const { default: ticketsRoutes } = await import('./routes/tickets.js');
+const { default: matchAnalysisRoutes } = await import('./routes/matchAnalysis.js');
+const { default: galleryRoutes } = await import('./routes/gallery.js');
+const { default: liveAnalyticsRoutes } = await import('./routes/liveAnalytics.js');
 const { errorHandler, logger } = await import('./utils/logger.js');
 
 const app = express();
@@ -143,6 +146,9 @@ app.use('/api/sponsorships', sponsorshipRoutes);
 app.use('/api/agreements', agreementRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api', ticketsRoutes);  // Tickets API (admin + public)
+app.use('/api/match-analysis', matchAnalysisRoutes);  // Player match analysis
+app.use('/api/gallery', galleryRoutes);  // Club gallery
+app.use('/api/live-analytics', liveAnalyticsRoutes);  // Real-time match analytics
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
@@ -151,6 +157,10 @@ const PORT = process.env.PORT || 4000;
 await connectDB(process.env.MONGO_URI);
 
 const server = app.listen(PORT, () => console.log(`API on :${PORT} (CORS: ${allowedOrigins.join(', ')})`));
+
+// Initialize WebSocket service
+const { default: websocketService } = await import('./services/websocket.js');
+websocketService.initialize(server);
 
 // Configure server timeouts to prevent hanging requests
 server.timeout = 60000; // 60 seconds timeout
@@ -181,3 +191,32 @@ try {
     syncTournamentAndMatches().catch(() => { });
   }, 60 * 1000);
 } catch (_) { }
+
+// Auto-close ticket sales for completed/cancelled matches
+try {
+  const { autoCloseTicketSales } = await import('./routes/tickets.js');
+  
+  // Run immediately on startup
+  console.log('Running initial ticket auto-close check...');
+  autoCloseTicketSales().then(result => {
+    if (result.success) {
+      console.log(`Auto-closed ${result.closedCount} ticket sale(s) on startup`);
+    }
+  }).catch(err => {
+    console.error('Error in initial auto-close:', err);
+  });
+  
+  // Run every 30 minutes
+  setInterval(() => {
+    console.log('Running periodic ticket auto-close check...');
+    autoCloseTicketSales().then(result => {
+      if (result.success && result.closedCount > 0) {
+        console.log(`Auto-closed ${result.closedCount} ticket sale(s)`);
+      }
+    }).catch(err => {
+      console.error('Error in periodic auto-close:', err);
+    });
+  }, 30 * 60 * 1000); // Every 30 minutes
+} catch (err) {
+  console.error('Failed to initialize ticket auto-close:', err);
+}

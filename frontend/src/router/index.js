@@ -15,6 +15,7 @@ import ClubManagerMatches from '../pages/ClubManagerMatches.vue';
 import ClubManagerProfile from '../pages/ClubManagerProfile.vue';
 import ClubManagerTrainingSessions from '../pages/ClubManagerTrainingSessions.vue'; // Added import
 import ClubManagerSponsorships from '../pages/ClubManagerSponsorships.vue'; // Sponsorships
+import ClubManagerGallery from '../pages/ClubManagerGallery.vue'; // Gallery
 import ClubsList from '../pages/ClubsList.vue';
 import ClubDetails from '../pages/ClubDetails.vue';
 import AdminTournament from '../pages/AdminTournament.vue';
@@ -42,6 +43,7 @@ import PlayerProfile from '../pages/player/Profile.vue';
 import PlayerGoals from '../pages/player/Goals.vue'; // Added import
 import PlayerFeedback from '../pages/player/Feedback.vue'; // Added import
 import PlayerMatches from '../pages/player/Matches.vue'; // Added import
+import PlayerMatchAnalysis from '../pages/player/MatchAnalysis.vue'; // Match Analysis
 
 import CoachRegistration from '../pages/CoachRegistration.vue';
 import CoachPanel from '../pages/CoachPanel.vue';
@@ -112,7 +114,8 @@ const routes = [
       { path: 'training-sessions', name: 'club-manager-training-sessions', component: ClubManagerTrainingSessions }, // Added route
       { path: 'sponsorships', name: 'club-manager-sponsorships', component: ClubManagerSponsorships }, // Sponsorships
       { path: 'messages', name: 'club-manager-messages', component: ClubManagerMessages },
-      { path: 'profile', name: 'club-manager-profile', component: ClubManagerProfile }
+      { path: 'profile', name: 'club-manager-profile', component: ClubManagerProfile },
+      { path: 'gallery', name: 'club-manager-gallery', component: ClubManagerGallery }
     ]
   },
   // Admin panel layout with nested routes
@@ -149,6 +152,10 @@ const routes = [
   { path: '/tournaments/:id/matches/:matchId', name: 'match-details', component: MatchDetails, props: true, meta: { fullWidth: true } },
   // Admin match editor
   { path: '/admin/tournaments/:id/matches/:matchId', name: 'admin-match-editor', component: AdminMatchEditor, meta: { requiresAuth: true, requiresAdmin: true }, props: true },
+  // Live match analytics
+  { path: '/match/:id/analytics', name: 'live-match-analytics', component: () => import('../pages/LiveMatchAnalytics.vue'), props: true, meta: { fullWidth: true } },
+  // Connection test page
+  { path: '/connection-test', name: 'connection-test', component: () => import('../components/ConnectionTest.vue') },
 
   // Player routes
   { path: '/player/register', name: 'player-registration', component: PlayerRegistration, meta: { requiresAuth: true } },
@@ -168,6 +175,7 @@ const routes = [
       { path: 'goals', name: 'player-panel-goals', component: PlayerGoals }, // Player goals page
       { path: 'feedback', name: 'player-panel-feedback', component: PlayerFeedback }, // Player feedback page
       { path: 'matches', name: 'player-panel-matches', component: PlayerMatches }, // Player matches page
+      { path: 'match-analysis', name: 'player-panel-match-analysis', component: PlayerMatchAnalysis }, // Match Analysis
       { path: 'profile', name: 'player-panel-profile', component: PlayerProfile }
     ]
   },
@@ -222,6 +230,7 @@ const routes = [
 
   // Ticket booking routes
   { path: '/tickets', name: 'ticket-booking', component: () => import('../pages/TicketBooking.vue') },
+  { path: '/tickets/3d/:matchId', name: 'ticket-booking-3d', component: () => import('../pages/TicketBooking3D.vue'), props: true, meta: { fullscreen: true } },
   { path: '/my-tickets', name: 'my-tickets', component: () => import('../pages/MyTickets.vue'), meta: { requiresAuth: true } }
 ];
 

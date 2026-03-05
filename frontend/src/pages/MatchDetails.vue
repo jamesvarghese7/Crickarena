@@ -46,6 +46,18 @@
               </button>
               
               <div class="flex items-center gap-3">
+                <!-- Live Analytics Button -->
+                <button 
+                  @click="goToAnalytics"
+                  class="group flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold text-sm shadow-lg shadow-purple-500/30 transition-all hover:scale-105"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                  </svg>
+                  <span>Live Analytics</span>
+                  <span v-if="match.status === 'Live'" class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                </button>
+                
                 <span v-if="match.status === 'Live'" class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-red-500 text-white shadow-lg shadow-red-500/30">
                   <span class="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></span>
                   LIVE
@@ -212,6 +224,7 @@
             <SquadView v-if="activeTab === 'squad'" :match="match" :rosters="rosters" />
             <StatsView v-if="activeTab === 'stats'" :match="match" />
             <InfoView v-if="activeTab === 'info'" :match="match" />
+            <LiveAnalyticsDashboard v-if="activeTab === 'analytics'" :matchId="route.params.matchId" />
           </div>
         </div>
       </div>
@@ -230,6 +243,7 @@ import OversView from '../components/match/OversView.vue';
 import SquadView from '../components/match/SquadView.vue';
 import StatsView from '../components/match/StatsView.vue';
 import InfoView from '../components/match/InfoView.vue';
+import LiveAnalyticsDashboard from '../components/match/LiveAnalyticsDashboard.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -247,7 +261,8 @@ const tabs = [
   { key: 'overs', label: 'Overs', icon: '🎯' },
   { key: 'squad', label: 'Squad', icon: '👥' },
   { key: 'stats', label: 'Stats', icon: '📈' },
-  { key: 'info', label: 'Info', icon: 'ℹ️' }
+  { key: 'info', label: 'Info', icon: 'ℹ️' },
+  { key: 'analytics', label: 'Analytics', icon: '🤖' }
 ];
 
 const tournamentName = computed(() => match.value?.tournament?.name || match.value?.tournament?.title || 'Tournament');
@@ -423,6 +438,11 @@ function getTossWinnerName() {
 }
 
 function goBack() { router.back(); }
+
+function goToAnalytics() {
+  const matchId = route.params.matchId;
+  router.push({ name: 'live-match-analytics', params: { id: matchId } });
+}
 
 function getTeamScore(teamType) {
   if (!match.value?.innings?.length) return '0/0';

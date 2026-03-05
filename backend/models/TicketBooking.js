@@ -38,11 +38,27 @@ const ticketBookingSchema = new mongoose.Schema({
         firebaseUid: { type: String }  // If logged in user
     },
 
-    // Booking details
-    section: { type: String, required: true },       // Section name booked
+    // Booking type (classic section-based or 3D individual seats)
+    bookingType: {
+        type: String,
+        enum: ['classic', '3d'],
+        default: 'classic'
+    },
+
+    // Booking details (for classic mode)
+    section: { type: String },                       // Section name booked (classic)
     quantity: { type: Number, required: true, min: 1, max: 10 },
-    unitPrice: { type: Number, required: true },     // Price per ticket at time of booking
+    unitPrice: { type: Number },                     // Price per ticket (classic)
     totalAmount: { type: Number, required: true },   // Total amount paid
+
+    // Selected seats (for 3D mode)
+    selectedSeats: [{
+        seatId: { type: String, required: true },    // 'NS-R01-S001'
+        section: { type: String, required: true },
+        row: { type: Number, required: true },
+        seatNumber: { type: Number, required: true },
+        price: { type: Number, required: true }
+    }],
 
     // Payment tracking (Razorpay)
     paymentStatus: {
