@@ -269,8 +269,16 @@ router.put('/:id/feature', verifyFirebaseToken, async (req, res) => {
 // ─── Serve gallery image binary ────────────────────────────────────
 router.get('/:id/image', async (req, res) => {
     try {
+        console.log('📸 Image request for ID:', req.params.id);
         const item = await GalleryItem.findById(req.params.id).select('image status');
-        if (!item || !item.image || !item.image.data) {
+        
+        if (!item) {
+            console.warn('❌ Gallery item not found:', req.params.id);
+            return res.status(404).end();
+        }
+        
+        if (!item.image || !item.image.data) {
+            console.warn('❌ Gallery item has no image data:', req.params.id);
             return res.status(404).end();
         }
 
@@ -284,12 +292,23 @@ router.get('/:id/image', async (req, res) => {
         }
 
         const contentType = item.image.contentType || 'image/jpeg';
+        console.log('✅ Serving image:', {
+            id: req.params.id,
+            contentType,
+            size: imgData.length,
+            status: item.status
+        });
+        
+        // Set CORS headers explicitly for image
+        res.set('Access-Control-Allow-Origin', req.headers.origin || '*');
+        res.set('Access-Control-Allow-Credentials', 'true');
         res.set('Content-Type', contentType);
         res.set('Content-Length', imgData.length);
         res.set('Cache-Control', 'public, max-age=86400');
+        res.set('Cross-Origin-Resource-Policy', 'cross-origin');
         return res.send(imgData);
     } catch (error) {
-        console.error('Gallery image serve error:', error);
+        console.error('❌ Gallery image serve error:', error.message);
         return res.status(404).end();
     }
 });

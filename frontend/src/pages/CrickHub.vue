@@ -225,7 +225,7 @@
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             <div v-for="t in favTournaments" :key="t._id" class="group relative rounded-2xl overflow-hidden border border-white/20 bg-white/10 backdrop-blur-sm shadow-lg hover:bg-white/15 hover:border-emerald-500/40 transition-all duration-300">
               <div class="h-32 bg-gradient-to-br from-emerald-900/50 to-slate-900/50 relative">
-                <img v-if="t.bannerUrl" :src="t.bannerUrl" class="w-full h-full object-cover opacity-70 group-hover:opacity-90 transition" />
+                <img v-if="t.bannerUrl" :src="t.bannerUrl" crossorigin="use-credentials" class="w-full h-full object-cover opacity-70 group-hover:opacity-90 transition" />
                 <div v-else class="absolute inset-0 flex items-center justify-center">
                   <svg class="w-12 h-12 text-emerald-500/50" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                     <path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
@@ -270,7 +270,7 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             <div v-for="c in favClubs" :key="c._id || c.id" class="rounded-2xl overflow-hidden border border-white/20 bg-white/10 backdrop-blur-sm shadow-lg hover:bg-white/15 hover:border-emerald-500/40 transition-all duration-300">
               <div class="h-32 bg-gradient-to-br from-slate-800/50 to-slate-900/50 flex items-center justify-center overflow-hidden relative">
-                <img v-if="c.logoUrl" :src="c.logoUrl" class="w-20 h-20 object-cover rounded-full border-2 border-white/30 shadow-lg" />
+                <img v-if="c.logoUrl" :src="c.logoUrl" crossorigin="use-credentials" class="w-20 h-20 object-cover rounded-full border-2 border-white/30 shadow-lg" />
                 <div v-else class="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500/30 to-emerald-600/30 border-2 border-white/20 flex items-center justify-center">
                   <svg class="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                     <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
