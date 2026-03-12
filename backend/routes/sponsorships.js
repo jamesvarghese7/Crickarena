@@ -845,11 +845,18 @@ router.put('/deals/:id/cancel', async (req, res) => {
                 $inc: { 'analytics.activeDeals': -1 }
             });
 
-            // Update opportunity
-            await SponsorshipOpportunity.findByIdAndUpdate(deal.opportunity, {
-                $inc: { currentSponsors: -1 },
-                status: 'open'
-            });
+            // Update opportunity - only reopen if previously filled
+            const opportunity = await SponsorshipOpportunity.findById(deal.opportunity);
+            if (opportunity) {
+                opportunity.currentSponsors -= 1;
+                
+                // Only reopen if previously filled and now has available slots
+                if (opportunity.status === 'filled' && opportunity.currentSponsors < opportunity.maxSponsors) {
+                    opportunity.status = 'open';
+                }
+                
+                await opportunity.save();
+            }
         }
 
         deal.status = 'cancelled';

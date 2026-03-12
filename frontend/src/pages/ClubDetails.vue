@@ -386,7 +386,7 @@
             <!-- MATCHES TAB -->
             <div v-if="activeTab === 'matches'">
               <div v-if="loadingMatches" class="text-center py-16">
-                <div class="inline-block rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent mb-4"></div>
+                <div class="inline-block rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent animate-spin mb-4"></div>
                 <p class="text-gray-300 text-lg">Loading matches...</p>
               </div>
               
@@ -401,16 +401,42 @@
               </div>
 
               <div v-else class="space-y-8">
+                <!-- Quick Stats Summary -->
+                <div class="grid grid-cols-3 gap-4 mb-6">
+                  <div class="rounded-xl p-4 border border-red-500/50 text-center bg-gradient-to-br from-red-950/60 to-red-900/40 backdrop-blur-sm shadow-lg">
+                    <div class="text-3xl font-black text-red-400 mb-1">{{ liveMatches.length }}</div>
+                    <div class="text-xs text-gray-300 font-semibold uppercase tracking-wider">Live Now</div>
+                  </div>
+                  <div class="rounded-xl p-4 border border-blue-500/50 text-center bg-gradient-to-br from-blue-950/60 to-blue-900/40 backdrop-blur-sm shadow-lg">
+                    <div class="text-3xl font-black text-blue-400 mb-1">{{ upcomingMatches.length }}</div>
+                    <div class="text-xs text-gray-300 font-semibold uppercase tracking-wider">Upcoming</div>
+                  </div>
+                  <div class="rounded-xl p-4 border border-green-500/50 text-center bg-gradient-to-br from-green-950/60 to-green-900/40 backdrop-blur-sm shadow-lg">
+                    <div class="text-3xl font-black text-green-400 mb-1">{{ completedMatches.length }}</div>
+                    <div class="text-xs text-gray-300 font-semibold uppercase tracking-wider">Completed</div>
+                  </div>
+                </div>
+
+                <!-- Show message if all match arrays are empty -->
+                <div v-if="liveMatches.length === 0 && upcomingMatches.length === 0 && completedMatches.length === 0" class="text-center py-20 glass-card rounded-2xl border border-white/20">
+                  <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-white/10 flex items-center justify-center">
+                    <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                  </div>
+                  <h3 class="text-xl font-semibold text-white mb-2">No Categorized Matches</h3>
+                  <p class="text-gray-400 max-w-md mx-auto">Match data is loading or unavailable.</p>
+                </div>
                 <!-- Live Matches Section -->
                 <div v-if="liveMatches.length > 0">
-                  <div class="flex items-center gap-3 mb-5">
-                    <div class="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center animate-pulse">
+                  <div class="flex items-center gap-3 mb-5 bg-gradient-to-r from-red-900/40 to-transparent px-4 py-3 rounded-xl border border-red-500/30">
+                    <div class="w-10 h-10 rounded-xl bg-red-500/30 flex items-center justify-center animate-pulse shadow-lg">
                       <svg class="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 24 24">
                         <circle cx="12" cy="12" r="8"/>
                       </svg>
                     </div>
                     <h3 class="text-2xl font-bold text-white">Live Matches</h3>
-                    <span class="px-3 py-1 bg-red-500/20 text-red-400 text-sm font-semibold rounded-full border border-red-500/30 animate-pulse">
+                    <span class="px-3 py-1 bg-red-500/30 text-red-300 text-sm font-semibold rounded-full border border-red-500/50 animate-pulse shadow-lg">
                       {{ liveMatches.length }} LIVE
                     </span>
                   </div>
@@ -418,7 +444,7 @@
                   <div class="grid gap-4">
                     <div v-for="match in liveMatches" :key="match._id"
                          @click="viewMatchDetails(match._id)"
-                         class="glass-card rounded-2xl border-2 border-red-500/40 hover:border-red-500/60 transition-all duration-300 overflow-hidden cursor-pointer group relative">
+                         class="rounded-2xl border-2 border-red-500/40 hover:border-red-500/60 transition-all duration-300 overflow-hidden cursor-pointer group relative bg-gradient-to-br from-slate-800/95 via-slate-900/95 to-slate-800/95 backdrop-blur-xl shadow-xl">
                       <!-- Live indicator -->
                       <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 via-red-400 to-red-500 animate-pulse"></div>
                       
@@ -426,24 +452,24 @@
                         <!-- Match Header -->
                         <div class="flex items-center justify-between mb-4">
                           <div class="flex items-center gap-2 flex-wrap">
-                            <span class="px-3 py-1 rounded-full text-xs font-bold uppercase border bg-red-500/20 text-red-400 border-red-500/30 animate-pulse">
+                            <span class="px-3 py-1.5 rounded-full text-xs font-bold uppercase border bg-red-500/40 text-red-200 border-red-500/60 animate-pulse shadow-lg">
                               🔴 LIVE
                             </span>
-                            <span v-if="match.matchFormat" class="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                            <span v-if="match.matchFormat" class="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-500/30 text-purple-200 border border-purple-500/50 shadow-md">
                               {{ match.matchFormat }}
                             </span>
-                            <span v-if="match.stage || match.round" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                            <span v-if="match.stage || match.round" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/30 text-blue-200 border border-blue-500/50 shadow-md">
                               {{ match.stage || match.round }}
                             </span>
                           </div>
-                          <div class="text-right">
-                            <div class="text-sm font-semibold text-red-400">{{ formatMatchDate(match.date) }}</div>
-                            <div v-if="match.time" class="text-xs text-gray-400">{{ formatMatchTime(match.time) }}</div>
+                          <div class="text-right bg-slate-800/60 px-3 py-1.5 rounded-lg border border-red-500/30">
+                            <div class="text-sm font-semibold text-red-300">{{ formatMatchDate(match.date) }}</div>
+                            <div v-if="match.time" class="text-xs text-gray-300">{{ formatMatchTime(match.time) }}</div>
                           </div>
                         </div>
 
                         <!-- Tournament Info -->
-                        <div v-if="match.tournament" class="mb-4 flex items-center gap-2 text-sm">
+                        <div v-if="match.tournament?.name" class="mb-4 flex items-center gap-2 text-sm">
                           <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                           </svg>
@@ -454,14 +480,16 @@
                         <!-- Teams with Scores -->
                         <div class="space-y-3">
                           <!-- Home Club -->
-                          <div class="flex items-center justify-between p-4 bg-gradient-to-r from-emerald-500/10 to-transparent rounded-xl border border-emerald-500/20">
+                          <div v-if="match.homeClub" class="flex items-center justify-between p-4 bg-gradient-to-r from-emerald-600/30 via-emerald-500/20 to-transparent rounded-xl border border-emerald-500/40 backdrop-blur-sm">
                             <div class="flex items-center gap-3 flex-1 min-w-0">
-                              <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center flex-shrink-0 shadow-lg">
-                                <img v-if="match.homeClub.logoUrl" :src="getClubLogoUrl(match.homeClub.logoUrl)" :alt="match.homeClub.name" class="w-full h-full object-cover rounded-xl"/>
-                                <span v-else class="text-white font-bold text-lg">{{ match.homeClub.name?.charAt(0) }}</span>
+                              <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 p-[3px] flex items-center justify-center flex-shrink-0 shadow-lg">
+                                <div class="w-full h-full rounded-lg bg-white flex items-center justify-center p-1">
+                                  <img v-if="match.homeClub?.logoUrl" :src="match.homeClub.logoUrl" :alt="match.homeClub?.name || 'Home Team'" class="w-full h-full object-contain" />
+                                  <span v-else class="text-emerald-600 font-bold text-lg">{{ match.homeClub?.name?.charAt(0) || 'H' }}</span>
+                                </div>
                               </div>
                               <div class="min-w-0">
-                                <div class="font-bold text-white text-lg truncate">{{ match.homeClub.name }}</div>
+                                <div class="font-bold text-white text-lg truncate">{{ match.homeClub?.name || 'Home Team' }}</div>
                                 <div class="text-xs text-emerald-400 font-semibold">HOME</div>
                               </div>
                             </div>
@@ -473,14 +501,16 @@
                           </div>
 
                           <!-- Away Club -->
-                          <div class="flex items-center justify-between p-4 bg-gradient-to-r from-blue-500/10 to-transparent rounded-xl border border-blue-500/20">
+                          <div v-if="match.awayClub" class="flex items-center justify-between p-4 bg-gradient-to-r from-blue-600/30 via-blue-500/20 to-transparent rounded-xl border border-blue-500/40 backdrop-blur-sm">
                             <div class="flex items-center gap-3 flex-1 min-w-0">
-                              <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-lg">
-                                <img v-if="match.awayClub.logoUrl" :src="getClubLogoUrl(match.awayClub.logoUrl)" :alt="match.awayClub.name" class="w-full h-full object-cover rounded-xl"/>
-                                <span v-else class="text-white font-bold text-lg">{{ match.awayClub.name?.charAt(0) }}</span>
+                              <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 p-[3px] flex items-center justify-center flex-shrink-0 shadow-lg">
+                                <div class="w-full h-full rounded-lg bg-white flex items-center justify-center p-1">
+                                  <img v-if="match.awayClub?.logoUrl" :src="match.awayClub.logoUrl" :alt="match.awayClub?.name || 'Away Team'" class="w-full h-full object-contain" />
+                                  <span v-else class="text-blue-600 font-bold text-lg">{{ match.awayClub?.name?.charAt(0) || 'A' }}</span>
+                                </div>
                               </div>
                               <div class="min-w-0">
-                                <div class="font-bold text-white text-lg truncate">{{ match.awayClub.name }}</div>
+                                <div class="font-bold text-white text-lg truncate">{{ match.awayClub?.name || 'Away Team' }}</div>
                                 <div class="text-xs text-blue-400 font-semibold">AWAY</div>
                               </div>
                             </div>
@@ -490,10 +520,15 @@
                             </div>
                             <div v-else class="text-gray-500 text-sm font-medium ml-4">Yet to bat</div>
                           </div>
+
+                          <!-- Fallback if no teams found -->
+                          <div v-if="!match.homeClub && !match.awayClub" class="text-center py-6 text-gray-400">
+                            <p class="text-sm">Match data incomplete</p>
+                          </div>
                         </div>
 
                         <!-- Venue -->
-                        <div v-if="match.venue" class="mt-4 pt-4 border-t border-white/10 flex items-center gap-2 text-sm text-gray-400">
+                        <div v-if="match.venue" class="mt-4 pt-4 border-t border-white/20 flex items-center gap-2 text-sm text-gray-300">
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -507,14 +542,14 @@
 
                 <!-- Upcoming Matches Section -->
                 <div v-if="upcomingMatches.length > 0">
-                  <div class="flex items-center gap-3 mb-5">
-                    <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                  <div class="flex items-center gap-3 mb-5 bg-gradient-to-r from-blue-900/40 to-transparent px-4 py-3 rounded-xl border border-blue-500/30">
+                    <div class="w-10 h-10 rounded-xl bg-blue-500/30 flex items-center justify-center shadow-lg">
                       <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                       </svg>
                     </div>
                     <h3 class="text-2xl font-bold text-white">Upcoming Matches</h3>
-                    <span class="px-3 py-1 bg-blue-500/20 text-blue-400 text-sm font-semibold rounded-full border border-blue-500/30">
+                    <span class="px-3 py-1 bg-blue-500/30 text-blue-300 text-sm font-semibold rounded-full border border-blue-500/50 shadow-lg">
                       {{ upcomingMatches.length }}
                     </span>
                   </div>
@@ -522,29 +557,29 @@
                   <div class="grid gap-4">
                     <div v-for="match in upcomingMatches" :key="match._id"
                          @click="viewMatchDetails(match._id)"
-                         class="glass-card rounded-2xl border border-white/20 hover:border-blue-500/40 transition-all duration-300 overflow-hidden cursor-pointer group">
+                         class="rounded-2xl border border-white/20 hover:border-blue-500/40 transition-all duration-300 overflow-hidden cursor-pointer group bg-gradient-to-br from-slate-800/95 via-slate-900/95 to-slate-800/95 backdrop-blur-xl shadow-lg">
                       <div class="p-5">
                         <!-- Match Header -->
                         <div class="flex items-center justify-between mb-4">
                           <div class="flex items-center gap-2 flex-wrap">
-                            <span :class="['px-3 py-1 rounded-full text-xs font-bold uppercase border', getMatchStatusColor(match.status)]">
+                            <span :class="['px-3 py-1.5 rounded-full text-xs font-bold uppercase border shadow-lg', getMatchStatusColor(match.status)]">
                               {{ match.status }}
                             </span>
-                            <span v-if="match.matchFormat" class="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                            <span v-if="match.matchFormat" class="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-500/30 text-purple-200 border border-purple-500/50 shadow-md">
                               {{ match.matchFormat }}
                             </span>
-                            <span v-if="match.stage || match.round" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                            <span v-if="match.stage || match.round" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/30 text-blue-200 border border-blue-500/50 shadow-md">
                               {{ match.stage || match.round }}
                             </span>
                           </div>
-                          <div class="text-right">
-                            <div class="text-sm font-semibold text-emerald-400">{{ formatMatchDate(match.date) }}</div>
-                            <div v-if="match.time" class="text-xs text-gray-400">{{ formatMatchTime(match.time) }}</div>
+                          <div class="text-right bg-slate-800/60 px-3 py-1.5 rounded-lg border border-blue-500/30">
+                            <div class="text-sm font-semibold text-blue-300">{{ formatMatchDate(match.date) }}</div>
+                            <div v-if="match.time" class="text-xs text-gray-300">{{ formatMatchTime(match.time) }}</div>
                           </div>
                         </div>
 
                         <!-- Tournament Info -->
-                        <div v-if="match.tournament" class="mb-4 flex items-center gap-2 text-sm">
+                        <div v-if="match.tournament?.name" class="mb-4 flex items-center gap-2 text-sm">
                           <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                           </svg>
@@ -553,39 +588,48 @@
                         </div>
 
                         <!-- Teams -->
-                        <div class="flex items-center justify-between gap-4">
+                        <div v-if="match.homeClub && match.awayClub" class="flex items-center justify-between gap-4">
                           <!-- Home Club -->
                           <div class="flex items-center gap-3 flex-1 min-w-0">
-                            <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center flex-shrink-0 shadow-lg">
-                              <img v-if="match.homeClub.logoUrl" :src="getClubLogoUrl(match.homeClub.logoUrl)" :alt="match.homeClub.name" class="w-full h-full object-cover rounded-xl"/>
-                              <span v-else class="text-white font-bold text-xl">{{ match.homeClub.name?.charAt(0) }}</span>
+                            <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 p-[3px] flex items-center justify-center flex-shrink-0 shadow-lg">
+                              <div class="w-full h-full rounded-lg bg-white flex items-center justify-center p-1.5">
+                                <img v-if="match.homeClub?.logoUrl" :src="match.homeClub.logoUrl" :alt="match.homeClub?.name || 'Home Team'" class="w-full h-full object-contain" />
+                                <span v-else class="text-emerald-600 font-bold text-xl">{{ match.homeClub?.name?.charAt(0) || 'H' }}</span>
+                              </div>
                             </div>
                             <div class="min-w-0">
-                              <div class="font-bold text-white text-lg truncate">{{ match.homeClub.name }}</div>
+                              <div class="font-bold text-white text-lg truncate">{{ match.homeClub?.name || 'Home Team' }}</div>
                               <div class="text-xs text-emerald-400 font-semibold">HOME</div>
                             </div>
                           </div>
 
                           <!-- VS -->
-                          <div class="px-5 py-3 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-blue-500/20 rounded-xl border border-white/20 shadow-lg">
+                          <div class="px-5 py-3 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-blue-500/20 rounded-xl border border-white/20 shadow-lg flex-shrink-0">
                             <span class="text-white font-black text-lg">VS</span>
                           </div>
 
                           <!-- Away Club -->
                           <div class="flex items-center gap-3 flex-1 justify-end min-w-0">
                             <div class="min-w-0 text-right">
-                              <div class="font-bold text-white text-lg truncate">{{ match.awayClub.name }}</div>
+                              <div class="font-bold text-white text-lg truncate">{{ match.awayClub?.name || 'Away Team' }}</div>
                               <div class="text-xs text-blue-400 font-semibold">AWAY</div>
                             </div>
-                            <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-lg">
-                              <img v-if="match.awayClub.logoUrl" :src="getClubLogoUrl(match.awayClub.logoUrl)" :alt="match.awayClub.name" class="w-full h-full object-cover rounded-xl"/>
-                              <span v-else class="text-white font-bold text-xl">{{ match.awayClub.name?.charAt(0) }}</span>
+                            <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 p-[3px] flex items-center justify-center flex-shrink-0 shadow-lg">
+                              <div class="w-full h-full rounded-lg bg-white flex items-center justify-center p-1.5">
+                                <img v-if="match.awayClub?.logoUrl" :src="match.awayClub.logoUrl" :alt="match.awayClub?.name || 'Away Team'" class="w-full h-full object-contain" />
+                                <span v-else class="text-blue-600 font-bold text-xl">{{ match.awayClub?.name?.charAt(0) || 'A' }}</span>
+                              </div>
                             </div>
                           </div>
                         </div>
 
+                        <!-- Fallback if teams missing -->
+                        <div v-else class="text-center py-6 text-gray-400">
+                          <p class="text-sm">Team information unavailable</p>
+                        </div>
+
                         <!-- Venue -->
-                        <div v-if="match.venue" class="mt-4 pt-4 border-t border-white/10 flex items-center gap-2 text-sm text-gray-400">
+                        <div v-if="match.venue" class="mt-4 pt-4 border-t border-white/20 flex items-center gap-2 text-sm text-gray-300">
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -599,14 +643,14 @@
 
                 <!-- Completed Matches Section -->
                 <div v-if="completedMatches.length > 0">
-                  <div class="flex items-center gap-3 mb-5">
-                    <div class="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
+                  <div class="flex items-center gap-3 mb-5 bg-gradient-to-r from-green-900/40 to-transparent px-4 py-3 rounded-xl border border-green-500/30">
+                    <div class="w-10 h-10 rounded-xl bg-green-500/30 flex items-center justify-center shadow-lg">
                       <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                       </svg>
                     </div>
                     <h3 class="text-2xl font-bold text-white">Completed Matches</h3>
-                    <span class="px-3 py-1 bg-green-500/20 text-green-400 text-sm font-semibold rounded-full border border-green-500/30">
+                    <span class="px-3 py-1 bg-green-500/30 text-green-300 text-sm font-semibold rounded-full border border-green-500/50 shadow-lg">
                       {{ completedMatches.length }}
                     </span>
                   </div>
@@ -614,26 +658,28 @@
                   <div class="grid gap-4">
                     <div v-for="match in completedMatches" :key="match._id"
                          @click="viewMatchDetails(match._id)"
-                         class="glass-card rounded-2xl border border-white/20 hover:border-green-500/40 transition-all duration-300 overflow-hidden cursor-pointer group">
+                         class="rounded-2xl border border-white/20 hover:border-green-500/40 transition-all duration-300 overflow-hidden cursor-pointer group bg-gradient-to-br from-slate-800/95 via-slate-900/95 to-slate-800/95 backdrop-blur-xl shadow-lg">
                       <div class="p-5">
                         <!-- Match Header -->
                         <div class="flex items-center justify-between mb-4">
                           <div class="flex items-center gap-2 flex-wrap">
-                            <span :class="['px-3 py-1 rounded-full text-xs font-bold uppercase border', getMatchStatusColor(match.status)]">
+                            <span :class="['px-3 py-1.5 rounded-full text-xs font-bold uppercase border shadow-lg', getMatchStatusColor(match.status)]">
                               ✓ {{ match.status }}
                             </span>
-                            <span v-if="match.matchFormat" class="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                            <span v-if="match.matchFormat" class="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-500/30 text-purple-200 border border-purple-500/50 shadow-md">
                               {{ match.matchFormat }}
                             </span>
-                            <span v-if="match.stage || match.round" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                            <span v-if="match.stage || match.round" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/30 text-blue-200 border border-blue-500/50 shadow-md">
                               {{ match.stage || match.round }}
                             </span>
                           </div>
-                          <div class="text-sm font-semibold text-gray-400">{{ formatMatchDate(match.date) }}</div>
+                          <div class="bg-slate-800/60 px-3 py-1.5 rounded-lg border border-green-500/30">
+                            <div class="text-sm font-semibold text-green-300">{{ formatMatchDate(match.date) }}</div>
+                          </div>
                         </div>
 
                         <!-- Tournament Info -->
-                        <div v-if="match.tournament" class="mb-4 flex items-center gap-2 text-sm">
+                        <div v-if="match.tournament?.name" class="mb-4 flex items-center gap-2 text-sm">
                           <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                           </svg>
@@ -642,22 +688,24 @@
                         </div>
 
                         <!-- Teams with Scores -->
-                        <div class="space-y-3">
+                        <div v-if="match.homeClub && match.awayClub" class="space-y-3">
                           <!-- Home Club -->
                           <div :class="[
-                            'flex items-center justify-between p-4 rounded-xl border transition-all',
-                            match.result?.winner && String(match.result.winner) === String(match.homeClub._id)
-                              ? 'bg-gradient-to-r from-green-500/20 to-transparent border-green-500/40'
-                              : 'bg-white/5 border-white/10'
+                            'flex items-center justify-between p-4 rounded-xl border transition-all backdrop-blur-sm',
+                            match.result?.winner && match.homeClub?._id && String(match.result.winner) === String(match.homeClub._id)
+                              ? 'bg-gradient-to-r from-green-600/40 via-green-500/20 to-transparent border-green-500/50'
+                              : 'bg-slate-800/60 border-white/20'
                           ]">
                             <div class="flex items-center gap-3 flex-1 min-w-0">
                               <div class="relative">
-                                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center flex-shrink-0 shadow-lg">
-                                  <img v-if="match.homeClub.logoUrl" :src="getClubLogoUrl(match.homeClub.logoUrl)" :alt="match.homeClub.name" class="w-full h-full object-cover rounded-xl"/>
-                                  <span v-else class="text-white font-bold text-lg">{{ match.homeClub.name?.charAt(0) }}</span>
+                                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 p-[3px] flex items-center justify-center flex-shrink-0 shadow-lg">
+                                  <div class="w-full h-full rounded-lg bg-white flex items-center justify-center p-1">
+                                    <img v-if="match.homeClub?.logoUrl" :src="match.homeClub.logoUrl" :alt="match.homeClub?.name || 'Home Team'" class="w-full h-full object-contain" />
+                                    <span v-else class="text-emerald-600 font-bold text-lg">{{ match.homeClub?.name?.charAt(0) || 'H' }}</span>
+                                  </div>
                                 </div>
                                 <!-- Winner Badge -->
-                                <div v-if="match.result?.winner && String(match.result.winner) === String(match.homeClub._id)" 
+                                <div v-if="match.result?.winner && match.homeClub?._id && String(match.result.winner) === String(match.homeClub._id)" 
                                      class="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-slate-800">
                                   <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
@@ -665,7 +713,7 @@
                                 </div>
                               </div>
                               <div class="min-w-0">
-                                <div class="font-bold text-white text-lg truncate">{{ match.homeClub.name }}</div>
+                                <div class="font-bold text-white text-lg truncate">{{ match.homeClub?.name || 'Home Team' }}</div>
                                 <div class="text-xs text-emerald-400 font-semibold">HOME</div>
                               </div>
                             </div>
@@ -678,19 +726,21 @@
 
                           <!-- Away Club -->
                           <div :class="[
-                            'flex items-center justify-between p-4 rounded-xl border transition-all',
-                            match.result?.winner && String(match.result.winner) === String(match.awayClub._id)
-                              ? 'bg-gradient-to-r from-green-500/20 to-transparent border-green-500/40'
-                              : 'bg-white/5 border-white/10'
+                            'flex items-center justify-between p-4 rounded-xl border transition-all backdrop-blur-sm',
+                            match.result?.winner && match.awayClub?._id && String(match.result.winner) === String(match.awayClub._id)
+                              ? 'bg-gradient-to-r from-green-600/40 via-green-500/20 to-transparent border-green-500/50'
+                              : 'bg-slate-800/60 border-white/20'
                           ]">
                             <div class="flex items-center gap-3 flex-1 min-w-0">
                               <div class="relative">
-                                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-lg">
-                                  <img v-if="match.awayClub.logoUrl" :src="getClubLogoUrl(match.awayClub.logoUrl)" :alt="match.awayClub.name" class="w-full h-full object-cover rounded-xl"/>
-                                  <span v-else class="text-white font-bold text-lg">{{ match.awayClub.name?.charAt(0) }}</span>
+                                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 p-[3px] flex items-center justify-center flex-shrink-0 shadow-lg">
+                                  <div class="w-full h-full rounded-lg bg-white flex items-center justify-center p-1">
+                                    <img v-if="match.awayClub?.logoUrl" :src="match.awayClub.logoUrl" :alt="match.awayClub?.name || 'Away Team'" class="w-full h-full object-contain" />
+                                    <span v-else class="text-blue-600 font-bold text-lg">{{ match.awayClub?.name?.charAt(0) || 'A' }}</span>
+                                  </div>
                                 </div>
                                 <!-- Winner Badge -->
-                                <div v-if="match.result?.winner && String(match.result.winner) === String(match.awayClub._id)" 
+                                <div v-if="match.result?.winner && match.awayClub?._id && String(match.result.winner) === String(match.awayClub._id)" 
                                      class="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-slate-800">
                                   <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
@@ -698,7 +748,7 @@
                                 </div>
                               </div>
                               <div class="min-w-0">
-                                <div class="font-bold text-white text-lg truncate">{{ match.awayClub.name }}</div>
+                                <div class="font-bold text-white text-lg truncate">{{ match.awayClub?.name || 'Away Team' }}</div>
                                 <div class="text-xs text-blue-400 font-semibold">AWAY</div>
                               </div>
                             </div>
@@ -708,6 +758,11 @@
                             </div>
                             <div v-else class="text-gray-500 text-sm font-medium ml-4">Did not bat</div>
                           </div>
+                        </div>
+
+                        <!-- Fallback if teams missing -->
+                        <div v-else class="text-center py-6 text-gray-400">
+                          <p class="text-sm">Team information unavailable</p>
                         </div>
 
                         <!-- Result -->
@@ -721,7 +776,7 @@
                         </div>
 
                         <!-- Venue -->
-                        <div v-if="match.venue" class="mt-3 flex items-center gap-2 text-xs text-gray-500">
+                        <div v-if="match.venue" class="mt-3 flex items-center gap-2 text-xs text-gray-300">
                           <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -1451,8 +1506,31 @@ async function loadClubMatches() {
     const clubId = club.value.id || club.value._id;
     console.log(`🏏 Loading matches for club: ${club.value.name || club.value.clubName} (ID: ${clubId})`);
     const { data } = await api.get(`/clubs/public/${clubId}/matches`);
-    console.log(`✅ Loaded ${data.matches?.length || 0} matches:`, data.matches);
-    console.log('📊 Match statuses:', data.matches?.map(m => ({ id: m._id, status: m.status, date: m.date })));
+    console.log(`✅ Loaded ${data.matches?.length || 0} matches`);
+    
+    // Debug: Log match data structure
+    if (data.matches && data.matches.length > 0) {
+      console.log('📊 Sample match structure:', {
+        firstMatch: data.matches[0],
+        hasHomeClub: !!data.matches[0]?.homeClub,
+        hasAwayClub: !!data.matches[0]?.awayClub,
+        hasTournament: !!data.matches[0]?.tournament,
+        homeClubName: data.matches[0]?.homeClub?.name,
+        awayClubName: data.matches[0]?.awayClub?.name,
+        homeClubLogoUrl: data.matches[0]?.homeClub?.logoUrl,
+        awayClubLogoUrl: data.matches[0]?.awayClub?.logoUrl
+      });
+      console.log('📊 Match statuses:', data.matches.map(m => ({ 
+        id: m._id, 
+        status: m.status, 
+        date: m.date,
+        hasHomeClub: !!m.homeClub,
+        hasAwayClub: !!m.awayClub,
+        homeLogoUrl: m.homeClub?.logoUrl,
+        awayLogoUrl: m.awayClub?.logoUrl
+      })));
+    }
+    
     clubMatches.value = data.matches || [];
   } catch (error) {
     console.error('❌ Error loading club matches:', error);
@@ -1636,12 +1714,19 @@ function closeCoachModal() {
 // Format match date
 function formatMatchDate(dateString) {
   if (!dateString) return 'TBD';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric'
-  });
+  try {
+    const date = new Date(dateString);
+    // Check if date is valid
+    if (isNaN(date.getTime())) return 'Invalid Date';
+    return date.toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'TBD';
+  }
 }
 
 // Format match time
@@ -1667,10 +1752,25 @@ function getMatchStatusColor(status) {
 
 // Get club logo URL
 function getClubLogoUrl(logoUrl) {
-  if (!logoUrl) return '';
-  if (logoUrl.startsWith('http')) return logoUrl;
+  if (!logoUrl) {
+    console.log('🖼️ No logoUrl provided');
+    return '';
+  }
+  if (logoUrl.startsWith('http')) {
+    console.log('🖼️ Using full URL:', logoUrl);
+    return logoUrl;
+  }
   const API = import.meta.env.VITE_API_BASE || 'http://localhost:4000/api';
-  return `${API}${logoUrl}`;
+  const fullUrl = `${API}${logoUrl}`;
+  console.log('🖼️ Constructed logo URL:', fullUrl);
+  return fullUrl;
+}
+
+// Handle logo image load error
+function handleLogoError(event, clubName) {
+  console.error('❌ Failed to load logo for:', clubName, 'src:', event.target.src);
+  // Hide the image on error so fallback text shows
+  event.target.style.display = 'none';
 }
 
 // Navigate to match details
