@@ -70,7 +70,7 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       scriptSrc: ["'self'", 'https://checkout.razorpay.com', "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:"],
+      imgSrc: ["'self'", "data:", "https:", "http://localhost:4000", "http://localhost:5173"],
       connectSrc: ["'self'", 'https://api.razorpay.com'],
       frameSrc: ["'self'", 'https://checkout.razorpay.com']
     },

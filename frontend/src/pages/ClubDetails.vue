@@ -873,8 +873,9 @@
                 @click="openLightbox(idx)"
                 class="group relative aspect-square rounded-xl overflow-hidden cursor-pointer border border-white/10 hover:border-purple-500/40 transition-all duration-300">
                 <img :src="getGalleryImageUrl(item.imageUrl)" :alt="item.caption || 'Gallery photo'"
+                  crossorigin="use-credentials"
                   class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  @error="e => e.target.style.display='none'"/>
+                  @error="handleImageError($event, item)"/>
                 <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <div class="absolute bottom-0 left-0 right-0 p-3">
                     <p v-if="item.caption" class="text-white text-xs font-medium truncate">{{ item.caption }}</p>
@@ -1190,7 +1191,7 @@
           </svg>
         </button>
         <div class="max-w-4xl max-h-[85vh] mx-4">
-          <img v-if="filteredGallery[lightboxIndex]" :src="getGalleryImageUrl(filteredGallery[lightboxIndex].imageUrl)" :alt="filteredGallery[lightboxIndex].caption || 'Gallery photo'" class="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"/>
+          <img v-if="filteredGallery[lightboxIndex]" :src="getGalleryImageUrl(filteredGallery[lightboxIndex].imageUrl)" :alt="filteredGallery[lightboxIndex].caption || 'Gallery photo'" crossorigin="use-credentials" class="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"/>
           <div v-if="filteredGallery[lightboxIndex]?.caption" class="text-center mt-3">
             <p class="text-white text-sm font-medium">{{ filteredGallery[lightboxIndex].caption }}</p>
             <p class="text-gray-400 text-xs mt-1 capitalize">{{ filteredGallery[lightboxIndex].category }} · {{ filteredGallery[lightboxIndex].uploadedBy }}</p>
@@ -1326,9 +1327,17 @@ const tabClass = (tabId) => {
 };
 
 function getGalleryImageUrl(path) {
-  if (!path) return '';
-  if (path.startsWith('http')) return path;
-  return `${SPONSOR_API_URL}${path}`;
+  if (!path) {
+    console.warn('📸 getGalleryImageUrl: path is empty');
+    return '';
+  }
+  if (path.startsWith('http')) {
+    console.log('📸 getGalleryImageUrl: using full URL:', path);
+    return path;
+  }
+  const fullUrl = `${SPONSOR_API_URL}${path}`;
+  console.log('📸 getGalleryImageUrl: constructed URL:', fullUrl);
+  return fullUrl;
 }
 
 function openLightbox(idx) {
@@ -1340,12 +1349,29 @@ function closeLightbox() {
   lightboxOpen.value = false;
 }
 
+function handleImageError(event, item) {
+  console.error('❌ Image failed to load:', {
+    imageUrl: item.imageUrl,
+    finalUrl: event.target.src,
+    itemId: item.id,
+    item: item
+  });
+  event.target.style.display = 'none';
+}
+
 async function fetchGallery() {
   const clubId = route.params.id;
   if (!clubId) return;
   loadingGallery.value = true;
   try {
     const { data } = await api.get(`/gallery/club/${clubId}?limit=50`);
+    console.log('📸 Gallery API Response:', data);
+    console.log('📸 Gallery Items:', data.items);
+    if (data.items && data.items.length > 0) {
+      console.log('📸 First item imageUrl:', data.items[0].imageUrl);
+      console.log('📸 SPONSOR_API_URL:', SPONSOR_API_URL);
+      console.log('📸 Final URL would be:', getGalleryImageUrl(data.items[0].imageUrl));
+    }
     galleryItems.value = data.items || [];
   } catch (e) {
     console.warn('Failed to fetch gallery:', e);

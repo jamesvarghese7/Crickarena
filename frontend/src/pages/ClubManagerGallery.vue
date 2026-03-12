@@ -72,6 +72,7 @@
           class="group relative bg-white rounded-xl overflow-hidden border border-slate-200 hover:shadow-lg transition-all duration-300">
           <div class="aspect-square overflow-hidden bg-slate-100">
             <img :src="getImageUrl(item.imageUrl)" :alt="item.caption || 'Gallery photo'" 
+              crossorigin="use-credentials"
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               @error="e => e.target.style.display='none'"/>
           </div>
@@ -132,7 +133,7 @@
         <div v-for="item in pendingItems" :key="item.id"
           class="flex gap-4 bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md transition-shadow">
           <div class="w-28 h-28 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
-            <img :src="getImageUrl(item.imageUrl)" :alt="item.caption" class="w-full h-full object-cover"/>
+            <img :src="getImageUrl(item.imageUrl)" :alt="item.caption" crossorigin="use-credentials" class="w-full h-full object-cover"/>
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 mb-1">
