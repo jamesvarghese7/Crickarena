@@ -1017,12 +1017,12 @@ router.get('/public/:id/matches', async (req, res) => {
         homeClub: {
           _id: match.homeClub._id,
           name: match.homeClub.clubName || match.homeClub.name,
-          logoUrl: match.homeClub.logoUrl
+          logoUrl: match.homeClub.logoUrl || `/api/clubs/${match.homeClub._id}/logo`
         },
         awayClub: {
           _id: match.awayClub._id,
           name: match.awayClub.clubName || match.awayClub.name,
-          logoUrl: match.awayClub.logoUrl
+          logoUrl: match.awayClub.logoUrl || `/api/clubs/${match.awayClub._id}/logo`
         },
         homeScore: homeInnings ? { runs: homeInnings.runs, wickets: homeInnings.wickets, overs: homeInnings.oversString } : null,
         awayScore: awayInnings ? { runs: awayInnings.runs, wickets: awayInnings.wickets, overs: awayInnings.oversString } : null,
