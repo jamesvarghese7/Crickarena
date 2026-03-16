@@ -195,12 +195,17 @@
                 </div>
                 
                 <h3 class="text-lg font-bold text-slate-900 mb-2">{{ player.fullName }}</h3>
-                <div class="flex items-center justify-center gap-2 mb-4">
+                <div class="flex items-center justify-center gap-2 mb-4 flex-wrap">
                   <span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
                     {{ player.preferredPosition || 'All-rounder' }}
                   </span>
                   <span v-if="player.jerseyNumber" class="px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-700">
                     #{{ player.jerseyNumber }}
+                  </span>
+                  <span v-if="player.wasSeeded" 
+                        class="px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 border border-amber-300"
+                        title="This player was added through automated seeding">
+                    🌱 Seeded
                   </span>
                 </div>
                 
@@ -549,34 +554,35 @@ async function loadPendingApplications() {
 async function loadApprovedPlayers() {
   loadingPlayers.value = true;
   try {
-    const response = await api.get('/players/club/applications');
-    const allApplications = response.data.applications || [];
-    const approved = allApplications.filter(app => app.status === 'approved');
+    // Use the new roster endpoint that fetches ALL players (including seeded ones)
+    const response = await api.get('/players/club/roster');
+    const allPlayers = response.data.players || [];
     
-    // Transform approved applications into player objects with proper structure
-    approvedPlayers.value = approved.map(app => ({
-      _id: app.player._id,
-      applicationId: app._id,
-      playerName: app.player.fullName,
-      fullName: app.player.fullName,
-      age: app.player.age,
-      position: app.player.preferredPosition,
-      preferredPosition: app.player.preferredPosition,
-      playingExperience: app.player.playingExperience,
-      email: app.player.user?.email,
-      phone: app.player.phone,
-      battingStyle: app.player.battingStyle,
-      bowlingStyle: app.player.bowlingStyle,
-      jerseyNumber: app.player.jerseyNumber,
-      matchesPlayed: app.player.statistics?.matchesPlayed || 0,
-      runsScored: app.player.statistics?.runsScored || 0,
-      wicketsTaken: app.player.statistics?.wicketsTaken || 0,
-      catches: app.player.statistics?.catches || 0,
-      stumpings: app.player.statistics?.stumpings || 0,
-      joinedDate: app.processedAt || app.appliedAt,
-      approvedAt: app.processedAt,
-      approvalNotes: app.approvalNotes,
-      hasProfilePhoto: app.player.hasProfilePhoto
+    // Transform into the format expected by the UI
+    approvedPlayers.value = allPlayers.map(player => ({
+      _id: player._id,
+      applicationId: player.applicationId,
+      playerName: player.fullName,
+      fullName: player.fullName,
+      age: player.age,
+      position: player.preferredPosition,
+      preferredPosition: player.preferredPosition,
+      playingExperience: player.playingExperience,
+      email: player.email,
+      phone: player.phone,
+      battingStyle: player.battingStyle,
+      bowlingStyle: player.bowlingStyle,
+      jerseyNumber: player.jerseyNumber,
+      matchesPlayed: player.statistics?.matchesPlayed || 0,
+      runsScored: player.statistics?.runsScored || 0,
+      wicketsTaken: player.statistics?.wicketsTaken || 0,
+      catches: player.statistics?.catches || 0,
+      stumpings: player.statistics?.stumpings || 0,
+      joinedDate: player.joinedAt,
+      approvedAt: player.approvedAt,
+      approvalNotes: player.approvalNotes,
+      hasProfilePhoto: player.hasProfilePhoto,
+      wasSeeded: player.wasSeeded // New flag to indicate if player was seeded
     }));
   } catch (error) {
     console.error('Failed to load approved players:', error);

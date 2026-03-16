@@ -144,6 +144,17 @@ class WebSocketService {
    * Calculate comprehensive match analytics
    */
   calculateMatchAnalytics(match, currentInnings) {
+    // Fallback to the latest innings with deliveries if caller passes an empty innings.
+    if ((!currentInnings || (currentInnings.balls || 0) === 0) && match?.innings?.length) {
+      for (let i = match.innings.length - 1; i >= 0; i -= 1) {
+        const innings = match.innings[i];
+        if ((innings?.balls || 0) > 0) {
+          currentInnings = innings;
+          break;
+        }
+      }
+    }
+
     if (!currentInnings) return null;
 
     const runs = currentInnings.runs || 0;
@@ -157,11 +168,17 @@ class WebSocketService {
       return null;
     }
 
-    // Get target if second innings
+    // Get target only when the active innings is the second innings.
     let target = null;
     let winProbability = null;
+    const isSecondInningsActive = !!(
+      match.innings &&
+      match.innings.length >= 2 &&
+      (match.innings[1]?.balls || 0) > 0 &&
+      String(currentInnings?.battingClub) === String(match.innings[1]?.battingClub)
+    );
     
-    if (match.innings && match.innings.length >= 2) {
+    if (isSecondInningsActive) {
       const firstInnings = match.innings[0];
       target = (firstInnings.runs || 0) + 1;
       
@@ -180,15 +197,47 @@ class WebSocketService {
         ballsRemaining,
         requiredRunRate,
         currentRunRate,
-        recentForm
+        recentForm,
+        format: match.matchFormat || 'T20',
+        overs: balls / 6
       });
     }
 
-    // Calculate momentum
-    const momentum = matchAnalytics.calculateMomentum(currentInnings.overs || []);
+    // Detect match phase
+    const overs = balls / 6;
+    const phase = matchAnalytics.getMatchPhase(overs, match.matchFormat || 'T20');
 
-    // Predict final score
-    const finalScorePrediction = matchAnalytics.predictFinalScore(currentInnings, oversLimit);
+    // Calculate momentum (phase-aware)
+    const momentum = matchAnalytics.calculateMomentum(currentInnings.overs || [], phase);
+
+    // Predict final score (enhanced)
+    const finalScorePrediction = matchAnalytics.predictFinalScore(
+      currentInnings, 
+      oversLimit,
+      match.matchFormat || 'T20'
+    );
+
+    // Calculate pressure index if chasing
+    let pressureIndex = null;
+    if (isSecondInningsActive && target) {
+      const currentRunRate = balls > 0 ? (runs / balls) * 6 : 0;
+      const requiredRunRate = ballsRemaining > 0 ? ((target - runs) / ballsRemaining) * 6 : 0;
+      pressureIndex = matchAnalytics.calculatePressureIndex({
+        requiredRunRate,
+        currentRunRate,
+        wicketsLost: wickets,
+        ballsRemaining,
+        overs
+      });
+    }
+
+    // Predict partnership momentum
+    const battingCard = currentInnings.battingCard || [];
+    const notOut = battingCard.filter(b => !b.dismissal?.how);
+    const partnershipMomentum = matchAnalytics.predictPartnershipMomentum(
+      notOut,
+      currentInnings.overs || []
+    );
 
     // Generate insights
     const insights = matchAnalytics.generateInsights(match, currentInnings);
@@ -202,6 +251,11 @@ class WebSocketService {
       finalScorePrediction,
       insights,
       heatmap,
+      pressureIndex,
+      pressureLevel: pressureIndex ? 
+        (pressureIndex < 30 ? 'low' : pressureIndex < 60 ? 'moderate' : pressureIndex < 80 ? 'high' : 'extreme') : null,
+      partnershipMomentum,
+      matchPhase: phase,
       currentRunRate: balls > 0 ? ((runs / balls) * 6).toFixed(2) : '0.00',
       requiredRunRate: target && ballsRemaining > 0 ? 
         (((target - runs) / ballsRemaining) * 6).toFixed(2) : null,
@@ -221,6 +275,12 @@ class WebSocketService {
 
     const firstInnings = match.innings[0];
     const secondInnings = match.innings[1];
+
+    // Do not show innings comparison until second innings actually starts.
+    const currentBalls = secondInnings.balls || 0;
+    if (currentBalls <= 0) {
+      return null;
+    }
 
     // Get team names
     const getTeamName = (clubId) => {
@@ -245,8 +305,6 @@ class WebSocketService {
     const firstInningsTeam = getTeamName(firstInnings.battingClub);
     const secondInningsTeam = getTeamName(secondInnings.battingClub);
 
-    // Get current over in second innings
-    const currentBalls = secondInnings.balls || 0;
     const currentOvers = Math.floor(currentBalls / 6);
 
     // Calculate first innings score at same stage
@@ -256,14 +314,38 @@ class WebSocketService {
       runRate: 0
     };
 
-    // Sum up runs from first innings up to current over
+    // Sum first-innings score up to same legal-ball count as current second innings.
     if (firstInnings.overs && firstInnings.overs.length > 0) {
-      const oversToCompare = firstInnings.overs.slice(0, currentOvers + 1);
-      firstInningsAtStage.runs = oversToCompare.reduce((sum, over) => sum + (over.totalRuns || 0), 0);
-      firstInningsAtStage.wickets = oversToCompare.reduce((sum, over) => sum + (over.totalWickets || 0), 0);
-      
-      const ballsAtStage = Math.min(currentBalls, firstInnings.balls || 0);
-      firstInningsAtStage.runRate = ballsAtStage > 0 ? (firstInningsAtStage.runs / ballsAtStage * 6).toFixed(2) : '0.00';
+      const ballsToCompare = Math.min(currentBalls, firstInnings.balls || 0);
+      let legalBallsSeen = 0;
+
+      for (const over of firstInnings.overs) {
+        const overBalls = over.balls || [];
+        const legalBallsInOver = overBalls.filter(
+          ball => ball?.extras !== 'wide' && ball?.extras !== 'no-ball'
+        ).length;
+
+        if (legalBallsSeen + legalBallsInOver <= ballsToCompare) {
+          firstInningsAtStage.runs += over.totalRuns || 0;
+          firstInningsAtStage.wickets += over.totalWickets || 0;
+          legalBallsSeen += legalBallsInOver;
+          continue;
+        }
+
+        // Partial over: add proportional runs/wickets based on legal deliveries consumed.
+        const remainingLegalBalls = Math.max(0, ballsToCompare - legalBallsSeen);
+        if (legalBallsInOver > 0 && remainingLegalBalls > 0) {
+          const ratio = remainingLegalBalls / legalBallsInOver;
+          firstInningsAtStage.runs += Math.round((over.totalRuns || 0) * ratio);
+          firstInningsAtStage.wickets += Math.round((over.totalWickets || 0) * ratio);
+          legalBallsSeen += remainingLegalBalls;
+        }
+        break;
+      }
+
+      firstInningsAtStage.runRate = ballsToCompare > 0
+        ? (firstInningsAtStage.runs / ballsToCompare * 6).toFixed(2)
+        : '0.00';
     } else {
       // Fallback if no over-by-over data
       const ballsAtStage = Math.min(currentBalls, firstInnings.balls || 0);
