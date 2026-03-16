@@ -92,6 +92,22 @@
         </div>
       </section>
 
+      <!-- Match Complete Warning -->
+      <div v-if="matchComplete && !finalized" class="bg-yellow-500/20 border border-yellow-500/50 rounded-xl p-4">
+        <div class="flex items-center gap-3">
+          <svg class="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <div class="flex-1">
+            <h3 class="font-bold text-yellow-200">Match Complete!</h3>
+            <p class="text-sm text-yellow-100 mt-1">The match has ended. Please finalize to lock the result and update standings.</p>
+          </div>
+          <button @click="showFinalizeModal = true" class="btn btn-warning">
+            Finalize Now
+          </button>
+        </div>
+      </div>
+
       <!-- Mode Toggle -->
       <div class="flex justify-center gap-2">
         <button @click="scoringMode = 'ball'" :class="['mode-btn', scoringMode === 'ball' && 'mode-btn-active']">
@@ -103,9 +119,20 @@
       </div>
 
       <!-- Toss Section -->
-      <section v-if="!form.toss.wonBy" class="glass-card p-6">
-        <h2 class="text-lg font-bold text-white mb-4">🪙 Toss</h2>
-        <div class="grid md:grid-cols-2 gap-4">
+      <section class="glass-card p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            🪙 Toss
+            <span v-if="form.toss.wonBy" class="text-xs px-2 py-1 bg-green-500/20 text-green-300 rounded-full">✓ Set</span>
+          </h2>
+          <button v-if="form.toss.wonBy && !finalized" @click="form.toss.wonBy = ''" 
+                  class="text-xs text-blue-300 hover:text-blue-200 underline">
+            Edit Toss
+          </button>
+        </div>
+        
+        <!-- Toss Entry Form -->
+        <div v-if="!form.toss.wonBy" class="grid md:grid-cols-2 gap-4">
           <div>
             <label class="label">Toss Won By</label>
             <select v-model="form.toss.wonBy" class="input-field" :disabled="finalized">
@@ -118,11 +145,18 @@
             <label class="label">Decision</label>
             <select v-model="form.toss.decision" class="input-field" :disabled="finalized">
               <option value="bat">Bat First</option>
-              <option value="bowl">Bowl First</option>
+              <option value="bowl">Field First</option>
             </select>
           </div>
         </div>
-        <p v-if="tossInfo" class="mt-3 text-green-300 text-sm">{{ tossInfo }}</p>
+        
+        <!-- Toss Summary (after selection) -->
+        <div v-else class="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+          <p class="text-green-200 font-medium">{{ tossInfo }}</p>
+          <p class="text-sm text-white/60 mt-2">
+            1st Innings: {{ getBattingTeamName(0) }} batting
+          </p>
+        </div>
       </section>
 
       <!-- Innings Tabs -->
@@ -151,7 +185,7 @@
               <option value="">Select Striker</option>
               <option v-for="p in availableStrikers" :key="p.playerId" :value="p.playerName"
                       :disabled="p.isOut" :class="{ 'text-red-400 line-through': p.isOut }">
-                {{ p.playerName }}{{ p.isOut ? ' (Out)' : '' }}
+                {{ p.playerName }}{{ p.isSubstitute ? ' (Sub)' : '' }}{{ p.isOut ? ' (Out)' : '' }}
               </option>
             </select>
             <div v-if="strikerStats" class="text-sm text-blue-200 mt-1">
@@ -165,7 +199,7 @@
               <option value="">Select Non-Striker</option>
               <option v-for="p in availableNonStrikers" :key="p.playerId" :value="p.playerName"
                       :disabled="p.isOut" :class="{ 'text-red-400 line-through': p.isOut }">
-                {{ p.playerName }}{{ p.isOut ? ' (Out)' : '' }}
+                {{ p.playerName }}{{ p.isSubstitute ? ' (Sub)' : '' }}{{ p.isOut ? ' (Out)' : '' }}
               </option>
             </select>
             <div v-if="nonStrikerStats" class="text-sm text-blue-200 mt-1">
@@ -178,7 +212,7 @@
             <label class="label">Bowler</label>
             <select v-model="currentBowler" class="input-field" :disabled="finalized">
               <option value="">Select Bowler</option>
-              <option v-for="p in bowlingRoster" :key="p.playerId" :value="p.playerName">{{ p.playerName }}</option>
+              <option v-for="p in bowlingSelectionPool" :key="p.playerId" :value="p.playerName">{{ p.playerName }}{{ bowlingSubstitutes.some(s => s.playerId === p.playerId) ? ' (Sub)' : '' }}</option>
             </select>
             <div v-if="bowlerStats" class="text-sm text-blue-200 mt-1">
               {{ bowlerStats.overs }}-{{ bowlerStats.maidens }}-{{ bowlerStats.runs }}-{{ bowlerStats.wickets }} • Econ: {{ bowlerStats.econ }}
@@ -196,7 +230,7 @@
         <div class="lg:col-span-2 glass-card p-5">
           <div class="flex items-center justify-between mb-4">
             <h3 class="font-bold text-white">Over {{ currentOver }}.{{ currentBallInOver }}</h3>
-            <button @click="undoLastBall" :disabled="!canUndo || finalized" class="btn-sm btn-outline">
+            <button @click="undoLastBall" :disabled="!canUndo || finalized || matchComplete" class="btn-sm btn-outline">
               ↩ Undo
             </button>
           </div>
@@ -206,7 +240,7 @@
             <div v-for="(ball, i) in currentOverBalls" :key="i" :class="['ball-indicator', getBallClass(ball)]">
               {{ getBallDisplay(ball) }}
             </div>
-            <div v-for="i in (6 - currentOverBalls.length)" :key="'empty-'+i" class="ball-indicator ball-empty">•</div>
+            <div v-for="i in (6 - legalBallsInCurrentOver)" :key="'empty-'+i" class="ball-indicator ball-empty">•</div>
           </div>
 
           <!-- Run Buttons -->
@@ -214,7 +248,7 @@
             <div class="text-sm text-white/60 mb-2">Runs</div>
             <div class="flex flex-wrap gap-2">
               <button v-for="r in [0,1,2,3,4,5,6]" :key="r" @click="addBall(r, 'none')" 
-                      :disabled="finalized"
+                      :disabled="finalized || matchComplete"
                       :class="['run-btn', r === 4 && 'run-btn-four', r === 6 && 'run-btn-six']">
                 {{ r }}
               </button>
@@ -225,10 +259,10 @@
           <div class="mb-4">
             <div class="text-sm text-white/60 mb-2">Extras</div>
             <div class="flex flex-wrap gap-2">
-              <button @click="showExtrasModal = true" :disabled="finalized" class="extra-btn">Wide</button>
-              <button @click="showNoBallModal = true" :disabled="finalized" class="extra-btn">No Ball</button>
-              <button @click="addBall(1, 'bye')" :disabled="finalized" class="extra-btn">Bye</button>
-              <button @click="addBall(1, 'legbye')" :disabled="finalized" class="extra-btn">Leg Bye</button>
+              <button @click="showExtrasModal = true" :disabled="finalized || matchComplete" class="extra-btn">Wide</button>
+              <button @click="showNoBallModal = true" :disabled="finalized || matchComplete" class="extra-btn">No Ball</button>
+              <button @click="showByeModal = true" :disabled="finalized || matchComplete" class="extra-btn">Bye</button>
+              <button @click="showLegByeModal = true" :disabled="finalized || matchComplete" class="extra-btn">Leg Bye</button>
             </div>
           </div>
 
@@ -237,7 +271,7 @@
             <div class="text-sm text-white/60 mb-2">Wicket</div>
             <div class="flex flex-wrap gap-2">
               <button v-for="w in wicketTypes" :key="w" @click="openWicketModal(w)" 
-                      :disabled="finalized" class="wicket-btn">
+                      :disabled="finalized || matchComplete" class="wicket-btn">
                 {{ w }}
               </button>
             </div>
@@ -272,7 +306,7 @@
                   <td class="py-2 px-2">
                     <select v-model="bat.playerName" class="input-sm" :disabled="finalized">
                       <option value="">Select</option>
-                      <option v-for="p in battingRoster" :key="p.playerId" :value="p.playerName">{{ p.playerName }}</option>
+                      <option v-for="p in battingSelectionPool" :key="p.playerId" :value="p.playerName">{{ p.playerName }}{{ battingSubstitutes.some(s => s.playerId === p.playerId) ? ' (Sub)' : '' }}</option>
                     </select>
                   </td>
                   <td class="py-2 px-2"><input v-model.number="bat.runs" type="number" min="0" class="input-num" :disabled="finalized"/></td>
@@ -316,7 +350,7 @@
               <thead>
                 <tr class="text-white/60 border-b border-white/10">
                   <th class="text-left py-2 px-2">Bowler</th>
-                  <th class="text-center py-2 px-2 w-16">O</th>
+                  <th class="text-center py-2 px-2 w-16">B</th>
                   <th class="text-center py-2 px-2 w-12">M</th>
                   <th class="text-center py-2 px-2 w-16">R</th>
                   <th class="text-center py-2 px-2 w-12">W</th>
@@ -329,14 +363,14 @@
                   <td class="py-2 px-2">
                     <select v-model="bowl.bowlerName" class="input-sm" :disabled="finalized">
                       <option value="">Select</option>
-                      <option v-for="p in bowlingRoster" :key="p.playerId" :value="p.playerName">{{ p.playerName }}</option>
+                      <option v-for="p in bowlingSelectionPool" :key="p.playerId" :value="p.playerName">{{ p.playerName }}{{ bowlingSubstitutes.some(s => s.playerId === p.playerId) ? ' (Sub)' : '' }}</option>
                     </select>
                   </td>
-                  <td class="py-2 px-2"><input v-model.number="bowl.overs" type="number" min="0" step="0.1" class="input-num" :disabled="finalized"/></td>
+                  <td class="py-2 px-2"><input v-model.number="bowl.balls" type="number" min="0" class="input-num" :disabled="finalized"/></td>
                   <td class="py-2 px-2"><input v-model.number="bowl.maidens" type="number" min="0" class="input-num" :disabled="finalized"/></td>
                   <td class="py-2 px-2"><input v-model.number="bowl.runs" type="number" min="0" class="input-num" :disabled="finalized"/></td>
                   <td class="py-2 px-2"><input v-model.number="bowl.wickets" type="number" min="0" class="input-num" :disabled="finalized"/></td>
-                  <td class="py-2 px-2 text-center text-white/70">{{ calcEcon(bowl.runs, bowl.overs) }}</td>
+                  <td class="py-2 px-2 text-center text-white/70">{{ calcEcon(bowl.runs, bowl.balls / 6) }}</td>
                   <td class="py-2 px-2">
                     <button @click="removeBowler(i)" :disabled="finalized" class="text-red-400 hover:text-red-300">✕</button>
                   </td>
@@ -401,16 +435,38 @@
               <label class="label">How Out</label>
               <input :value="wicketForm.how" class="input-field bg-white/5" disabled/>
             </div>
+            
+            <!-- Delivery Type -->
+            <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
+              <div class="text-sm text-yellow-200 mb-2">Delivery Type (if applicable)</div>
+              <div class="flex gap-4">
+                <label class="flex items-center gap-2 text-white/80">
+                  <input type="checkbox" v-model="wicketForm.isOnNoBall" class="rounded"/>
+                  On No Ball
+                </label>
+                <label class="flex items-center gap-2 text-white/80">
+                  <input type="checkbox" v-model="wicketForm.isOnWide" class="rounded"/>
+                  On Wide
+                </label>
+              </div>
+              <div v-if="wicketForm.isOnNoBall" class="text-xs text-yellow-300 mt-2">
+                ⚠️ Only Run Out is legal on a No Ball
+              </div>
+              <div v-if="wicketForm.isOnWide" class="text-xs text-yellow-300 mt-2">
+                ⚠️ Only Run Out or Stumped is legal on a Wide
+              </div>
+            </div>
+            
             <div v-if="needsFielder">
-              <label class="label">Fielder</label>
+              <label class="label">Fielder <span class="text-red-400">*</span></label>
               <select v-model="wicketForm.fielder" class="input-field">
                 <option value="">Select Fielder</option>
-                <option v-for="p in bowlingRoster" :key="p.playerId" :value="p.playerName">{{ p.playerName }}</option>
+                <option v-for="p in bowlingSelectionPool" :key="p.playerId" :value="p.playerName">{{ p.playerName }}{{ bowlingSubstitutes.some(s => s.playerId === p.playerId) ? ' (Sub)' : '' }}</option>
               </select>
             </div>
             <div>
               <label class="label">Runs on this ball</label>
-              <input v-model.number="wicketForm.runs" type="number" min="0" max="6" class="input-field"/>
+              <input v-model.number="wicketForm.runs" type="number" min="0" max="10" class="input-field"/>
             </div>
             <label class="flex items-center gap-2 text-white/80">
               <input type="checkbox" v-model="wicketForm.crossed" class="rounded"/>
@@ -482,12 +538,52 @@
             <div>
               <label class="label">Runs off the bat (in addition to 1 no ball)</label>
               <div class="flex gap-2">
-                <button v-for="r in [0,1,2,3,4,6]" :key="r" @click="addBall(1 + r, 'noball'); showNoBallModal = false" class="run-btn">+{{ r }}</button>
+                <button v-for="r in [0,1,2,3,4,6]" :key="r" @click="addBall(1 + r, 'no-ball'); showNoBallModal = false" class="run-btn">+{{ r }}</button>
               </div>
             </div>
           </div>
           <div class="flex justify-end mt-6">
             <button @click="showNoBallModal = false" class="btn btn-outline">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Bye Modal -->
+    <Teleport to="body">
+      <div v-if="showByeModal" class="modal-overlay" @click.self="showByeModal = false">
+        <div class="modal-content">
+          <h3 class="text-lg font-bold text-white mb-4">Bye</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="label">Number of byes (legal delivery)</label>
+              <div class="flex gap-2">
+                <button v-for="r in [1,2,3,4]" :key="r" @click="addBall(r, 'bye'); showByeModal = false" class="run-btn">{{ r }}</button>
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-end mt-6">
+            <button @click="showByeModal = false" class="btn btn-outline">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Leg Bye Modal -->
+    <Teleport to="body">
+      <div v-if="showLegByeModal" class="modal-overlay" @click.self="showLegByeModal = false">
+        <div class="modal-content">
+          <h3 class="text-lg font-bold text-white mb-4">Leg Bye</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="label">Number of leg byes (legal delivery)</label>
+              <div class="flex gap-2">
+                <button v-for="r in [1,2,3,4]" :key="r" @click="addBall(r, 'leg-bye'); showLegByeModal = false" class="run-btn">{{ r }}</button>
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-end mt-6">
+            <button @click="showLegByeModal = false" class="btn btn-outline">Cancel</button>
           </div>
         </div>
       </div>
@@ -512,6 +608,7 @@ const loading = ref(true);
 const saving = ref(false);
 const error = ref('');
 const finalized = ref(false);
+const matchComplete = ref(false);
 const match = ref(null);
 const tournament = ref(null);
 const scoringMode = ref('ball');
@@ -523,6 +620,8 @@ const showWicketModal = ref(false);
 const showFinalizeModal = ref(false);
 const showExtrasModal = ref(false);
 const showNoBallModal = ref(false);
+const showByeModal = ref(false);
+const showLegByeModal = ref(false);
 
 // Current players for ball-by-ball mode
 const currentStriker = ref('');
@@ -553,7 +652,9 @@ const wicketForm = reactive({
   fielder: '',
   bowler: '',
   runs: 0,
-  crossed: false
+  crossed: false,
+  isOnNoBall: false,
+  isOnWide: false
 });
 
 const finalizeForm = reactive({
@@ -563,13 +664,13 @@ const finalizeForm = reactive({
 });
 
 const rosterData = ref({
-  homeClub: { players: [] },
-  awayClub: { players: [] }
+  homeClub: { players: [], substitutes: [] },
+  awayClub: { players: [], substitutes: [] }
 });
 
 // Constants
-const wicketTypes = ['Bowled', 'Caught', 'LBW', 'Run Out', 'Stumped', 'Hit Wicket'];
-const dismissalTypes = ['Bowled', 'Caught', 'LBW', 'Run Out', 'Stumped', 'Hit Wicket', 'Retired Out'];
+const wicketTypes = ['Bowled', 'Caught', 'LBW', 'Run Out', 'Stumped', 'Hit Wicket', 'Obstructing Field', 'Hit Ball Twice'];
+const dismissalTypes = ['Bowled', 'Caught', 'LBW', 'Run Out', 'Stumped', 'Hit Wicket', 'Retired Out', 'Retired Hurt', 'Obstructing Field', 'Hit Ball Twice', 'Timed Out'];
 
 // Helper Functions
 function createEmptyInnings() {
@@ -586,6 +687,21 @@ function createEmptyInnings() {
   };
 }
 
+function normalizeRosterPlayers(roster) {
+  if (!roster) return [];
+  // New schema: for match scoring/editor use only Playing XI.
+  if (Array.isArray(roster.playing)) {
+    return roster.playing;
+  }
+  // Old schema fallback.
+  return Array.isArray(roster.players) ? roster.players : [];
+}
+
+function normalizeRosterSubstitutes(roster) {
+  if (!roster) return [];
+  return Array.isArray(roster.substitutes) ? roster.substitutes : [];
+}
+
 function goBack() {
   router.back();
 }
@@ -596,6 +712,7 @@ const awayTeamName = computed(() => form.awayName || 'Away Team');
 
 const matchStatus = computed(() => {
   if (finalized.value) return 'Completed';
+  if (matchComplete.value) return 'Match Complete';
   if (form.innings.some(i => i.totalBalls > 0)) return 'Live';
   return 'Scheduled';
 });
@@ -604,6 +721,7 @@ const statusBadgeClass = computed(() => {
   const base = 'px-3 py-1 rounded-full text-xs font-bold';
   switch (matchStatus.value) {
     case 'Live': return `${base} bg-red-500 text-white animate-pulse`;
+    case 'Match Complete': return `${base} bg-yellow-500 text-white`;
     case 'Completed': return `${base} bg-green-500 text-white`;
     default: return `${base} bg-blue-500 text-white`;
   }
@@ -618,6 +736,18 @@ const battingRoster = computed(() => {
   return [];
 });
 
+const battingSubstitutes = computed(() => {
+  const battingClub = currentInnings.value.battingClub;
+  if (battingClub === form.homeClub) return rosterData.value.homeClub.substitutes || [];
+  if (battingClub === form.awayClub) return rosterData.value.awayClub.substitutes || [];
+  return [];
+});
+
+const battingSelectionPool = computed(() => [
+  ...battingRoster.value,
+  ...battingSubstitutes.value
+]);
+
 // Get list of dismissed batsmen names
 const dismissedBatsmen = computed(() => {
   const battingCard = currentInnings.value.battingCard || [];
@@ -628,8 +758,9 @@ const dismissedBatsmen = computed(() => {
 
 // Available batsmen for striker (excludes out players and current non-striker)
 const availableStrikers = computed(() => {
-  return battingRoster.value.map(p => ({
+  return battingSelectionPool.value.map(p => ({
     ...p,
+    isSubstitute: battingSubstitutes.value.some(s => s.playerId === p.playerId),
     isOut: dismissedBatsmen.value.includes(p.playerName),
     isOther: p.playerName === currentNonStriker.value
   })).filter(p => !p.isOther); // Don't show currently selected non-striker
@@ -637,8 +768,9 @@ const availableStrikers = computed(() => {
 
 // Available batsmen for non-striker (excludes out players and current striker)
 const availableNonStrikers = computed(() => {
-  return battingRoster.value.map(p => ({
+  return battingSelectionPool.value.map(p => ({
     ...p,
+    isSubstitute: battingSubstitutes.value.some(s => s.playerId === p.playerId),
     isOut: dismissedBatsmen.value.includes(p.playerName),
     isOther: p.playerName === currentStriker.value
   })).filter(p => !p.isOther); // Don't show currently selected striker
@@ -651,10 +783,23 @@ const bowlingRoster = computed(() => {
   return [];
 });
 
+const bowlingSubstitutes = computed(() => {
+  const bowlingClub = currentInnings.value.bowlingClub;
+  if (bowlingClub === form.homeClub) return rosterData.value.homeClub.substitutes || [];
+  if (bowlingClub === form.awayClub) return rosterData.value.awayClub.substitutes || [];
+  return [];
+});
+
+const bowlingSelectionPool = computed(() => [
+  ...bowlingRoster.value,
+  ...bowlingSubstitutes.value
+]);
+
 const tossInfo = computed(() => {
   if (!form.toss.wonBy) return '';
   const winner = form.toss.wonBy === form.homeClub ? homeTeamName.value : awayTeamName.value;
-  return `${winner} won the toss and chose to ${form.toss.decision}`;
+  const decision = form.toss.decision === 'bat' ? 'bat first' : 'field first';
+  return `${winner} won the toss and chose to ${decision}`;
 });
 
 const currentOver = computed(() => Math.floor(currentInnings.value.totalBalls / 6) + 1);
@@ -664,6 +809,10 @@ const currentOverBalls = computed(() => {
   const overs = currentInnings.value.overs || [];
   const lastOver = overs.find(o => o.overNumber === currentOver.value);
   return lastOver?.balls || [];
+});
+
+const legalBallsInCurrentOver = computed(() => {
+  return currentOverBalls.value.filter(b => b.extras !== 'wide' && b.extras !== 'no-ball').length;
 });
 
 const canUndo = computed(() => ballHistory.value.length > 0);
@@ -707,8 +856,32 @@ const bowlerStats = computed(() => {
 });
 
 const partnership = computed(() => {
-  // Calculate from last wicket
-  return { runs: 0, balls: 0 }; // Simplified for now
+  const inn = currentInnings.value;
+  if (!inn || !inn.overs || inn.overs.length === 0) return { runs: 0, balls: 0 };
+  
+  // Find index of last wicket in all balls
+  const allBalls = [];
+  for (const over of inn.overs) {
+    for (const ball of (over.balls || [])) {
+      allBalls.push(ball);
+    }
+  }
+  
+  // Find last wicket
+  let lastWicketIdx = -1;
+  for (let i = allBalls.length - 1; i >= 0; i--) {
+    if (allBalls[i].wicket) {
+      lastWicketIdx = i;
+      break;
+    }
+  }
+  
+  // Calculate runs and balls since last wicket (or from start if no wicket)
+  const ballsSinceWicket = allBalls.slice(lastWicketIdx + 1);
+  const runs = ballsSinceWicket.reduce((sum, b) => sum + (b.runs || 0), 0);
+  const balls = ballsSinceWicket.filter(b => b.extras !== 'wide' && b.extras !== 'no-ball').length;
+  
+  return { runs, balls };
 });
 
 const targetInfo = computed(() => {
@@ -720,12 +893,26 @@ const targetInfo = computed(() => {
   const target = firstInnings.totalRuns + 1;
   const needed = target - secondInnings.totalRuns;
   const ballsLeft = (tournament.value?.oversLimit || 20) * 6 - secondInnings.totalBalls;
+  const wicketsLeft = 10 - secondInnings.totalWickets;
   
-  if (needed <= 0) return `${getBattingTeamName(1)} won by ${10 - secondInnings.totalWickets} wickets!`;
-  if (secondInnings.totalWickets >= 10) return `${getBattingTeamName(0)} won by ${needed - 1} runs!`;
-  if (ballsLeft <= 0) return `${getBattingTeamName(0)} won by ${needed - 1} runs!`;
+  // Team 2 won
+  if (needed <= 0) {
+    if (wicketsLeft === 10) {
+      return `${getBattingTeamName(1)} won without losing a wicket!`;
+    }
+    return `${getBattingTeamName(1)} won by ${wicketsLeft} wicket${wicketsLeft === 1 ? '' : 's'}!`;
+  }
   
-  return `${getBattingTeamName(1)} need ${needed} runs from ${ballsLeft} balls (Target: ${target})`;
+  // Team 2 all out or overs finished
+  if (secondInnings.totalWickets >= 10) return `${getBattingTeamName(0)} won by ${needed} run${needed === 1 ? '' : 's'}!`;
+  if (ballsLeft <= 0) {
+    if (needed === 1) {
+      return `Match Tied!`;
+    }
+    return `${getBattingTeamName(0)} won by ${needed} run${needed === 1 ? '' : 's'}!`;
+  }
+  
+  return `${getBattingTeamName(1)} need ${needed} run${needed === 1 ? '' : 's'} from ${ballsLeft} ball${ballsLeft === 1 ? '' : 's'} (Target: ${target})`;
 });
 
 // Current run rate (for batting team in current innings)
@@ -796,7 +983,7 @@ function calcInningsTotal(inn) {
 }
 
 function calcInningsWickets(inn) {
-  return (inn.battingCard || []).filter(b => b.dismissalHow && b.dismissalHow !== 'Not Out').length;
+  return (inn.battingCard || []).filter(b => b.dismissalHow && b.dismissalHow !== 'Not Out' && b.dismissalHow !== 'Retired Hurt').length;
 }
 
 function calcSR(runs, balls) {
@@ -821,27 +1008,53 @@ function getBallClass(ball) {
 function getBallDisplay(ball) {
   if (ball.wicket) return 'W';
   if (ball.extras === 'wide') return `${ball.runs}wd`;
-  if (ball.extras === 'noball') return `${ball.runs}nb`;
+  if (ball.extras === 'no-ball') return `${ball.runs}nb`;
   if (ball.extras === 'bye') return `${ball.runs}b`;
-  if (ball.extras === 'legbye') return `${ball.runs}lb`;
+  if (ball.extras === 'leg-bye') return `${ball.runs}lb`;
   return ball.runs;
 }
 
 // Ball-by-ball logic
 function addBall(runs, extras = 'none', wicket = null) {
-  if (finalized.value) return;
+  if (finalized.value || matchComplete.value) {
+    notify.error('Match is complete. Cannot add balls.');
+    return;
+  }
   if (!currentStriker.value || !currentBowler.value) {
     notify.error('Please select striker and bowler');
     return;
   }
 
   const inn = form.innings[activeInnings.value];
-  const isLegalDelivery = extras !== 'wide' && extras !== 'noball';
+  const isLegalDelivery = extras !== 'wide' && extras !== 'no-ball';
+  
+  // BALL COUNTING LOGIC:
+  // - totalBalls: Counts only LEGAL deliveries (excludes wides/no-balls) - determines over number
+  // - ballNumber: Sequence position in over (includes ALL balls) - can exceed 6 if extras
+  // - currentOver: floor(totalBalls / 6) + 1
+  // - An over completes after 6 LEGAL deliveries, regardless of how many wides/no-balls
+  
+  // Get or create over object
+  let overObj = inn.overs.find(o => o.overNumber === currentOver.value);
+  if (!overObj) {
+    overObj = { overNumber: currentOver.value, bowler: currentBowler.value, balls: [] };
+    inn.overs.push(overObj);
+  } else {
+    // Validate that bowler hasn't changed mid-over (except for wides/no-balls which don't count)
+    if (overObj.bowler !== currentBowler.value && isLegalDelivery) {
+      notify.warning(`Bowler changed mid-over from ${overObj.bowler} to ${currentBowler.value}`);
+      // Update the over's bowler to reflect the change
+      overObj.bowler = currentBowler.value;
+    }
+  }
+  
+  // Calculate actual ball number in over (including extras)
+  const actualBallNumber = overObj.balls.length + 1;
   
   // Create ball record
   const ball = {
     overNumber: currentOver.value,
-    ballNumber: currentBallInOver.value + 1,
+    ballNumber: actualBallNumber,
     runs,
     extras,
     wicket,
@@ -857,12 +1070,7 @@ function addBall(runs, extras = 'none', wicket = null) {
     nonStriker: currentNonStriker.value
   });
 
-  // Update over structure
-  let overObj = inn.overs.find(o => o.overNumber === currentOver.value);
-  if (!overObj) {
-    overObj = { overNumber: currentOver.value, bowler: currentBowler.value, balls: [] };
-    inn.overs.push(overObj);
-  }
+  // Add ball to over
   overObj.balls.push(ball);
 
   // Update totals
@@ -873,12 +1081,12 @@ function addBall(runs, extras = 'none', wicket = null) {
 
   // Update extras
   if (extras === 'wide') inn.extras.wides += runs;
-  else if (extras === 'noball') inn.extras.noBalls += runs;
+  else if (extras === 'no-ball') inn.extras.noBalls += 1; // Only the penalty, not runs off bat
   else if (extras === 'bye') inn.extras.byes += runs;
-  else if (extras === 'legbye') inn.extras.legByes += runs;
+  else if (extras === 'leg-bye') inn.extras.legByes += runs;
 
   // Update batsman stats (only for legal deliveries and bat runs)
-  if (extras === 'none' || extras === 'noball') {
+  if (extras === 'none' || extras === 'no-ball') {
     updateBatsmanStats(currentStriker.value, extras === 'none' ? runs : runs - 1, isLegalDelivery);
   }
 
@@ -893,6 +1101,24 @@ function addBall(runs, extras = 'none', wicket = null) {
 
   // Strike rotation
   handleStrikeRotation(runs, extras, wicket);
+
+  // Check if team 2 has achieved target (for 2nd innings only)
+  if (activeInnings.value === 1) {
+    const target = form.innings[0].totalRuns + 1;
+    if (inn.totalRuns >= target) {
+      matchComplete.value = true;
+      const wicketsLeft = 10 - inn.totalWickets;
+      if (wicketsLeft === 10) {
+        notify.success(`${getBattingTeamName(1)} won without losing a wicket!`);
+      } else {
+        notify.success(`${getBattingTeamName(1)} won by ${wicketsLeft} wicket${wicketsLeft === 1 ? '' : 's'}!`);
+      }
+      setTimeout(() => {
+        notify.info('Match complete. Please finalize to lock the result.');
+      }, 2000);
+      return; // Don't check innings complete, match is over
+    }
+  }
 
   // Check if innings is complete (overs finished or all out)
   checkInningsComplete();
@@ -926,14 +1152,31 @@ function checkInningsComplete() {
       }, 1000);
     } else {
       // Match complete - 2nd innings ended
+      matchComplete.value = true;
       const firstInningsRuns = form.innings[0].totalRuns;
       const secondInningsRuns = inn.totalRuns;
+      const wicketsLeft = 10 - inn.totalWickets;
       
-      if (secondInningsRuns >= firstInningsRuns + 1) {
-        notify.success(`${getBattingTeamName(1)} won!`);
+      if (secondInningsRuns > firstInningsRuns) {
+        // Team 2 won
+        if (wicketsLeft === 10) {
+          notify.success(`${getBattingTeamName(1)} won without losing a wicket!`);
+        } else {
+          notify.success(`${getBattingTeamName(1)} won by ${wicketsLeft} wicket${wicketsLeft === 1 ? '' : 's'}!`);
+        }
+      } else if (secondInningsRuns === firstInningsRuns) {
+        // Tie
+        notify.info(`Match Tied! Both teams scored ${firstInningsRuns} runs.`);
       } else {
-        notify.success(`${getBattingTeamName(0)} won by ${firstInningsRuns - secondInningsRuns} runs!`);
+        // Team 1 won
+        const margin = firstInningsRuns - secondInningsRuns;
+        notify.success(`${getBattingTeamName(0)} won by ${margin} run${margin === 1 ? '' : 's'}!`);
       }
+      
+      // Prompt to finalize
+      setTimeout(() => {
+        notify.info('Match complete. Please finalize to lock the result.');
+      }, 2000);
     }
   }
 }
@@ -961,6 +1204,23 @@ function updateBowlerStats(name, runs, isLegalDelivery, gotWicket) {
   bowl.runs = (bowl.runs || 0) + runs;
   if (isLegalDelivery) bowl.balls = (bowl.balls || 0) + 1;
   if (gotWicket) bowl.wickets = (bowl.wickets || 0) + 1;
+  
+  // Check for maiden over (over complete with 0 runs)
+  if (bowl.balls % 6 === 0 && bowl.balls > 0) {
+    // Check if last over was a maiden (no runs conceded in last 6 balls)
+    const overNum = Math.floor((bowl.balls - 1) / 6) + 1;
+    const thisOver = inn.overs.find(o => o.overNumber === overNum && o.bowler === name);
+    if (thisOver) {
+      // Count legal deliveries (wides and no-balls don't count toward the 6 balls)
+      const legalBalls = thisOver.balls.filter(b => b.extras !== 'wide' && b.extras !== 'no-ball').length;
+      if (legalBalls === 6) {
+        const overRuns = thisOver.balls.reduce((sum, b) => sum + (b.runs || 0), 0);
+        if (overRuns === 0) {
+          bowl.maidens = (bowl.maidens || 0) + 1;
+        }
+      }
+    }
+  }
 }
 
 function markBatsmanOut(name, how, fielder, bowler) {
@@ -972,25 +1232,35 @@ function markBatsmanOut(name, how, fielder, bowler) {
   }
   bat.dismissalHow = how;
   bat.dismissalFielder = fielder;
-  bat.dismissalBowler = bowler;
+  // Only credit bowler if it's a bowling dismissal (not run out, obstructing field, etc.)
+  if (['Bowled', 'Caught', 'LBW', 'Stumped', 'Hit Wicket'].includes(how)) {
+    bat.dismissalBowler = bowler;
+  }
 }
 
 function handleStrikeRotation(runs, extras, wicket) {
   const oddRuns = runs % 2 === 1;
-  const endOfOver = currentInnings.value.totalBalls % 6 === 0 && extras !== 'wide' && extras !== 'noball';
+  const endOfOver = currentInnings.value.totalBalls % 6 === 0 && extras !== 'wide' && extras !== 'no-ball';
 
   // Wicket handling
   if (wicket) {
-    // New batsman needed - for now just show notification
-    notify.info('Select new batsman');
+    // If batsmen crossed before wicket, non-striker becomes striker
     if (wicket.crossed) {
-      // Striker becomes current non-striker's position
+      currentStriker.value = currentNonStriker.value;
+      // Non-striker will be set when new batsman is selected
+      currentNonStriker.value = '';
+      notify.info('Select new batsman (at non-striker end)');
+    } else {
+      // Striker is out, non-striker stays
+      currentStriker.value = '';
+      notify.info('Select new batsman (at striker end)');
     }
     return;
   }
 
-  // Normal rotation
-  if (oddRuns || endOfOver) {
+  // Normal rotation - XOR logic: rotate only if exactly one condition is true
+  // If both odd runs AND end of over, batsmen swap twice = no net change
+  if (oddRuns !== endOfOver) {
     const temp = currentStriker.value;
     currentStriker.value = currentNonStriker.value;
     currentNonStriker.value = temp;
@@ -1004,10 +1274,35 @@ function openWicketModal(how) {
   wicketForm.bowler = currentBowler.value;
   wicketForm.runs = 0;
   wicketForm.crossed = false;
+  wicketForm.isOnNoBall = false;
+  wicketForm.isOnWide = false;
   showWicketModal.value = true;
 }
 
 function confirmWicket() {
+  // Validate wicket type based on delivery type
+  const how = wicketForm.how;
+  const isNoBall = wicketForm.isOnNoBall;
+  const isWide = wicketForm.isOnWide;
+  
+  // On No Ball: Only Run Out is allowed
+  if (isNoBall && how !== 'Run Out') {
+    notify.error('On a No Ball, only Run Out is possible!');
+    return;
+  }
+  
+  // On Wide: Only Run Out and Stumped are allowed
+  if (isWide && how !== 'Run Out' && how !== 'Stumped') {
+    notify.error('On a Wide, only Run Out or Stumped is possible!');
+    return;
+  }
+  
+  // Validate fielder is provided when needed
+  if (['Caught', 'Run Out', 'Stumped'].includes(how) && !wicketForm.fielder) {
+    notify.error('Fielder name is required for this dismissal');
+    return;
+  }
+  
   const wicket = {
     batsman: wicketForm.batsman,
     how: wicketForm.how,
@@ -1015,7 +1310,13 @@ function confirmWicket() {
     bowler: wicketForm.bowler,
     crossed: wicketForm.crossed
   };
-  addBall(wicketForm.runs, 'none', wicket);
+  
+  // Determine extras type based on flags
+  let extras = 'none';
+  if (isNoBall) extras = 'no-ball';
+  else if (isWide) extras = 'wide';
+  
+  addBall(wicketForm.runs, extras, wicket);
   showWicketModal.value = false;
 }
 
@@ -1025,7 +1326,8 @@ function undoLastBall() {
   if (!last) return;
   
   const inn = form.innings[last.inningsIdx];
-  const overObj = inn.overs.find(o => o.overNumber === last.ball.overNumber);
+  const ball = last.ball;
+  const overObj = inn.overs.find(o => o.overNumber === ball.overNumber);
   if (overObj) {
     overObj.balls.pop();
     if (overObj.balls.length === 0) {
@@ -1034,23 +1336,70 @@ function undoLastBall() {
   }
 
   // Reverse totals
-  inn.totalRuns -= last.ball.runs;
-  if (last.ball.extras !== 'wide' && last.ball.extras !== 'noball') {
+  inn.totalRuns -= ball.runs;
+  const wasLegalDelivery = ball.extras !== 'wide' && ball.extras !== 'no-ball';
+  if (wasLegalDelivery) {
     inn.totalBalls -= 1;
   }
-  if (last.ball.wicket) {
+  if (ball.wicket) {
     inn.totalWickets -= 1;
+  }
+
+  // Reverse extras
+  if (ball.extras === 'wide') inn.extras.wides -= ball.runs;
+  else if (ball.extras === 'no-ball') inn.extras.noBalls -= 1; // Only the penalty
+  else if (ball.extras === 'bye') inn.extras.byes -= ball.runs;
+  else if (ball.extras === 'leg-bye') inn.extras.legByes -= ball.runs;
+
+  // Reverse batsman stats
+  if (ball.extras === 'none' || ball.extras === 'no-ball') {
+    const runsToReverse = ball.extras === 'none' ? ball.runs : ball.runs - 1;
+    const bat = inn.battingCard.find(b => b.playerName === ball.batsman);
+    if (bat) {
+      bat.runs = Math.max(0, (bat.runs || 0) - runsToReverse);
+      if (wasLegalDelivery) bat.balls = Math.max(0, (bat.balls || 0) - 1);
+      if (ball.runs === 4) bat.fours = Math.max(0, (bat.fours || 0) - 1);
+      if (ball.runs === 6) bat.sixes = Math.max(0, (bat.sixes || 0) - 1);
+    }
+  }
+
+  // Reverse bowler stats
+  const bowl = inn.bowlingCard.find(b => b.bowlerName === ball.bowler);
+  if (bowl) {
+    bowl.runs = Math.max(0, (bowl.runs || 0) - ball.runs);
+    if (wasLegalDelivery) bowl.balls = Math.max(0, (bowl.balls || 0) - 1);
+    if (ball.wicket) bowl.wickets = Math.max(0, (bowl.wickets || 0) - 1);
+  }
+
+  // Reverse dismissal record
+  if (ball.wicket) {
+    const bat = inn.battingCard.find(b => b.playerName === ball.wicket.batsman);
+    if (bat) {
+      bat.dismissalHow = '';
+      bat.dismissalFielder = '';
+      bat.dismissalBowler = '';
+    }
   }
 
   // Restore players
   currentStriker.value = last.striker;
   currentNonStriker.value = last.nonStriker;
 
+  // Reset match complete if was complete
+  if (matchComplete.value) {
+    matchComplete.value = false;
+  }
+
   notify.success('Ball undone');
 }
 
 // Scorecard mode helpers
 function addBatter() {
+  const currentBatters = currentInnings.value.battingCard.length;
+  if (currentBatters >= 11) {
+    notify.error('Cannot add more than 11 batsmen to the batting card');
+    return;
+  }
   currentInnings.value.battingCard.push({
     playerName: '',
     runs: 0,
@@ -1068,7 +1417,7 @@ function removeBatter(idx) {
 function addBowler() {
   currentInnings.value.bowlingCard.push({
     bowlerName: '',
-    overs: 0,
+    balls: 0,
     maidens: 0,
     runs: 0,
     wickets: 0
@@ -1092,6 +1441,7 @@ async function load() {
     tournament.value = tRes.data;
     match.value = mRes.data;
     finalized.value = mRes.data.finalized || mRes.data.status === 'Completed';
+    matchComplete.value = false; // Reset match complete state on load
 
     // Populate form
     form.homeClub = mRes.data.homeClub?._id || mRes.data.homeClub || '';
@@ -1116,10 +1466,16 @@ async function load() {
       form.summary = { ...mRes.data.summary };
     }
 
-    // Load rosters
+    // Load rosters (supports old and new schemas)
     rosterData.value = {
-      homeClub: { players: mRes.data.homeClubRoster?.players || [] },
-      awayClub: { players: mRes.data.awayClubRoster?.players || [] }
+      homeClub: {
+        players: normalizeRosterPlayers(mRes.data.homeClubRoster),
+        substitutes: normalizeRosterSubstitutes(mRes.data.homeClubRoster)
+      },
+      awayClub: {
+        players: normalizeRosterPlayers(mRes.data.awayClubRoster),
+        substitutes: normalizeRosterSubstitutes(mRes.data.awayClubRoster)
+      }
     };
 
   } catch (e) {
@@ -1146,7 +1502,7 @@ function mapInningsFromAPI(inn) {
     bowlingCard: (inn.bowlingCard || []).map(b => ({
       bowlerName: b.bowlerName || '',
       balls: b.balls || 0,
-      overs: b.balls ? b.balls / 6 : 0,
+      overs: 0, // Calculated on display, not stored
       maidens: b.maidens || 0,
       runs: b.runs || 0,
       wickets: b.wickets || 0
@@ -1282,11 +1638,11 @@ function restoreBatsmenFromLastOver() {
   // Check if we need to swap due to odd runs or end of over
   const lastBallRuns = lastBall.runs || 0;
   const lastBallExtras = lastBall.extras || 'none';
-  const isLegalDelivery = lastBallExtras !== 'wide' && lastBallExtras !== 'noball';
+  const isLegalDelivery = lastBallExtras !== 'wide' && lastBallExtras !== 'no-ball';
   
   // Count legal deliveries in the current over to check if we're at the start of a new over
   const legalBallsInLastOver = (inn.overs.find(o => o.overNumber === lastBall.overNumber)?.balls || [])
-    .filter(b => b.extras !== 'wide' && b.extras !== 'noball').length;
+    .filter(b => b.extras !== 'wide' && b.extras !== 'no-ball').length;
   
   const endedOnOverComplete = legalBallsInLastOver === 6;
   const oddRuns = lastBallRuns % 2 === 1;

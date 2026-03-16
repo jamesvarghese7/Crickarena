@@ -30,6 +30,14 @@
             </div>
           </div>
         </div>
+        <div v-if="homeSubs?.length" class="px-5 py-4 border-t border-slate-700/40 bg-slate-900/30">
+          <div class="text-xs uppercase tracking-wider text-amber-300 font-semibold mb-2">Substitutes</div>
+          <div class="flex flex-wrap gap-2">
+            <span v-for="player in homeSubs" :key="`home-sub-${player.playerId}`" class="px-3 py-1.5 rounded-lg bg-amber-500/15 text-amber-200 border border-amber-500/30 text-xs font-medium">
+              {{ player.playerName }}
+            </span>
+          </div>
+        </div>
         <div v-else class="text-center py-16">
           <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-700/50 flex items-center justify-center">
             <svg class="w-8 h-8 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,6 +74,14 @@
               </div>
               <div class="text-xs text-slate-400 mt-0.5">{{ player.position }}</div>
             </div>
+          </div>
+        </div>
+        <div v-if="awaySubs?.length" class="px-5 py-4 border-t border-slate-700/40 bg-slate-900/30">
+          <div class="text-xs uppercase tracking-wider text-amber-300 font-semibold mb-2">Substitutes</div>
+          <div class="flex flex-wrap gap-2">
+            <span v-for="player in awaySubs" :key="`away-sub-${player.playerId}`" class="px-3 py-1.5 rounded-lg bg-amber-500/15 text-amber-200 border border-amber-500/30 text-xs font-medium">
+              {{ player.playerName }}
+            </span>
           </div>
         </div>
         <div v-else class="text-center py-16">
@@ -116,8 +132,23 @@ const props = defineProps({
   rosters: { type: Object, default: null }
 });
 
-const homeRoster = computed(() => props.rosters?.homeTeam?.roster?.players || []);
-const awayRoster = computed(() => props.rosters?.awayTeam?.roster?.players || []);
+function getPlayingRoster(roster) {
+  if (!roster) return [];
+  if (Array.isArray(roster.playing)) return roster.playing;
+  if (Array.isArray(roster.players)) return roster.players;
+  return [];
+}
+
+function getSubstituteRoster(roster) {
+  if (!roster) return [];
+  if (Array.isArray(roster.substitutes)) return roster.substitutes;
+  return [];
+}
+
+const homeRoster = computed(() => getPlayingRoster(props.rosters?.homeTeam?.roster));
+const awayRoster = computed(() => getPlayingRoster(props.rosters?.awayTeam?.roster));
+const homeSubs = computed(() => getSubstituteRoster(props.rosters?.homeTeam?.roster));
+const awaySubs = computed(() => getSubstituteRoster(props.rosters?.awayTeam?.roster));
 
 function isCaptain(player) {
   const pos = (player.position || '').toLowerCase();

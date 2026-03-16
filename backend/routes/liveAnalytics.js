@@ -11,6 +11,20 @@ import websocketService from '../services/websocket.js';
 const router = express.Router();
 
 /**
+ * Pick the most recent innings that has at least one legal delivery recorded.
+ */
+function getLatestActiveInnings(match) {
+  if (!match?.innings?.length) return null;
+
+  for (let i = match.innings.length - 1; i >= 0; i -= 1) {
+    const innings = match.innings[i];
+    if ((innings?.balls || 0) > 0) return innings;
+  }
+
+  return null;
+}
+
+/**
  * GET /api/live-analytics/:matchId
  * Get comprehensive analytics for a live match
  */
@@ -27,22 +41,12 @@ router.get('/:matchId', async (req, res) => {
       return res.status(404).json({ message: 'Match not found' });
     }
 
-    const currentInnings = match.innings && match.innings.length > 0 
-      ? match.innings[match.innings.length - 1] 
-      : null;
+    const currentInnings = getLatestActiveInnings(match);
 
     if (!currentInnings) {
       return res.status(400).json({ 
         success: false,
         message: 'No innings data available. Analytics will be available once the match starts and balls are bowled.' 
-      });
-    }
-
-    // Check if any balls have been bowled
-    if (!currentInnings.balls || currentInnings.balls === 0) {
-      return res.status(400).json({ 
-        success: false,
-        message: 'No balls bowled yet. Analytics will be available once the match begins.' 
       });
     }
 
@@ -124,13 +128,26 @@ router.get('/:matchId/win-probability', async (req, res) => {
       ballsRemaining,
       requiredRunRate,
       currentRunRate,
-      recentForm
+      recentForm,
+      format: match.matchFormat || 'T20',
+      overs: balls / 6
+    });
+
+    // Calculate pressure index
+    const pressureIndex = matchAnalytics.calculatePressureIndex({
+      requiredRunRate,
+      currentRunRate,
+      wicketsLost,
+      ballsRemaining,
+      overs: balls / 6
     });
 
     res.json({
       success: true,
       matchId,
       winProbability,
+      pressureIndex,
+      pressureLevel: pressureIndex < 30 ? 'low' : pressureIndex < 60 ? 'moderate' : pressureIndex < 80 ? 'high' : 'extreme',
       context: {
         target,
         currentScore,
@@ -160,12 +177,16 @@ router.get('/:matchId/momentum', async (req, res) => {
       return res.status(404).json({ message: 'Match not found' });
     }
 
-    const currentInnings = match.innings[match.innings.length - 1];
+    const currentInnings = getLatestActiveInnings(match);
     if (!currentInnings) {
       return res.status(400).json({ message: 'No innings data available' });
     }
 
-    const momentum = matchAnalytics.calculateMomentum(currentInnings.overs || []);
+    const phase = matchAnalytics.getMatchPhase(
+      (currentInnings.balls || 0) / 6,
+      match.matchFormat || 'T20'
+    );
+    const momentum = matchAnalytics.calculateMomentum(currentInnings.overs || [], phase);
 
     res.json({
       success: true,
@@ -191,12 +212,16 @@ router.get('/:matchId/prediction', async (req, res) => {
       return res.status(404).json({ message: 'Match not found' });
     }
 
-    const currentInnings = match.innings[match.innings.length - 1];
+    const currentInnings = getLatestActiveInnings(match);
     if (!currentInnings) {
       return res.status(400).json({ message: 'No innings data available' });
     }
 
-    const prediction = matchAnalytics.predictFinalScore(currentInnings, match.oversLimit || 20);
+    const prediction = matchAnalytics.predictFinalScore(
+      currentInnings, 
+      match.oversLimit || 20,
+      match.matchFormat || 'T20'
+    );
 
     res.json({
       success: true,
@@ -227,7 +252,7 @@ router.get('/:matchId/insights', async (req, res) => {
       return res.status(404).json({ message: 'Match not found' });
     }
 
-    const currentInnings = match.innings[match.innings.length - 1];
+    const currentInnings = getLatestActiveInnings(match);
     if (!currentInnings) {
       return res.status(400).json({ message: 'No innings data available' });
     }
@@ -293,7 +318,7 @@ router.post('/:matchId/broadcast', async (req, res) => {
       return res.status(404).json({ message: 'Match not found' });
     }
 
-    const currentInnings = match.innings[match.innings.length - 1];
+    const currentInnings = getLatestActiveInnings(match);
     if (!currentInnings) {
       return res.status(400).json({ message: 'No innings data available' });
     }

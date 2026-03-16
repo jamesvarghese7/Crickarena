@@ -38,10 +38,18 @@
 
     <!-- Win Probability Gauge -->
     <div v-if="winProbability" class="bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-slate-700/50 overflow-hidden shadow-xl">
-      <div class="px-5 py-3 bg-slate-900/50 border-b border-slate-700/50">
+      <div class="px-5 py-3 bg-slate-900/50 border-b border-slate-700/50 flex items-center justify-between">
         <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
           <span class="text-lg">📊</span> Win Probability
         </h3>
+        <span v-if="matchPhase" class="px-3 py-1 rounded-full text-xs font-bold uppercase"
+          :class="[
+            matchPhase === 'powerplay' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40' :
+            matchPhase === 'middle' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/40' :
+            'bg-red-500/20 text-red-400 border border-red-500/40'
+          ]">
+          {{ matchPhase }}
+        </span>
       </div>
       
       <div class="p-6">
@@ -68,6 +76,66 @@
             :style="{ width: winProbability.bowling + '%' }"
           ></div>
         </div>
+        
+        <!-- Pressure Index (if chasing) -->
+        <div v-if="pressureIndex !== null" class="mt-4 pt-4 border-t border-slate-700/50">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs text-slate-400 uppercase tracking-wide">Pressure Index</span>
+            <span class="text-sm font-bold"
+              :class="[
+                pressureLevel === 'low' ? 'text-emerald-400' :
+                pressureLevel === 'moderate' ? 'text-yellow-400' :
+                pressureLevel === 'high' ? 'text-orange-400' : 'text-red-400'
+              ]">
+              {{ pressureIndex }}/100 ({{ pressureLevel }})
+            </span>
+          </div>
+          <div class="h-2 bg-slate-700/50 rounded-full overflow-hidden">
+            <div class="h-full transition-all duration-700"
+              :class="[
+                pressureLevel === 'low' ? 'bg-emerald-500' :
+                pressureLevel === 'moderate' ? 'bg-yellow-500' :
+                pressureLevel === 'high' ? 'bg-orange-500' : 'bg-red-500'
+              ]"
+              :style="{ width: pressureIndex + '%' }">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Partnership Momentum -->
+    <div v-if="partnershipMomentum && partnershipMomentum.runs > 0" class="bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-slate-700/50 overflow-hidden shadow-xl">
+      <div class="px-5 py-3 bg-slate-900/50 border-b border-slate-700/50">
+        <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+          <span class="text-lg">🤝</span> Current Partnership
+        </h3>
+      </div>
+      
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <div class="text-3xl font-black text-white">{{ partnershipMomentum.runs }}</div>
+            <div class="text-xs text-slate-400 mt-1">runs ({{ partnershipMomentum.balls }} balls)</div>
+          </div>
+          <div class="text-right">
+            <div class="text-2xl font-bold text-blue-400">{{ partnershipMomentum.runRate }}</div>
+            <div class="text-xs text-slate-400 mt-1">per over</div>
+          </div>
+        </div>
+        
+        <div class="bg-slate-700/30 rounded-lg px-4 py-3 flex items-center justify-between">
+          <span class="text-sm text-slate-300">{{ partnershipMomentum.message }}</span>
+          <span class="px-3 py-1 rounded-full text-xs font-bold uppercase"
+            :class="[
+              partnershipMomentum.momentum === 'explosive' ? 'bg-red-500/20 text-red-400 border border-red-500/40' :
+              partnershipMomentum.momentum === 'strong' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' :
+              partnershipMomentum.momentum === 'developing' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40' :
+              'bg-orange-500/20 text-orange-400 border border-orange-500/40'
+            ]">
+            {{ partnershipMomentum.momentum }}
+          </span>
+        </div>
       </div>
     </div>
 
@@ -80,19 +148,25 @@
       </div>
       
       <div class="p-6">
-        <div class="flex items-center justify-center gap-4">
+        <div class="flex items-center justify-between gap-4 mb-3">
           <div 
             :class="[
-              'px-6 py-3 rounded-xl font-bold text-lg',
+              'px-6 py-3 rounded-xl font-bold text-lg flex-1 text-center',
+              momentum.trend === 'surging' ? 'bg-emerald-600/20 text-emerald-300 border-2 border-emerald-500/50' :
               momentum.trend === 'positive' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
               momentum.trend === 'negative' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+              momentum.trend === 'struggling' ? 'bg-red-600/20 text-red-300 border-2 border-red-500/50' :
               'bg-slate-700/50 text-slate-400 border border-slate-600/30'
             ]"
           >
-            {{ momentum.trend === 'positive' ? '↗️ Positive' : momentum.trend === 'negative' ? '↘️ Negative' : '→ Neutral' }}
+            {{ momentum.trend === 'surging' ? '🔥 Surging' : 
+               momentum.trend === 'positive' ? '↗️ Positive' : 
+               momentum.trend === 'negative' ? '↘️ Negative' : 
+               momentum.trend === 'struggling' ? '📉 Struggling' : '→ Neutral' }}
           </div>
-          <div class="text-2xl font-black text-white">{{ momentum.value }}</div>
+          <div class="text-3xl font-black text-white">{{ momentum.value }}</div>
         </div>
+        <div class="text-center text-sm text-slate-400">{{ momentum.description || 'Match flow indicator' }}</div>
       </div>
     </div>
 
@@ -144,7 +218,7 @@
     </div>
 
     <!-- Innings Comparison (2nd innings only) -->
-    <div v-if="inningsComparison" class="bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-slate-700/50 overflow-hidden shadow-xl">
+    <div v-if="inningsComparison && inningsComparison.currentOvers !== '0.0'" class="bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-slate-700/50 overflow-hidden shadow-xl">
       <div class="px-5 py-3 bg-slate-900/50 border-b border-slate-700/50">
         <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
           <span class="text-lg">⚖️</span> Innings Comparison
@@ -247,31 +321,59 @@
       </div>
     </div>
 
-    <!-- AI Insights -->
+    <!-- AI Insights (Enhanced) -->
     <div v-if="insights && insights.length" class="bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-slate-700/50 overflow-hidden shadow-xl">
-      <div class="px-5 py-3 bg-slate-900/50 border-b border-slate-700/50">
+      <div class="px-5 py-3 bg-slate-900/50 border-b border-slate-700/50 flex items-center justify-between">
         <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
           <span class="text-lg">🤖</span> AI Insights
         </h3>
+        <span class="px-2 py-1 bg-purple-500/20 text-purple-300 rounded text-xs font-bold">ENHANCED</span>
       </div>
       
       <div class="divide-y divide-slate-700/30">
         <div 
-          v-for="(insight, idx) in insights" 
+          v-for="(insight, idx) in insights.slice(0, 8)" 
           :key="idx"
-          class="px-5 py-4 flex items-start gap-3"
+          class="px-5 py-4 flex items-start gap-3 hover:bg-slate-700/20 transition-colors"
         >
+          <!-- Priority Indicator -->
+          <div class="flex items-center gap-2">
+            <span class="text-xl">{{ insight.icon || '💡' }}</span>
+            <span 
+              :class="[
+                'w-1 h-8 rounded-full',
+                insight.priority === 'urgent' ? 'bg-red-500 animate-pulse' :
+                insight.priority === 'high' ? 'bg-orange-500' :
+                insight.priority === 'medium' ? 'bg-yellow-500' : 'bg-blue-500'
+              ]"
+            ></span>
+          </div>
+          
+          <!-- Message -->
+          <div class="flex-1">
+            <p class="text-sm text-slate-200 font-medium">{{ insight.message }}</p>
+            <span v-if="insight.priority" class="text-xs text-slate-500 uppercase mt-1 inline-block">{{ insight.priority }}</span>
+          </div>
+          
+          <!-- Type Badge -->
           <span 
             :class="[
-              'w-8 h-8 rounded-lg flex items-center justify-center text-sm flex-shrink-0',
+              'px-2 py-1 rounded text-xs font-bold flex-shrink-0',
               insight.type === 'positive' ? 'bg-emerald-500/20 text-emerald-400' :
               insight.type === 'negative' ? 'bg-red-500/20 text-red-400' :
+              insight.type === 'critical' ? 'bg-red-600/30 text-red-300' :
+              insight.type === 'milestone' ? 'bg-purple-500/20 text-purple-400' :
+              insight.type === 'momentum' ? 'bg-blue-500/20 text-blue-400' :
               'bg-amber-500/20 text-amber-400'
             ]"
           >
-            {{ insight.type === 'positive' ? '✓' : insight.type === 'negative' ? '✗' : '!' }}
+            {{ insight.type }}
           </span>
-          <p class="text-sm text-slate-300 flex-1">{{ insight.message }}</p>
+        </div>
+        
+        <!-- Show more indicator if there are more insights -->
+        <div v-if="insights.length > 8" class="px-5 py-3 text-center text-xs text-slate-500 bg-slate-900/30">
+          + {{ insights.length - 8 }} more insights
         </div>
       </div>
     </div>
@@ -305,7 +407,12 @@ const currentRunRate = ref('0.00');
 const requiredRunRate = ref(null);
 const viewersCount = ref(0);
 const lastUpdateTime = ref('--:--');
-const inningsComparison = ref(null); // NEW: Innings comparison data
+const inningsComparison = ref(null);
+// Enhanced features
+const pressureIndex = ref(null);
+const pressureLevel = ref(null);
+const matchPhase = ref(null);
+const partnershipMomentum = ref(null);
 
 // Computed property to check if we have any analytics data
 const hasAnyData = computed(() => {
@@ -427,7 +534,13 @@ const updateAnalytics = (analytics) => {
   currentRunRate.value = analytics.currentRunRate || '0.00';
   requiredRunRate.value = analytics.requiredRunRate;
   viewersCount.value = analytics.viewersCount || 0;
-  inningsComparison.value = analytics.inningsComparison || null; // NEW
+  inningsComparison.value = analytics.inningsComparison || null;
+  
+  // Enhanced features
+  pressureIndex.value = analytics.pressureIndex || null;
+  pressureLevel.value = analytics.pressureLevel || null;
+  matchPhase.value = analytics.matchPhase || null;
+  partnershipMomentum.value = analytics.partnershipMomentum || null;
   
   const now = new Date();
   lastUpdateTime.value = now.toLocaleTimeString();

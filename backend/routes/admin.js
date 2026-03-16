@@ -22,7 +22,9 @@ const {
   calculateNRR,
   updateStandingFromMatch,
   sortStandingsWithTieBreakers,
-  scheduleWithReserveDays
+  scheduleWithReserveDays,
+  createPlayoffMatchesFromStandings,
+  splitIntoGroupsSeeded
 } = fixturesV3;
 
 const router = express.Router();
@@ -1685,6 +1687,421 @@ router.post('/tournaments/:id/fixtures/seed-knockout', verifyFirebaseToken, requ
   }
 });
 
+// ===== Generate playoff matches for Super League format =====
+router.post('/tournaments/:id/fixtures/generate-playoffs', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
+  try {
+    const tournamentId = req.params.id;
+    const tournament = await Tournament.findById(tournamentId)
+      .populate('participants', 'clubName name district');
+
+    if (!tournament) {
+      return res.status(404).json({ message: 'Tournament not found' });
+    }
+
+    if (tournament.format !== 'super-league') {
+      return res.status(400).json({ 
+        message: 'Only super-league format supports playoff generation',
+        currentFormat: tournament.format
+      });
+    }
+
+    // Check if league stage is complete
+    const leagueMatches = await Match.find({ 
+      tournament: tournamentId, 
+      stage: 'Group' 
+    });
+
+    const completedLeagueMatches = leagueMatches.filter(m => m.status === 'Completed');
+    if (completedLeagueMatches.length !== leagueMatches.length) {
+      return res.status(400).json({ 
+        message: 'League stage not complete',
+        completed: completedLeagueMatches.length,
+        total: leagueMatches.length
+      });
+    }
+
+    // Check if playoffs already exist
+    const existingPlayoffs = await Match.find({ 
+      tournament: tournamentId,
+      stage: { $in: ['Qualifier1', 'Qualifier2', 'Eliminator', 'Final'] }
+    });
+
+    if (existingPlayoffs.length > 0) {
+      return res.status(400).json({ 
+        message: 'Playoff matches already exist',
+        count: existingPlayoffs.length
+      });
+    }
+
+    // Get sorted standings
+    const standings = tournament.standings || [];
+    const sortedStandings = standings
+      .filter(s => s.group === 'League Stage')
+      .sort((a, b) => {
+        if (b.points !== a.points) return b.points - a.points;
+        if (b.nrr !== a.nrr) return b.nrr - a.nrr;
+        return b.won - a.won;
+      });
+
+    if (sortedStandings.length < 4) {
+      return res.status(400).json({ 
+        message: 'Not enough teams in standings',
+        required: 4,
+        found: sortedStandings.length
+      });
+    }
+
+    // Get playoff structure from tournament config
+    const playoffStructure = tournament.playoffConfig || {
+      topTeamsQualify: 4,
+      slots: [
+        {
+          name: 'Qualifier 1',
+          stage: 'Qualifier1',
+          teams: [1, 2],
+          winnerTo: 'Final',
+          loserTo: 'Qualifier 2'
+        },
+        {
+          name: 'Eliminator',
+          stage: 'Eliminator',
+          teams: [3, 4],
+          winnerTo: 'Qualifier 2',
+          loserTo: null
+        },
+        {
+          name: 'Qualifier 2',
+          stage: 'Qualifier2',
+          teams: ['loser:Qualifier 1', 'winner:Eliminator'],
+          winnerTo: 'Final',
+          loserTo: null
+        },
+        {
+          name: 'Final',
+          stage: 'Final',
+          teams: ['winner:Qualifier 1', 'winner:Qualifier 2'],
+          winnerTo: 'Champion',
+          loserTo: null
+        }
+      ]
+    };
+
+    // Create playoff matches
+    const playoffMatches = createPlayoffMatchesFromStandings(sortedStandings, playoffStructure);
+
+    // Prepare venue slots
+    const venueSlots = tournament.venueSlots && tournament.venueSlots.length > 0
+      ? tournament.venueSlots
+      : tournament.venues && tournament.venues.length > 0
+        ? tournament.venues.map(v => ({ name: v, slotTimes: ['09:00', '14:00', '18:00'] }))
+        : [{ name: 'Main Ground', slotTimes: ['14:00', '18:00'] }];
+
+    // Only schedule matches that have both teams determined (Q1 and Eliminator)
+    const immediateMatches = playoffMatches.filter(m => 
+      m.homeClub && m.awayClub && !m.dependsOn.length
+    );
+
+    if (immediateMatches.length === 0) {
+      return res.status(400).json({ message: 'No immediate playoff matches to schedule' });
+    }
+
+    // Convert to rounds format for scheduling
+    const rounds = [{
+      round: 'Qualifier 1 & Eliminator',
+      roundLabel: 'Qualifier 1 & Eliminator',
+      stage: 'Qualifier1',
+      matches: immediateMatches.map(m => ({
+        home: m.homeClub,
+        away: m.awayClub
+      }))
+    }];
+
+    // Schedule playoff matches
+    const scheduleOptions = {
+      startDate: new Date(), // Start from now
+      endDate: tournament.endDate,
+      venueSlots,
+      restDaysMin: tournament.restDaysMin || 2,
+      teamBlackouts: tournament.teamBlackouts || new Map(),
+      venueBlackouts: tournament.venueBlackouts || new Map(),
+      respectRoundOrder: true,
+      prioritizeWeekends: true,
+      reserveDays: tournament.reserveDays || [],
+      reserveDayStrategy: 'knockouts-only'
+    };
+
+    const scheduleResult = scheduleWithReserveDays(rounds, scheduleOptions);
+
+    if (!scheduleResult.ok) {
+      return res.status(400).json({
+        message: 'Failed to schedule playoff matches',
+        error: scheduleResult.message
+      });
+    }
+
+    // Create match records
+    const matches = [];
+    for (const matchData of scheduleResult.matches) {
+      const playoffMatch = immediateMatches.find(m => 
+        String(m.homeClub) === String(matchData.home) && 
+        String(m.awayClub) === String(matchData.away)
+      );
+
+      const match = new Match({
+        tournament: tournamentId,
+        homeClub: matchData.home,
+        awayClub: matchData.away,
+        date: matchData.date,
+        time: matchData.time,
+        venue: matchData.venue,
+        round: playoffMatch.name,
+        stage: playoffMatch.stage,
+        matchFormat: tournament.matchFormat || 'T20',
+        oversLimit: tournament.oversLimit || 20,
+        status: 'Scheduled',
+        matchCode: `PO${Date.now().toString().slice(-6)}${Math.random().toString(36).substr(2, 3).toUpperCase()}`,
+        hasReserveDay: matchData.hasReserveDay || true
+      });
+
+      matches.push(match);
+    }
+
+    await Match.insertMany(matches);
+
+    res.json({
+      success: true,
+      message: 'Playoff matches created successfully',
+      data: {
+        matchesCreated: matches.length,
+        qualifiedTeams: sortedStandings.slice(0, 4).map(s => ({
+          position: sortedStandings.indexOf(s) + 1,
+          club: s.club,
+          points: s.points,
+          nrr: s.nrr
+        })),
+        pendingMatches: ['Qualifier 2', 'Final'], // To be created after Q1 and Eliminator complete
+        nextStep: 'Complete Qualifier 1 and Eliminator to generate Qualifier 2 and Final'
+      }
+    });
+
+  } catch (error) {
+    console.error('Error generating playoffs:', error);
+    res.status(500).json({ 
+      message: 'Failed to generate playoff matches',
+      error: error.message 
+    });
+  }
+});
+
+// ===== Progress Super League playoffs (Q2 and Final) =====
+router.post('/tournaments/:id/fixtures/progress-playoffs', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
+  try {
+    const tournamentId = req.params.id;
+    const tournament = await Tournament.findById(tournamentId);
+
+    if (!tournament) {
+      return res.status(404).json({ message: 'Tournament not found' });
+    }
+
+    if (tournament.format !== 'super-league') {
+      return res.status(400).json({ message: 'Only super-league format supports this operation' });
+    }
+
+    // Check if Q1 and Eliminator are complete
+    const q1 = await Match.findOne({ tournament: tournamentId, stage: 'Qualifier1', status: 'Completed' });
+    const eliminator = await Match.findOne({ tournament: tournamentId, stage: 'Eliminator', status: 'Completed' });
+
+    if (!q1 || !eliminator) {
+      return res.status(400).json({ 
+        message: 'Qualifier 1 and Eliminator must be completed first',
+        q1Complete: !!q1,
+        eliminatorComplete: !!eliminator
+      });
+    }
+
+    // Check if Q2 already exists
+    const existingQ2 = await Match.findOne({ tournament: tournamentId, stage: 'Qualifier2' });
+    if (existingQ2) {
+      return res.status(400).json({ message: 'Qualifier 2 already exists' });
+    }
+
+    // Determine Q2 teams: Loser of Q1 vs Winner of Eliminator
+    const q1Loser = String(q1.result.winner) === String(q1.homeClub) ? q1.awayClub : q1.homeClub;
+    const eliminatorWinner = eliminator.result.winner;
+
+    // Prepare venue slots
+    const venueSlots = tournament.venueSlots && tournament.venueSlots.length > 0
+      ? tournament.venueSlots
+      : tournament.venues && tournament.venues.length > 0
+        ? tournament.venues.map(v => ({ name: v, slotTimes: ['18:00'] }))
+        : [{ name: 'Main Ground', slotTimes: ['18:00'] }];
+
+    // Schedule Q2
+    const rounds = [{
+      round: 'Qualifier 2',
+      roundLabel: 'Qualifier 2',
+      stage: 'Qualifier2',
+      matches: [{ home: q1Loser, away: eliminatorWinner }]
+    }];
+
+    const scheduleOptions = {
+      startDate: new Date(),
+      endDate: tournament.endDate,
+      venueSlots,
+      restDaysMin: 2,
+      teamBlackouts: tournament.teamBlackouts || new Map(),
+      venueBlackouts: tournament.venueBlackouts || new Map(),
+      respectRoundOrder: true,
+      prioritizeWeekends: true,
+      reserveDays: tournament.reserveDays || [],
+      reserveDayStrategy: 'knockouts-only'
+    };
+
+    const scheduleResult = scheduleWithReserveDays(rounds, scheduleOptions);
+
+    if (!scheduleResult.ok) {
+      return res.status(400).json({ message: 'Failed to schedule Qualifier 2' });
+    }
+
+    const matchData = scheduleResult.matches[0];
+    const q2Match = new Match({
+      tournament: tournamentId,
+      homeClub: matchData.home,
+      awayClub: matchData.away,
+      date: matchData.date,
+      time: matchData.time,
+      venue: matchData.venue,
+      round: 'Qualifier 2',
+      stage: 'Qualifier2',
+      matchFormat: tournament.matchFormat || 'T20',
+      oversLimit: tournament.oversLimit || 20,
+      status: 'Scheduled',
+      matchCode: `Q2${Date.now().toString().slice(-6)}${Math.random().toString(36).substr(2, 3).toUpperCase()}`,
+      hasReserveDay: true
+    });
+
+    await q2Match.save();
+
+    res.json({
+      success: true,
+      message: 'Qualifier 2 created successfully',
+      data: {
+        matchId: q2Match._id,
+        homeClub: q1Loser,
+        awayClub: eliminatorWinner,
+        date: matchData.date,
+        nextStep: 'Complete Qualifier 2 to generate Final'
+      }
+    });
+
+  } catch (error) {
+    console.error('Error progressing playoffs:', error);
+    res.status(500).json({ message: 'Failed to progress playoffs', error: error.message });
+  }
+});
+
+// ===== Generate Final match =====
+router.post('/tournaments/:id/fixtures/generate-final', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
+  try {
+    const tournamentId = req.params.id;
+    const tournament = await Tournament.findById(tournamentId);
+
+    if (!tournament) {
+      return res.status(404).json({ message: 'Tournament not found' });
+    }
+
+    // Check Q1 and Q2 completion
+    const q1 = await Match.findOne({ tournament: tournamentId, stage: 'Qualifier1', status: 'Completed' });
+    const q2 = await Match.findOne({ tournament: tournamentId, stage: 'Qualifier2', status: 'Completed' });
+
+    if (!q1 || !q2) {
+      return res.status(400).json({ 
+        message: 'Both Qualifier 1 and Qualifier 2 must be completed',
+        q1Complete: !!q1,
+        q2Complete: !!q2
+      });
+    }
+
+    // Check if Final already exists
+    const existingFinal = await Match.findOne({ tournament: tournamentId, stage: 'Final' });
+    if (existingFinal) {
+      return res.status(400).json({ message: 'Final match already exists' });
+    }
+
+    // Determine Final teams
+    const q1Winner = q1.result.winner;
+    const q2Winner = q2.result.winner;
+
+    // Prepare venue slots
+    const venueSlots = tournament.venueSlots && tournament.venueSlots.length > 0
+      ? tournament.venueSlots
+      : tournament.venues && tournament.venues.length > 0
+        ? tournament.venues.map(v => ({ name: v, slotTimes: ['18:00'] }))
+        : [{ name: 'Main Ground', slotTimes: ['18:00'] }];
+
+    // Schedule Final
+    const rounds = [{
+      round: 'Final',
+      roundLabel: 'Final',
+      stage: 'Final',
+      matches: [{ home: q1Winner, away: q2Winner }]
+    }];
+
+    const scheduleOptions = {
+      startDate: new Date(),
+      endDate: tournament.endDate,
+      venueSlots,
+      restDaysMin: 3,
+      teamBlackouts: tournament.teamBlackouts || new Map(),
+      venueBlackouts: tournament.venueBlackouts || new Map(),
+      respectRoundOrder: true,
+      prioritizeWeekends: true,
+      reserveDays: tournament.reserveDays || [],
+      reserveDayStrategy: 'end'
+    };
+
+    const scheduleResult = scheduleWithReserveDays(rounds, scheduleOptions);
+
+    if (!scheduleResult.ok) {
+      return res.status(400).json({ message: 'Failed to schedule Final' });
+    }
+
+    const matchData = scheduleResult.matches[0];
+    const finalMatch = new Match({
+      tournament: tournamentId,
+      homeClub: matchData.home,
+      awayClub: matchData.away,
+      date: matchData.date,
+      time: matchData.time,
+      venue: matchData.venue,
+      round: 'Final',
+      stage: 'Final',
+      matchFormat: tournament.matchFormat || 'T20',
+      oversLimit: tournament.oversLimit || 20,
+      status: 'Scheduled',
+      matchCode: `F${Date.now().toString().slice(-6)}${Math.random().toString(36).substr(2, 3).toUpperCase()}`,
+      hasReserveDay: true
+    });
+
+    await finalMatch.save();
+
+    res.json({
+      success: true,
+      message: 'Final match created successfully',
+      data: {
+        matchId: finalMatch._id,
+        homeClub: q1Winner,
+        awayClub: q2Winner,
+        date: matchData.date
+      }
+    });
+
+  } catch (error) {
+    console.error('Error generating final:', error);
+    res.status(500).json({ message: 'Failed to generate final', error: error.message });
+  }
+});
+
 // ===== Get tournament matches (admin) =====
 router.get('/tournaments/:id/matches', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
   try {
@@ -1697,6 +2114,265 @@ router.get('/tournaments/:id/matches', verifyFirebaseToken, requireRole('admin')
   } catch (error) {
     console.error('Error fetching tournament matches:', error);
     res.status(500).json({ message: 'Failed to fetch matches' });
+  }
+});
+
+// ===== Generate Super 8/Super Round matches (Groups+Super8 format) =====
+router.post('/tournaments/:id/fixtures/generate-super-round', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
+  try {
+    const tournamentId = req.params.id;
+    const { superGroupCount = 2 } = req.body || {};
+    
+    const tournament = await Tournament.findById(tournamentId)
+      .populate('participants', 'clubName name district');
+
+    if (!tournament) {
+      return res.status(404).json({ message: 'Tournament not found' });
+    }
+
+    if (tournament.format !== 'groups+super8') {
+      return res.status(400).json({ 
+        message: 'Only groups+super8 format supports super round generation',
+        currentFormat: tournament.format
+      });
+    }
+
+    // Check if group stage is complete
+    const groupMatches = await Match.find({ 
+      tournament: tournamentId, 
+      stage: 'Group' 
+    });
+
+    const completedGroupMatches = groupMatches.filter(m => m.status === 'Completed');
+    if (completedGroupMatches.length !== groupMatches.length) {
+      return res.status(400).json({ 
+        message: 'Group stage not complete',
+        completed: completedGroupMatches.length,
+        total: groupMatches.length
+      });
+    }
+
+    // Check if super round matches already exist
+    const existingSuperRound = await Match.find({ 
+      tournament: tournamentId,
+      stage: 'Super Round'
+    });
+
+    if (existingSuperRound.length > 0) {
+      return res.status(400).json({ 
+        message: 'Super round matches already exist',
+        count: existingSuperRound.length
+      });
+    }
+
+    // Get standings by group and determine qualifiers
+    const groups = tournament.groups || [];
+    const qualifiers = [];
+    const teamsQualifyPerGroup = tournament.superRoundConfig?.teamsQualifyPerGroup || 2;
+
+    for (const group of groups) {
+      const groupStandings = tournament.standings
+        .filter(s => s.group === group.name)
+        .sort((a, b) => {
+          if (b.points !== a.points) return b.points - a.points;
+          if (b.nrr !== a.nrr) return b.nrr - a.nrr;
+          return b.won - a.won;
+        });
+
+      const groupQualifiers = groupStandings.slice(0, teamsQualifyPerGroup);
+      qualifiers.push(...groupQualifiers.map(s => s.club));
+    }
+
+    if (qualifiers.length < 4) {
+      return res.status(400).json({ 
+        message: 'Not enough qualifiers for super round',
+        required: 4,
+        found: qualifiers.length
+      });
+    }
+
+    // Split qualifiers into super groups (serpentine)
+    const superGroups = splitIntoGroupsSeeded(
+      qualifiers.map(String),
+      superGroupCount,
+      null // No specific seeds
+    );
+
+    // Generate super round fixtures for each super group
+    const allRounds = [];
+    const carryForwardPoints = tournament.superRoundConfig?.carryForwardPoints !== false;
+
+    superGroups.forEach((superGroupTeams, idx) => {
+      const superGroupName = `Super Group ${String.fromCharCode(65 + idx)}`;
+      
+      // Generate round-robin within super group
+      const rounds = generateRoundRobinPairings(superGroupTeams, { 
+        doubleRoundRobin: false // Single round-robin in super round
+      });
+
+      rounds.forEach(r => {
+        allRounds.push({
+          round: r.round,
+          roundLabel: `${superGroupName} - Match Day ${r.round}`,
+          stage: 'Super Round',
+          group: superGroupName,
+          matches: r.matches
+        });
+      });
+    });
+
+    // Prepare venue slots
+    const venueSlots = tournament.venueSlots && tournament.venueSlots.length > 0
+      ? tournament.venueSlots
+      : tournament.venues && tournament.venues.length > 0
+        ? tournament.venues.map(v => ({ name: v, slotTimes: ['09:00', '14:00', '18:00'] }))
+        : [{ name: 'Main Ground', slotTimes: ['09:00', '14:00'] }];
+
+    // Schedule super round matches
+    const scheduleOptions = {
+      startDate: new Date(),
+      endDate: tournament.endDate,
+      venueSlots,
+      restDaysMin: tournament.restDaysMin || 1,
+      teamBlackouts: tournament.teamBlackouts || new Map(),
+      venueBlackouts: tournament.venueBlackouts || new Map(),
+      respectRoundOrder: true,
+      prioritizeWeekends: false,
+      reserveDays: tournament.reserveDays || [],
+      reserveDayStrategy: 'distributed'
+    };
+
+    const scheduleResult = scheduleWithReserveDays(allRounds, scheduleOptions);
+
+    if (!scheduleResult.ok) {
+      return res.status(400).json({
+        message: 'Failed to schedule super round matches',
+        error: scheduleResult.message
+      });
+    }
+
+    // Create match records
+    const matches = [];
+    for (const matchData of scheduleResult.matches) {
+      const match = new Match({
+        tournament: tournamentId,
+        homeClub: matchData.home,
+        awayClub: matchData.away,
+        date: matchData.date,
+        time: matchData.time,
+        venue: matchData.venue,
+        round: matchData.round,
+        stage: 'Super Round',
+        group: matchData.group,
+        matchFormat: tournament.matchFormat || 'T20',
+        oversLimit: tournament.oversLimit || 20,
+        status: 'Scheduled',
+        matchCode: `S8-${Date.now().toString().slice(-6)}${Math.random().toString(36).substr(2, 3).toUpperCase()}`,
+        hasReserveDay: matchData.hasReserveDay || false
+      });
+
+      matches.push(match);
+    }
+
+    await Match.insertMany(matches);
+
+    // Initialize super round standings (carry forward points if enabled)
+    if (carryForwardPoints) {
+      // Find matches between qualifiers in group stage
+      for (const qualifier of qualifiers) {
+        const qualifierStr = String(qualifier);
+        
+        // Get existing standing
+        const existingStanding = tournament.standings.find(s => String(s.club) === qualifierStr);
+        if (!existingStanding) continue;
+
+        // Calculate which group this team is in
+        const superGroupIdx = superGroups.findIndex(sg => sg.includes(qualifierStr));
+        const superGroupName = `Super Group ${String.fromCharCode(65 + superGroupIdx)}`;
+
+        // Find matches in group stage with other qualifiers from same super group
+        const otherQualifiers = superGroups[superGroupIdx].filter(t => t !== qualifierStr);
+        
+        let carriedPoints = 0;
+        let carriedWins = 0;
+        let carriedLosses = 0;
+        let carriedDrawn = 0;
+        let carriedNoResult = 0;
+        let carriedRunsScored = 0;
+        let carriedRunsConceded = 0;
+        let carriedOversFaced = 0;
+        let carriedOversBowled = 0;
+
+        // Calculate carried-forward stats from matches with other qualifiers
+        for (const otherQual of otherQualifiers) {
+          const h2hMatches = await Match.find({
+            tournament: tournamentId,
+            stage: 'Group',
+            status: 'Completed',
+            $or: [
+              { homeClub: qualifier, awayClub: otherQual },
+              { homeClub: otherQual, awayClub: qualifier }
+            ]
+          });
+
+          // Sum up points and stats from these matches
+          for (const match of h2hMatches) {
+            const isHome = String(match.homeClub) === qualifierStr;
+            if (!match.result) continue;
+
+            if (match.result.isNoResult) {
+              carriedNoResult++;
+              carriedPoints += 1;
+            } else if (match.result.isTie) {
+              carriedDrawn++;
+              carriedPoints += 1;
+            } else if (String(match.result.winner) === qualifierStr) {
+              carriedWins++;
+              carriedPoints += 2;
+            } else {
+              carriedLosses++;
+            }
+
+            // Add NRR components (simplified - would need actual innings data)
+            // This is a placeholder logic
+          }
+        }
+
+        // Update standing for super round
+        existingStanding.group = superGroupName;
+        existingStanding.played = carriedWins + carriedLosses + carriedDrawn + carriedNoResult;
+        existingStanding.won = carriedWins;
+        existingStanding.lost = carriedLosses;
+        existingStanding.drawn = carriedDrawn;
+        existingStanding.noResult = carriedNoResult;
+        existingStanding.points = carriedPoints;
+        // NRR components would be carried from group stage
+      }
+
+      await tournament.save();
+    }
+
+    res.json({
+      success: true,
+      message: 'Super round matches created successfully',
+      data: {
+        matchesCreated: matches.length,
+        superGroups: superGroups.map((sg, idx) => ({
+          name: `Super Group ${String.fromCharCode(65 + idx)}`,
+          teams: sg,
+          matchCount: sg.length * (sg.length - 1) / 2
+        })),
+        carryForwardPoints,
+        nextStep: 'Complete super round to generate semi-finals and final'
+      }
+    });
+
+  } catch (error) {
+    console.error('Error generating super round:', error);
+    res.status(500).json({ 
+      message: 'Failed to generate super round matches',
+      error: error.message 
+    });
   }
 });
 
@@ -1720,6 +2396,514 @@ router.delete('/tournaments/:id/fixtures', verifyFirebaseToken, requireRole('adm
   } catch (error) {
     console.error('Error deleting fixtures:', error);
     res.status(500).json({ message: 'Failed to delete fixtures' });
+  }
+});
+
+// ===== Bulk reschedule matches =====
+router.post('/tournaments/:id/fixtures/bulk-reschedule', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
+  try {
+    const { matchIds, dateOffset, newDate, reason } = req.body;
+
+    if (!matchIds || !Array.isArray(matchIds) || matchIds.length === 0) {
+      return res.status(400).json({ message: 'matchIds array is required' });
+    }
+
+    const tournament = await Tournament.findById(req.params.id);
+    if (!tournament) {
+      return res.status(404).json({ message: 'Tournament not found' });
+    }
+
+    const matches = await Match.find({ 
+      _id: { $in: matchIds }, 
+      tournament: req.params.id 
+    });
+
+    if (matches.length !== matchIds.length) {
+      return res.status(400).json({ 
+        message: 'Some matches not found',
+        requested: matchIds.length,
+        found: matches.length
+      });
+    }
+
+    // Check for completed matches
+    const completedMatches = matches.filter(m => m.status === 'Completed' || m.finalized);
+    if (completedMatches.length > 0) {
+      return res.status(400).json({ 
+        message: 'Cannot reschedule completed or finalized matches',
+        completedIds: completedMatches.map(m => m._id)
+      });
+    }
+
+    const updates = [];
+    const conflicts = [];
+
+    for (const match of matches) {
+      let newMatchDate;
+
+      if (newDate) {
+        // All matches moved to the same date
+        newMatchDate = new Date(newDate);
+      } else if (dateOffset) {
+        // Offset from original date (e.g., +7 days)
+        newMatchDate = new Date(match.date);
+        newMatchDate.setDate(newMatchDate.getDate() + dateOffset);
+      } else {
+        return res.status(400).json({ 
+          message: 'Either newDate or dateOffset must be provided' 
+        });
+      }
+
+      // Check for conflicts at new date/time/venue
+      const conflict = await Match.findOne({
+        tournament: req.params.id,
+        _id: { $ne: match._id },
+        date: newMatchDate,
+        time: match.time,
+        venue: match.venue,
+        status: { $ne: 'Cancelled' }
+      });
+
+      if (conflict) {
+        conflicts.push({
+          matchId: match._id,
+          originalDate: match.date,
+          newDate: newMatchDate,
+          conflictWith: conflict._id,
+          venue: match.venue,
+          time: match.time
+        });
+        continue;
+      }
+
+      // Check rest days for teams
+      const restDaysMin = tournament.restDaysMin || 1;
+      const dateKey = newMatchDate.toISOString().slice(0, 10);
+
+      // Find other matches for these teams around the new date
+      const teamMatches = await Match.find({
+        tournament: req.params.id,
+        _id: { $ne: match._id },
+        $or: [
+          { homeClub: match.homeClub },
+          { awayClub: match.homeClub },
+          { homeClub: match.awayClub },
+          { awayClub: match.awayClub }
+        ],
+        status: { $ne: 'Cancelled' }
+      });
+
+      let restDayViolation = false;
+      for (const tm of teamMatches) {
+        if (!tm.date) continue;
+        const daysDiff = Math.abs((newMatchDate - new Date(tm.date)) / (24 * 60 * 60 * 1000));
+        if (daysDiff < restDaysMin) {
+          conflicts.push({
+            matchId: match._id,
+            originalDate: match.date,
+            newDate: newMatchDate,
+            issue: 'Rest days violation',
+            conflictWith: tm._id,
+            daysDiff
+          });
+          restDayViolation = true;
+          break;
+        }
+      }
+
+      if (restDayViolation) continue;
+
+      // No conflicts, add to updates
+      updates.push({
+        matchId: match._id,
+        originalDate: match.date,
+        newDate: newMatchDate
+      });
+
+      // Update match
+      match.originalDate = match.date; // Store original date
+      match.date = newMatchDate;
+      
+      if (!match.rescheduledHistory) {
+        match.rescheduledHistory = [];
+      }
+      match.rescheduledHistory.push({
+        from: match.originalDate,
+        to: newMatchDate,
+        reason: reason || 'Bulk rescheduling',
+        by: req.user.uid || req.user.id || 'admin',
+        at: new Date()
+      });
+
+      await match.save();
+    }
+
+    res.json({
+      success: true,
+      message: `${updates.length} matches rescheduled successfully`,
+      data: {
+        updated: updates,
+        conflicts: conflicts.length > 0 ? conflicts : undefined,
+        warnings: conflicts.length > 0 
+          ? `${conflicts.length} matches could not be rescheduled due to conflicts`
+          : undefined
+      }
+    });
+
+  } catch (error) {
+    console.error('Error bulk rescheduling:', error);
+    res.status(500).json({ 
+      message: 'Failed to bulk reschedule matches',
+      error: error.message 
+    });
+  }
+});
+
+// ===== Bulk venue swap =====
+router.post('/tournaments/:id/fixtures/bulk-venue-swap', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
+  try {
+    const { fromVenue, toVenue, date, round, stage } = req.body;
+
+    if (!fromVenue || !toVenue) {
+      return res.status(400).json({ message: 'fromVenue and toVenue are required' });
+    }
+
+    const tournament = await Tournament.findById(req.params.id);
+    if (!tournament) {
+      return res.status(404).json({ message: 'Tournament not found' });
+    }
+
+    // Build query
+    const query = {
+      tournament: req.params.id,
+      venue: fromVenue,
+      status: { $nin: ['Completed', 'Cancelled'] }
+    };
+
+    if (date) query.date = new Date(date);
+    if (round) query.round = round;
+    if (stage) query.stage = stage;
+
+    const matches = await Match.find(query);
+
+    if (matches.length === 0) {
+      return res.status(404).json({ 
+        message: 'No matches found with the specified criteria' 
+      });
+    }
+
+    // Check for conflicts at new venue
+    const conflicts = [];
+    for (const match of matches) {
+      const conflict = await Match.findOne({
+        tournament: req.params.id,
+        _id: { $ne: match._id },
+        venue: toVenue,
+        date: match.date,
+        time: match.time,
+        status: { $ne: 'Cancelled' }
+      });
+
+      if (conflict) {
+        conflicts.push({
+          matchId: match._id,
+          date: match.date,
+          time: match.time,
+          conflictWith: conflict._id
+        });
+      }
+    }
+
+    if (conflicts.length > 0) {
+      return res.status(400).json({
+        message: `Venue swap would create ${conflicts.length} conflicts`,
+        conflicts
+      });
+    }
+
+    // Perform swap
+    const userId = req.user.uid || req.user.id || 'admin';
+    const updateResults = [];
+
+    for (const match of matches) {
+      const oldVenue = match.venue;
+      match.venue = toVenue;
+
+      if (!match.editHistory) {
+        match.editHistory = [];
+      }
+      match.editHistory.push({
+        at: new Date(),
+        by: userId,
+        changes: {
+          before: { venue: oldVenue },
+          after: { venue: toVenue }
+        }
+      });
+
+      await match.save();
+      updateResults.push({
+        matchId: match._id,
+        date: match.date,
+        time: match.time,
+        oldVenue,
+        newVenue: toVenue
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `${updateResults.length} matches updated`,
+      data: {
+        swapped: updateResults,
+        fromVenue,
+        toVenue
+      }
+    });
+
+  } catch (error) {
+    console.error('Error bulk venue swap:', error);
+    res.status(500).json({ 
+      message: 'Failed to swap venues',
+      error: error.message 
+    });
+  }
+});
+
+// ===== Bulk time shift =====
+router.post('/tournaments/:id/fixtures/bulk-time-shift', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
+  try {
+    const { matchIds, newTime, stage, round } = req.body;
+
+    if (!newTime) {
+      return res.status(400).json({ message: 'newTime is required' });
+    }
+
+    const tournament = await Tournament.findById(req.params.id);
+    if (!tournament) {
+      return res.status(404).json({ message: 'Tournament not found' });
+    }
+
+    // Build query
+    const query = {
+      tournament: req.params.id,
+      status: { $nin: ['Completed', 'Cancelled'] }
+    };
+
+    if (matchIds && Array.isArray(matchIds) && matchIds.length > 0) {
+      query._id = { $in: matchIds };
+    }
+    if (stage) query.stage = stage;
+    if (round) query.round = round;
+
+    const matches = await Match.find(query);
+
+    if (matches.length === 0) {
+      return res.status(404).json({ message: 'No matches found' });
+    }
+
+    // Check for conflicts
+    const conflicts = [];
+    for (const match of matches) {
+      const conflict = await Match.findOne({
+        tournament: req.params.id,
+        _id: { $ne: match._id },
+        venue: match.venue,
+        date: match.date,
+        time: newTime,
+        status: { $ne: 'Cancelled' }
+      });
+
+      if (conflict) {
+        conflicts.push({
+          matchId: match._id,
+          venue: match.venue,
+          date: match.date,
+          conflictWith: conflict._id
+        });
+      }
+    }
+
+    if (conflicts.length > 0) {
+      return res.status(400).json({
+        message: `Time shift would create ${conflicts.length} conflicts`,
+        conflicts
+      });
+    }
+
+    // Perform time shift
+    const userId = req.user.uid || req.user.id || 'admin';
+    const updateResults = [];
+
+    for (const match of matches) {
+      const oldTime = match.time;
+      match.time = newTime;
+
+      if (!match.editHistory) {
+        match.editHistory = [];
+      }
+      match.editHistory.push({
+        at: new Date(),
+        by: userId,
+        changes: {
+          before: { time: oldTime },
+          after: { time: newTime }
+        }
+      });
+
+      await match.save();
+      updateResults.push({
+        matchId: match._id,
+        date: match.date,
+        venue: match.venue,
+        oldTime,
+        newTime
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `${updateResults.length} matches updated`,
+      data: {
+        updated: updateResults
+      }
+    });
+
+  } catch (error) {
+    console.error('Error bulk time shift:', error);
+    res.status(500).json({ 
+      message: 'Failed to shift match times',
+      error: error.message 
+    });
+  }
+});
+
+// ===== Validate fixture conflicts =====
+router.post('/tournaments/:id/fixtures/validate-conflicts', verifyFirebaseToken, requireRole('admin'), async (req, res) => {
+  try {
+    const { matchId, date, time, venue, homeClub, awayClub } = req.body;
+
+    const tournament = await Tournament.findById(req.params.id);
+    if (!tournament) {
+      return res.status(404).json({ message: 'Tournament not found' });
+    }
+
+    const conflicts = [];
+    const warnings = [];
+
+    // Check venue+date+time conflict
+    if (date && time && venue) {
+      const venueConflict = await Match.findOne({
+        tournament: req.params.id,
+        _id: { $ne: matchId },
+        venue,
+        date: new Date(date),
+        time,
+        status: { $ne: 'Cancelled' }
+      });
+
+      if (venueConflict) {
+        conflicts.push({
+          type: 'VENUE_DOUBLE_BOOKING',
+          message: `Venue ${venue} is already booked at ${time} on ${date}`,
+          conflictingMatchId: venueConflict._id
+        });
+      }
+    }
+
+    // Check rest days for teams
+    if (date && (homeClub || awayClub)) {
+      const restDaysMin = tournament.restDaysMin || 1;
+      const newDate = new Date(date);
+      const teams = [homeClub, awayClub].filter(Boolean);
+
+      for (const team of teams) {
+        const teamMatches = await Match.find({
+          tournament: req.params.id,
+          _id: { $ne: matchId },
+          $or: [{ homeClub: team }, { awayClub: team }],
+          status: { $ne: 'Cancelled' }
+        });
+
+        for (const tm of teamMatches) {
+          if (!tm.date) continue;
+          const daysDiff = Math.abs((newDate - new Date(tm.date)) / (24 * 60 * 60 * 1000));
+          if (daysDiff < restDaysMin) {
+            warnings.push({
+              type: 'REST_DAYS_VIOLATION',
+              message: `Team has another match within ${restDaysMin} days`,
+              team,
+              conflictingMatchId: tm._id,
+              daysBetween: Math.floor(daysDiff)
+            });
+          }
+        }
+      }
+    }
+
+    // Check team blackouts
+    if (date && (homeClub || awayClub)) {
+      const dateKey = new Date(date).toISOString().slice(0, 10);
+      const teamBlackouts = tournament.teamBlackouts || new Map();
+
+      if (homeClub) {
+        const homeBlackouts = teamBlackouts.get?.(homeClub) || teamBlackouts[homeClub] || [];
+        if (homeBlackouts.includes(dateKey)) {
+          conflicts.push({
+            type: 'TEAM_BLACKOUT',
+            message: `Home team has blackout on ${dateKey}`,
+            team: homeClub,
+            date: dateKey
+          });
+        }
+      }
+
+      if (awayClub) {
+        const awayBlackouts = teamBlackouts.get?.(awayClub) || teamBlackouts[awayClub] || [];
+        if (awayBlackouts.includes(dateKey)) {
+          conflicts.push({
+            type: 'TEAM_BLACKOUT',
+            message: `Away team has blackout on ${dateKey}`,
+            team: awayClub,
+            date: dateKey
+          });
+        }
+      }
+    }
+
+    // Check venue blackouts
+    if (date && venue) {
+      const dateKey = new Date(date).toISOString().slice(0, 10);
+      const venueBlackouts = tournament.venueBlackouts || new Map();
+      const blackouts = venueBlackouts.get?.(venue) || venueBlackouts[venue] || [];
+
+      if (blackouts.includes(dateKey)) {
+        conflicts.push({
+          type: 'VENUE_BLACKOUT',
+          message: `Venue ${venue} has blackout on ${dateKey}`,
+          venue,
+          date: dateKey
+        });
+      }
+    }
+
+    res.json({
+      valid: conflicts.length === 0,
+      conflicts,
+      warnings,
+      summary: {
+        conflictCount: conflicts.length,
+        warningCount: warnings.length,
+        canProceed: conflicts.length === 0
+      }
+    });
+
+  } catch (error) {
+    console.error('Error validating conflicts:', error);
+    res.status(500).json({ 
+      message: 'Failed to validate conflicts',
+      error: error.message 
+    });
   }
 });
 
@@ -2242,21 +3426,39 @@ async function updatePlayerStatsFromMatch(match, multiplier = 1) {
     // Build name-to-playerId mapping from rosters
     const nameToPlayerId = new Map();
 
-    if (match.homeClubRoster?.players) {
-      for (const p of match.homeClubRoster.players) {
-        if (p.playerId && p.playerName) {
-          nameToPlayerId.set(p.playerName.toLowerCase().trim(), p.playerId);
+    // Helper to process roster players (supports both old and new schema)
+    const processRoster = (roster) => {
+      if (!roster) return;
+      
+      // New schema: roster.playing + roster.substitutes
+      if (roster.playing) {
+        for (const p of roster.playing) {
+          if (p.playerId && p.playerName) {
+            nameToPlayerId.set(p.playerName.toLowerCase().trim(), p.playerId);
+          }
         }
       }
-    }
+      
+      if (roster.substitutes) {
+        for (const p of roster.substitutes) {
+          if (p.playerId && p.playerName) {
+            nameToPlayerId.set(p.playerName.toLowerCase().trim(), p.playerId);
+          }
+        }
+      }
+      
+      // Old schema: roster.players (for backward compatibility)
+      if (roster.players) {
+        for (const p of roster.players) {
+          if (p.playerId && p.playerName) {
+            nameToPlayerId.set(p.playerName.toLowerCase().trim(), p.playerId);
+          }
+        }
+      }
+    };
 
-    if (match.awayClubRoster?.players) {
-      for (const p of match.awayClubRoster.players) {
-        if (p.playerId && p.playerName) {
-          nameToPlayerId.set(p.playerName.toLowerCase().trim(), p.playerId);
-        }
-      }
-    }
+    processRoster(match.homeClubRoster);
+    processRoster(match.awayClubRoster);
 
     // If no roster data, we cannot link player names to IDs
     if (nameToPlayerId.size === 0) {
@@ -2450,13 +3652,8 @@ function computeDerivedInnings(inn) {
               totalBallsFromOvers += 1;
             }
 
-            // Add runs
+            // Add runs (already includes extras + bat runs)
             totalRunsFromOvers += Number(ball.runs) || 0;
-
-            // Add extras
-            if (ball.extras !== 'none') {
-              totalRunsFromOvers += Number(ball.runs) || 0;
-            }
 
             // Count wickets
             if (ball.wicket && ball.wicket.how) {

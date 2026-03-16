@@ -45,8 +45,8 @@ const fowSchema = new mongoose.Schema({
 
 const ballSchema = new mongoose.Schema({
   overNumber: { type: Number, min: 1, required: true },
-  ballNumber: { type: Number, min: 1, max: 6, required: true },
-  runs: { type: Number, min: 0, max: 6, default: 0 },
+  ballNumber: { type: Number, min: 1, required: true }, // Can exceed 6 if there are wides/no-balls
+  runs: { type: Number, min: 0, max: 10, default: 0 }, // Max 10 to allow no-ball/wide + runs + overthrows
   extras: {
     type: String,
     enum: ['none', 'wide', 'no-ball', 'bye', 'leg-bye'],
@@ -95,14 +95,33 @@ const editHistorySchema = new mongoose.Schema({
   changes: { type: Object, default: {} }
 }, { _id: false });
 
+// Schema for player in lineup
+const lineupPlayerSchema = new mongoose.Schema({
+  playerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Player', required: true },
+  playerName: { type: String, required: true },
+  position: { type: String, required: true },
+  jerseyNumber: { type: Number }
+}, { _id: false });
+
+// Schema for substitution during match
+const substitutionSchema = new mongoose.Schema({
+  outPlayer: { type: mongoose.Schema.Types.ObjectId, ref: 'Player', required: true },
+  outPlayerName: { type: String, required: true },
+  inPlayer: { type: mongoose.Schema.Types.ObjectId, ref: 'Player', required: true },
+  inPlayerName: { type: String, required: true },
+  reason: { 
+    type: String, 
+    enum: ['injury', 'tactical', 'concussion'], 
+    default: 'injury' 
+  },
+  timestamp: { type: Date, default: Date.now }
+}, { _id: false });
+
 // Schema for team roster/lineup
 const rosterSchema = new mongoose.Schema({
-  players: [{
-    playerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Player', required: true },
-    playerName: { type: String, required: true },
-    position: { type: String, required: true },
-    jerseyNumber: { type: Number }
-  }],
+  playing: [lineupPlayerSchema], // 11 players in playing XI
+  substitutes: [lineupPlayerSchema], // 3 substitute players
+  substitutions: [substitutionSchema], // Record of substitutions made during match
   submittedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Coach', required: true },
   submittedAt: { type: Date, default: Date.now }
 }, { _id: false });

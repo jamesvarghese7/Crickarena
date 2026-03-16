@@ -643,6 +643,76 @@ router.get('/club/applications', verifyFirebaseToken, requireRole('clubManager')
   }
 });
 
+// GET /api/players/club/roster - Get ALL players in club manager's club (includes seeded players)
+router.get('/club/roster', verifyFirebaseToken, requireRole('clubManager'), async (req, res) => {
+  try {
+    // Find the club managed by this user
+    const club = await Club.findOne({ manager: req.user._id });
+    if (!club) {
+      return res.status(404).json({ message: 'No club found for this manager' });
+    }
+
+    // Find ALL players who are currently members of this club (by currentClub field)
+    const players = await Player.find({
+      currentClub: club._id,
+      isActive: true
+    })
+      .populate('user', 'name email')
+      .select('fullName age preferredPosition playingExperience battingStyle bowlingStyle jerseyNumber phone email profilePhoto statistics joinedClubAt applications')
+      .sort({ joinedClubAt: -1 }); // Most recent first
+
+    // Format player data
+    const formattedPlayers = players.map(player => {
+      // Check if player has an approved application for this club
+      const clubApplication = player.applications?.find(app => 
+        app.club.toString() === club._id.toString() && app.status === 'approved'
+      );
+
+      return {
+        _id: player._id,
+        fullName: player.fullName,
+        age: player.age,
+        preferredPosition: player.preferredPosition,
+        playingExperience: player.playingExperience,
+        battingStyle: player.battingStyle,
+        bowlingStyle: player.bowlingStyle,
+        jerseyNumber: player.jerseyNumber,
+        phone: player.phone,
+        email: player.email || player.user?.email,
+        hasProfilePhoto: !!(player.profilePhoto && player.profilePhoto.data),
+        statistics: {
+          matchesPlayed: player.statistics?.matchesPlayed || 0,
+          runsScored: player.statistics?.runsScored || 0,
+          wicketsTaken: player.statistics?.wicketsTaken || 0,
+          catches: player.statistics?.catches || 0,
+          stumpings: player.statistics?.stumpings || 0
+        },
+        joinedAt: player.joinedClubAt,
+        // Include application info if exists
+        applicationId: clubApplication?._id,
+        approvedAt: clubApplication?.processedAt,
+        approvalNotes: clubApplication?.approvalNotes,
+        // Flag to indicate if player was seeded (no application)
+        wasSeeded: !clubApplication
+      };
+    });
+
+    res.json({
+      club: {
+        id: club._id,
+        name: club.clubName || club.name,
+        district: club.district,
+        city: club.city
+      },
+      players: formattedPlayers,
+      totalPlayers: formattedPlayers.length
+    });
+  } catch (error) {
+    console.error('Error fetching club roster:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // PUT /api/players/club/applications/:applicationId/approve - Approve an application
 router.put('/club/applications/:applicationId/approve', verifyFirebaseToken, requireRole('clubManager'), async (req, res) => {
   try {

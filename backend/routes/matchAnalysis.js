@@ -22,13 +22,19 @@ router.get('/my-matches', async (req, res) => {
 
         const playerName = player.fullName;
 
-        // Find matches where player appears in batting or bowling card
+        // Find matches where player appears in batting or bowling card, or in roster
         const matches = await Match.find({
             $or: [
                 { 'innings.battingCard.playerName': playerName },
                 { 'innings.bowlingCard.bowlerName': playerName },
+                // Old schema
                 { 'homeClubRoster.players.playerId': player._id },
-                { 'awayClubRoster.players.playerId': player._id }
+                { 'awayClubRoster.players.playerId': player._id },
+                // New schema (11 playing + 3 substitutes)
+                { 'homeClubRoster.playing.playerId': player._id },
+                { 'awayClubRoster.playing.playerId': player._id },
+                { 'homeClubRoster.substitutes.playerId': player._id },
+                { 'awayClubRoster.substitutes.playerId': player._id }
             ],
             status: { $in: ['Completed', 'Live'] }
         })

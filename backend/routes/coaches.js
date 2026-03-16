@@ -1431,60 +1431,6 @@ router.get('/club/coach/:coachId/document/:documentId', verifyFirebaseToken, req
   }
 });
 
-// GET /api/coaches/club/players - Get players from the coach's club
-router.get('/club/players', verifyFirebaseToken, async (req, res) => {
-  try {
-    const coach = await Coach.findOne({ user: req.user._id }).populate('currentClub');
-    if (!coach) {
-      return res.status(404).json({ message: 'Coach profile not found' });
-    }
-
-    // Check if coach is associated with a club
-    if (!coach.currentClub) {
-      return res.status(400).json({ message: 'Coach is not associated with any club' });
-    }
-
-    // Import Player model
-    const Player = (await import('../models/Player.js')).default;
-
-    // Find all players who are currently members of the coach's club
-    const players = await Player.find({
-      currentClub: coach.currentClub._id,
-      isActive: true
-    })
-      .populate('user', 'name email')
-      .select('fullName age preferredPosition playingExperience battingStyle bowlingStyle joinedClubAt statistics profilePhoto')
-      .sort({ joinedClubAt: -1 }); // Most recent first
-
-    // Format player data for frontend display
-    const formattedPlayers = players.map(player => ({
-      _id: player._id,
-      name: player.fullName,
-      age: player.age,
-      preferredPosition: player.preferredPosition,
-      playingExperience: player.playingExperience,
-      battingStyle: player.battingStyle,
-      bowlingStyle: player.bowlingStyle,
-      joinedAt: player.joinedClubAt,
-      statistics: player.statistics,
-      hasProfilePhoto: !!(player.profilePhoto && player.profilePhoto.data)
-    }));
-
-    res.json({
-      club: {
-        id: coach.currentClub._id,
-        name: coach.currentClub.clubName || coach.currentClub.name,
-        district: coach.currentClub.district,
-        city: coach.currentClub.city
-      },
-      players: formattedPlayers
-    });
-  } catch (error) {
-    console.error('Error fetching club players:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
 // GET /api/coaches/club/player/:playerId - Get detailed player info for coach
 router.get('/club/player/:playerId', verifyFirebaseToken, async (req, res) => {
   try {
