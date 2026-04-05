@@ -176,17 +176,19 @@ router.post('/register', async (req, res) => {
     const sanitizedBody = sanitizeInput(req.body);
     console.log('Sanitized input:', sanitizedBody);
 
-    // Verify Firebase session or bearer token
+    // Verify Firebase bearer token or session cookie
+    // Prefer Bearer token (fresh from Firebase sign-in) over session cookie
+    // to avoid issues with stale/revoked cookies from previous sessions
     let decoded;
     try {
-      const sessionCookie = req.cookies?.session;
-      if (sessionCookie) {
-        decoded = await firebaseAdmin.auth().verifySessionCookie(sessionCookie, true);
-      } else {
-        const authH = req.headers.authorization || '';
-        const token = authH.startsWith('Bearer ') ? authH.slice(7) : null;
-        if (!token) return res.status(401).json({ message: 'Missing token' });
+      const authH = req.headers.authorization || '';
+      const token = authH.startsWith('Bearer ') ? authH.slice(7) : null;
+      if (token) {
         decoded = await firebaseAdmin.auth().verifyIdToken(token);
+      } else {
+        const sessionCookie = req.cookies?.session;
+        if (!sessionCookie) return res.status(401).json({ message: 'Missing token' });
+        decoded = await firebaseAdmin.auth().verifySessionCookie(sessionCookie, true);
       }
       console.log('Firebase token verified for UID:', decoded.uid);
     } catch (err) {

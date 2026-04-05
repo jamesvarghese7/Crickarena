@@ -59,6 +59,7 @@ export const useAuthStore = defineStore('auth', {
       if (!isFirebaseConfigured) throw new Error('Firebase not configured');
       const { user } = await signInWithPopup(auth, googleProvider);
       this.user = user; this.idToken = await user.getIdToken(true);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${this.idToken}`;
       // Attempt to create server session cookie; backend will reject if not registered
       try {
         await axios.post(`${API}/auth/session/login`, { idToken: this.idToken });
@@ -74,8 +75,46 @@ export const useAuthStore = defineStore('auth', {
         // Not registered: sign out locally and surface error
         await signOut(auth);
         this.user = null; this.idToken = null; this.userProfile = null;
+        delete axios.defaults.headers.common['Authorization'];
         throw new Error(e?.response?.data?.message || 'This email is not registered. Please sign up first.');
       }
+    },
+    async registerGoogle(role = 'public') {
+      if (!isFirebaseConfigured) throw new Error('Firebase not configured');
+      // Step 1: Google sign-in popup
+      const { user } = await signInWithPopup(auth, googleProvider);
+      this.user = user;
+      this.idToken = await user.getIdToken(true);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${this.idToken}`;
+      // Step 2: Register in MongoDB (this doesn't require a session cookie)
+      try {
+        const response = await axios.post(
+          `${API}/auth/register`,
+          {
+            firebaseUid: user.uid,
+            name: user.displayName || user.email?.split('@')[0] || 'User',
+            email: user.email,
+            role
+          },
+          { headers: { Authorization: `Bearer ${this.idToken}` } }
+        );
+        this.userProfile = response.data.user;
+      } catch (err) {
+        // Registration failed — sign out and surface error
+        await signOut(auth);
+        this.user = null; this.idToken = null; this.userProfile = null;
+        delete axios.defaults.headers.common['Authorization'];
+        throw new Error(err?.response?.data?.message || 'Google registration failed.');
+      }
+      // Step 3: Create session cookie now that user exists in MongoDB
+      try {
+        await axios.post(`${API}/auth/session/login`, { idToken: this.idToken });
+      } catch {}
+      // Step 4: Refresh profile
+      try {
+        const prof = await axios.get(`${API}/auth/profile`);
+        this.userProfile = prof.data.user;
+      } catch {}
     },
     async loginEmail(email, password) {
       if (!isFirebaseConfigured) throw new Error('Firebase not configured');

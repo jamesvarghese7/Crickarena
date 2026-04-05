@@ -61,11 +61,6 @@ router.get('/profile', verifyFirebaseToken, async (req, res) => {
     // Add computed field to indicate if profile photo exists
     const playerData = player.toObject();
     playerData.hasProfilePhoto = !!(player.profilePhoto && player.profilePhoto.data);
-    
-    console.log(`[DEBUG] Profile request - hasProfilePhoto: ${playerData.hasProfilePhoto}`);
-    if (player.profilePhoto) {
-      console.log(`[DEBUG] Profile request - photo data size: ${player.profilePhoto.data ? player.profilePhoto.data.length : 0} bytes`);
-    }
 
     res.json({ player: playerData });
   } catch (error) {
@@ -289,51 +284,17 @@ router.post('/upload-photo', verifyFirebaseToken, upload.single('photo'), async 
   }
 });
 
-// GET /api/players/debug - Debug player info (temporary)
-router.get('/debug', verifyFirebaseToken, async (req, res) => {
-  try {
-    const player = await Player.findOne({ user: req.user._id });
-    if (!player) {
-      return res.json({ debug: 'No player profile found' });
-    }
-    
-    const debugInfo = {
-      playerId: player._id,
-      userId: req.user._id,
-      userEmail: req.user.email,
-      hasProfilePhoto: !!(player.profilePhoto && player.profilePhoto.data),
-      profilePhotoSize: player.profilePhoto?.data?.length || 0,
-      profilePhotoContentType: player.profilePhoto?.contentType || null,
-      documentsCount: player.documents?.length || 0
-    };
-    
-    res.json({ debug: debugInfo });
-  } catch (error) {
-    console.error('Debug error:', error);
-    res.status(500).json({ debug: 'Error', error: error.message });
-  }
-});
-
 // GET /api/players/photo - Get profile photo
 router.get('/photo', verifyFirebaseToken, async (req, res) => {
   try {
-    console.log(`[DEBUG] Photo request from user: ${req.user._id} (${req.user.email})`);
+
     const player = await Player.findOne({ user: req.user._id });
-    console.log(`[DEBUG] Player found: ${!!player}`);
     
     if (!player) {
-      console.log(`[DEBUG] No player profile found for user: ${req.user._id}`);
       return res.status(404).json({ message: 'Player profile not found' });
     }
     
-    console.log(`[DEBUG] Player has profile photo: ${!!(player.profilePhoto && player.profilePhoto.data)}`);
-    if (player.profilePhoto) {
-      console.log(`[DEBUG] Photo data size: ${player.profilePhoto.data ? player.profilePhoto.data.length : 0} bytes`);
-      console.log(`[DEBUG] Photo content type: ${player.profilePhoto.contentType}`);
-    }
-    
     if (!player.profilePhoto || !player.profilePhoto.data) {
-      console.log(`[DEBUG] No photo data found for user: ${req.user._id}`);
       return res.status(404).json({ message: 'Profile photo not found' });
     }
     
@@ -343,10 +304,9 @@ router.get('/photo', verifyFirebaseToken, async (req, res) => {
       'Cache-Control': 'no-cache, no-store, must-revalidate',
       'Pragma': 'no-cache',
       'Expires': '0',
-      'ETag': `"${req.user._id}-${Date.now()}"` // Unique ETag per user and request
+      'ETag': `"${req.user._id}-${Date.now()}"`
     });
 
-    console.log(`[DEBUG] Sending photo data: ${player.profilePhoto.data.length} bytes`);
     res.send(player.profilePhoto.data);
   } catch (error) {
     console.error('Error fetching profile photo:', error);

@@ -387,11 +387,7 @@ async function onGoogleRegister() {
   }
   isLoading.value = true;
   try {
-    await auth.loginGoogle();
-    await auth.registerWithCurrentUser(role.value);
-    email.value = auth.user?.email || '';
-    displayName.value = auth.user?.displayName || '';
-    name.value = auth.user?.displayName || '';
+    await auth.registerGoogle(role.value);
     
     if (role.value === 'clubManager') {
       router.push({ name: 'club-registration' });

@@ -28,6 +28,31 @@ function getRazorpay() {
 const ELIGIBLE_STAGES = ['Knockout', 'Playoff', 'Final', 'Qualifier1', 'Qualifier2', 'Eliminator'];
 const ELIGIBLE_ROUNDS = ['Final', 'Semi-Final', 'Quarter-Final'];
 
+function getMatchStartDateTime(match) {
+    if (!match?.date) return null;
+
+    const baseDate = new Date(match.date);
+    if (Number.isNaN(baseDate.getTime())) return null;
+
+    // If no time is provided, keep tickets visible for the full match day.
+    if (!match.time || typeof match.time !== 'string') {
+        baseDate.setHours(23, 59, 59, 999);
+        return baseDate;
+    }
+
+    const [hoursRaw, minutesRaw] = match.time.split(':');
+    const hours = Number.parseInt(hoursRaw, 10);
+    const minutes = Number.parseInt(minutesRaw, 10);
+
+    if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+        baseDate.setHours(23, 59, 59, 999);
+        return baseDate;
+    }
+
+    baseDate.setHours(hours, minutes, 0, 0);
+    return baseDate;
+}
+
 /**
  * Utility: Auto-close ticket sales for completed/cancelled matches
  * This should be called periodically (e.g., via cron job or when match status changes)
@@ -498,8 +523,18 @@ router.get('/tickets/available', async (req, res) => {
         const now = new Date();
         const available = inventories.filter(inv => {
             if (!inv.match) return false;
-            const matchDate = new Date(inv.match.date);
-            return matchDate > now;
+
+            if (['Completed', 'Cancelled', 'Abandoned'].includes(inv.match.status)) {
+                return false;
+            }
+
+            const matchStart = getMatchStartDateTime(inv.match);
+            if (!matchStart) {
+                // Keep scheduled matches visible even when date parsing fails.
+                return inv.match.status === 'Scheduled';
+            }
+
+            return matchStart > now;
         }).map(inv => {
             // For 3D mode, remove the large seats array but keep stadiumConfig
             if (inv.bookingMode === '3d' && inv.seats) {

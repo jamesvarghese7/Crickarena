@@ -60,8 +60,6 @@ router.get('/profile', verifyFirebaseToken, async (req, res) => {
     const coachData = coach.toObject();
     coachData.hasProfilePhoto = !!(coach.profilePhoto && coach.profilePhoto.data);
 
-    console.log(`[DEBUG] Coach profile request - hasProfilePhoto: ${coachData.hasProfilePhoto}`);
-
     res.json({ coach: coachData });
   } catch (error) {
     console.error('Error fetching coach profile:', error);
@@ -289,19 +287,13 @@ router.post('/upload-photo', verifyFirebaseToken, upload.single('photo'), async 
 // GET /api/coaches/photo - Get profile photo
 router.get('/photo', verifyFirebaseToken, async (req, res) => {
   try {
-    console.log(`[DEBUG] Coach photo request from user: ${req.user._id} (${req.user.email})`);
     const coach = await Coach.findOne({ user: req.user._id });
-    console.log(`[DEBUG] Coach found: ${!!coach}`);
 
     if (!coach) {
-      console.log(`[DEBUG] No coach profile found for user: ${req.user._id}`);
       return res.status(404).json({ message: 'Coach profile not found' });
     }
 
-    console.log(`[DEBUG] Coach has profile photo: ${!!(coach.profilePhoto && coach.profilePhoto.data)}`);
-
     if (!coach.profilePhoto || !coach.profilePhoto.data) {
-      console.log(`[DEBUG] No photo data found for coach: ${req.user._id}`);
       return res.status(404).json({ message: 'Profile photo not found' });
     }
 
@@ -314,7 +306,6 @@ router.get('/photo', verifyFirebaseToken, async (req, res) => {
       'ETag': `"${req.user._id}-${Date.now()}"`
     });
 
-    console.log(`[DEBUG] Sending coach photo data: ${coach.profilePhoto.data.length} bytes`);
     res.send(coach.profilePhoto.data);
   } catch (error) {
     console.error('Error fetching coach profile photo:', error);
@@ -1689,20 +1680,35 @@ router.get('/club/players', verifyFirebaseToken, async (req, res) => {
     // Find all active players who are currently members of this club
     const players = await Player.find({
       currentClub: coach.currentClub._id,
-      isActive: true
+      isActive: { $ne: false }
     })
-      .select('fullName age preferredPosition battingStyle bowlingStyle jerseyNumber')
+      .select('fullName age preferredPosition playingExperience battingStyle bowlingStyle jerseyNumber email phone statistics profilePhoto joinedClubAt')
       .sort({ fullName: 1 });
 
     // Format player data
     const formattedPlayers = players.map(player => ({
       _id: player._id,
+      // Keep both keys for compatibility with coach UI sections.
+      name: player.fullName,
       fullName: player.fullName,
       age: player.age,
+      preferredPosition: player.preferredPosition,
       position: player.preferredPosition,
+      playingExperience: player.playingExperience,
       battingStyle: player.battingStyle,
       bowlingStyle: player.bowlingStyle,
-      jerseyNumber: player.jerseyNumber || null
+      jerseyNumber: player.jerseyNumber || null,
+      email: player.email || null,
+      phone: player.phone || null,
+      hasProfilePhoto: !!(player.profilePhoto && player.profilePhoto.data),
+      joinedAt: player.joinedClubAt || null,
+      statistics: {
+        matchesPlayed: player.statistics?.matchesPlayed || 0,
+        runsScored: player.statistics?.runsScored || 0,
+        wicketsTaken: player.statistics?.wicketsTaken || 0,
+        catches: player.statistics?.catches || 0,
+        stumpings: player.statistics?.stumpings || 0
+      }
     }));
 
     res.json({

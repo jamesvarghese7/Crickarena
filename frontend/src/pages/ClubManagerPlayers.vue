@@ -195,17 +195,12 @@
                 </div>
                 
                 <h3 class="text-lg font-bold text-slate-900 mb-2">{{ player.fullName }}</h3>
-                <div class="flex items-center justify-center gap-2 mb-4 flex-wrap">
+                <div class="flex items-center justify-center gap-2 mb-4">
                   <span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
                     {{ player.preferredPosition || 'All-rounder' }}
                   </span>
                   <span v-if="player.jerseyNumber" class="px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-700">
                     #{{ player.jerseyNumber }}
-                  </span>
-                  <span v-if="player.wasSeeded" 
-                        class="px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 border border-amber-300"
-                        title="This player was added through automated seeding">
-                    🌱 Seeded
                   </span>
                 </div>
                 

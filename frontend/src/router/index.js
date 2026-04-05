@@ -409,6 +409,45 @@ router.beforeEach(async (to, from, next) => {
       }
       return next({ name: 'sponsor-registration' });
     }
+
+    // Check if sponsor profile exists and is verified
+    if (to.path.startsWith('/sponsor-panel')) {
+      try {
+        const response = await axios.get(`${API}/sponsors/me?firebaseUid=${auth.user?.uid}`, { withCredentials: true });
+        const sponsor = response.data.sponsor;
+
+        // If sponsor exists but is not verified, redirect to registration
+        if (sponsor && sponsor.status !== 'verified') {
+          if (typeof window.$notify !== 'undefined') {
+            window.$notify.warning('Verification Pending', 'Your sponsor registration is pending admin approval. Please wait for verification.');
+          } else {
+            alert('Your sponsor registration is pending admin approval. Please wait for verification.');
+          }
+          return next({ name: 'sponsor-registration' });
+        }
+
+        // If no sponsor profile exists, redirect to registration
+        if (!sponsor) {
+          if (typeof window.$notify !== 'undefined') {
+            window.$notify.info('Sponsor Registration Required', 'Please complete your sponsor registration first.');
+          } else {
+            alert('Please complete your sponsor registration first.');
+          }
+          return next({ name: 'sponsor-registration' });
+        }
+      } catch (e) {
+        // If no sponsor profile exists (404), redirect to registration
+        if (e?.response?.status === 404) {
+          if (typeof window.$notify !== 'undefined') {
+            window.$notify.info('Sponsor Registration Required', 'Please complete your sponsor registration first.');
+          } else {
+            alert('Please complete your sponsor registration first.');
+          }
+          return next({ name: 'sponsor-registration' });
+        }
+        console.warn('Failed to check sponsor status:', e?.response?.data || e.message);
+      }
+    }
   }
 
   // Prevent completed players from accessing registration page
@@ -476,6 +515,30 @@ router.beforeEach(async (to, from, next) => {
         // 404 means no club exists; allow access
         if (e?.response?.status !== 404) {
           console.warn('Club check failed:', e?.response?.data || e.message);
+        }
+      }
+    }
+  }
+
+  // Prevent already-verified sponsors from accessing registration page
+  if (to.name === 'sponsor-registration' && isAuthed) {
+    const role = auth.userProfile?.role || 'public';
+    if (role === 'sponsor') {
+      try {
+        const resp = await axios.get(`${API}/sponsors/me?firebaseUid=${auth.user?.uid}`, { withCredentials: true });
+        const sponsor = resp?.data?.sponsor;
+        if (sponsor && sponsor.status === 'verified') {
+          if (typeof window.$notify !== 'undefined') {
+            window.$notify.info('Already Registered', 'Your sponsor profile is already verified. Redirecting to dashboard.');
+          } else {
+            alert('Your sponsor profile is already verified. Redirecting to dashboard.');
+          }
+          return next({ name: 'sponsor-dashboard' });
+        }
+      } catch (e) {
+        // 404 means no sponsor profile; allow access to registration
+        if (e?.response?.status !== 404) {
+          console.warn('Sponsor check failed:', e?.response?.data || e.message);
         }
       }
     }

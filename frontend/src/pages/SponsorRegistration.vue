@@ -54,6 +54,46 @@
     <!-- Right Panel - Registration Form -->
     <div class="right-panel">
       <div class="form-content">
+        <!-- Pending/Status View for already-registered sponsors -->
+        <div v-if="existingSponsor" class="status-view">
+          <div :class="['status-card', existingSponsor.status]">
+            <div class="status-icon">
+              <span v-if="existingSponsor.status === 'pending'">⏳</span>
+              <span v-else-if="existingSponsor.status === 'rejected'">❌</span>
+              <span v-else-if="existingSponsor.status === 'suspended'">🚫</span>
+            </div>
+            <h2 class="status-title" v-if="existingSponsor.status === 'pending'">Registration Pending</h2>
+            <h2 class="status-title" v-else-if="existingSponsor.status === 'rejected'">Registration Rejected</h2>
+            <h2 class="status-title" v-else-if="existingSponsor.status === 'suspended'">Account Suspended</h2>
+            <p class="status-message" v-if="existingSponsor.status === 'pending'">
+              Your sponsor registration for <strong>{{ existingSponsor.companyName }}</strong> has been submitted and is awaiting admin verification. You'll be able to access the Sponsor Dashboard once approved.
+            </p>
+            <p class="status-message" v-else-if="existingSponsor.status === 'rejected'">
+              Your sponsor registration for <strong>{{ existingSponsor.companyName }}</strong> was not approved. Please contact support for more information.
+            </p>
+            <p class="status-message" v-else-if="existingSponsor.status === 'suspended'">
+              Your sponsor account for <strong>{{ existingSponsor.companyName }}</strong> has been suspended. Please contact support for assistance.
+            </p>
+            <div class="status-details">
+              <div class="detail-item">
+                <span class="detail-label">Company</span>
+                <span class="detail-value">{{ existingSponsor.companyName }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Industry</span>
+                <span class="detail-value">{{ existingSponsor.industry }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Status</span>
+                <span :class="['detail-badge', existingSponsor.status]">{{ existingSponsor.status }}</span>
+              </div>
+            </div>
+            <RouterLink to="/crickhub" class="back-btn">← Back to CrickHub</RouterLink>
+          </div>
+        </div>
+
+        <!-- Registration Form (only shown if no existing sponsor) -->
+        <template v-else>
         <div class="form-header">
           <h2 class="form-title">Sponsor Registration</h2>
           <p class="form-subtitle">Complete your company profile</p>
@@ -328,6 +368,7 @@
             <RouterLink to="/privacy" class="link">Privacy Policy</RouterLink>
           </p>
         </form>
+        </template>
       </div>
     </div>
   </div>
@@ -345,6 +386,7 @@ const currentStep = ref(1);
 const isLoading = ref(false);
 const logoPreview = ref(null);
 const logoData = ref(null);
+const existingSponsor = ref(null);
 const logoInput = ref(null);
 
 const errors = reactive({
@@ -424,7 +466,24 @@ const isFormValid = computed(() => {
          form.contactEmail.trim() !== '';
 });
 
+async function checkExistingSponsor() {
+  try {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+    const response = await fetch(`${API_URL}/api/sponsors/me?firebaseUid=${auth.user?.uid}`);
+    if (response.ok) {
+      const data = await response.json();
+      if (data.sponsor && data.sponsor.status !== 'verified') {
+        existingSponsor.value = data.sponsor;
+      }
+    }
+  } catch {
+    // No existing sponsor, show registration form
+  }
+}
+
 onMounted(() => {
+  // Check if sponsor already registered
+  checkExistingSponsor();
   // Pre-fill with user data if available
   if (auth.user) {
     form.contactPerson = auth.user.displayName || auth.dbUser?.name || '';
@@ -522,11 +581,17 @@ async function onSubmit() {
       });
     }
 
-    // Refresh user data
-    await auth.fetchDbUser();
+    // Refresh user profile data
+    try {
+      const profileRes = await fetch(`${API_URL}/api/auth/profile`, { credentials: 'include' });
+      if (profileRes.ok) {
+        const profileData = await profileRes.json();
+        auth.userProfile = profileData.user;
+      }
+    } catch {}
 
-    alert('Registration submitted successfully! Your application is pending admin verification.');
-    router.push({ name: 'sponsor-dashboard' });
+    alert('Registration submitted successfully! Your application is pending admin verification. You will be able to access the Sponsor Dashboard once approved.');
+    router.push({ name: 'crickhub' });
   } catch (error) {
     console.error('Registration error:', error);
     alert(error.message || 'Failed to register. Please try again.');
@@ -1057,5 +1122,120 @@ async function onSubmit() {
   .checkbox-grid {
     grid-template-columns: 1fr;
   }
+}
+/* Status View Styles */
+.status-view {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+.status-card {
+  text-align: center;
+  padding: 2.5rem;
+  border-radius: 16px;
+  max-width: 480px;
+  width: 100%;
+}
+
+.status-card.pending {
+  background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+  border: 1px solid #F59E0B;
+}
+
+.status-card.rejected {
+  background: linear-gradient(135deg, #FEE2E2, #FECACA);
+  border: 1px solid #EF4444;
+}
+
+.status-card.suspended {
+  background: linear-gradient(135deg, #F3F4F6, #E5E7EB);
+  border: 1px solid #9CA3AF;
+}
+
+.status-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.status-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1F2937;
+  margin: 0 0 0.75rem;
+}
+
+.status-message {
+  font-size: 0.95rem;
+  color: #374151;
+  line-height: 1.6;
+  margin: 0 0 1.5rem;
+}
+
+.status-details {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.detail-label {
+  font-size: 0.7rem;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1F2937;
+}
+
+.detail-badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.detail-badge.pending {
+  background: rgba(245, 158, 11, 0.2);
+  color: #92400E;
+}
+
+.detail-badge.rejected {
+  background: rgba(239, 68, 68, 0.2);
+  color: #991B1B;
+}
+
+.detail-badge.suspended {
+  background: rgba(107, 114, 128, 0.2);
+  color: #4B5563;
+}
+
+.back-btn {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background: #1e40af;
+  color: white;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.back-btn:hover {
+  background: #1e3a8a;
 }
 </style>

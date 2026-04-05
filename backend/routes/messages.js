@@ -51,11 +51,6 @@ router.get('/conversations', verifyFirebaseToken, async (req, res) => {
     .populate('lastMessage.sender', 'name')
     .sort('-lastMessage.timestamp');
     
-    console.log('Found conversations for user:', req.user._id, 'Count:', conversations.length);
-    conversations.forEach(conv => {
-      console.log('Conversation ID:', conv._id, 'Type:', conv.type, 'Name:', conv.name);
-    });
-    
     res.json(conversations);
   } catch (error) {
     console.error('Error fetching conversations:', error);
