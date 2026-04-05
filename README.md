@@ -1,47 +1,90 @@
 <div align="center">
 
 <!-- Animated Header -->
-<img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=180&section=header&text=CrickArena&fontSize=50&fontColor=fff&animation=twinkling&fontAlignY=32&desc=Kerala's%20Premier%20Cricket%20Management%20Platform&descAlignY=51&descAlign=50"/>
+<img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=200&section=header&text=CrickArena&fontSize=50&fontColor=fff&animation=twinkling&fontAlignY=32&desc=Kerala's%20Premier%20Cricket%20Management%20Platform&descAlignY=51&descAlign=50"/>
 
 <!-- Typing Animation -->
 <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=24&duration=3000&pause=1000&color=10B981&center=true&vCenter=true&width=800&lines=Full-Stack+Cricket+Management+Platform+%F0%9F%8F%8F;MEVN+Stack+%7C+ML+Powered+%7C+Real-Time+Analytics;21+Models+%7C+19+Routes+%7C+7+Security+Layers;Transforming+Kerala's+Grassroots+Cricket+%F0%9F%9A%80" alt="Typing SVG" />
 
 <br/>
 
-<!-- Badges -->
+<!-- Animated Badges -->
 <p>
-  <img src="https://img.shields.io/badge/Vue.js-3.4-4FC08D?style=for-the-badge&logo=vue.js&logoColor=white" />
-  <img src="https://img.shields.io/badge/Node.js-ES_Modules-339933?style=for-the-badge&logo=node.js&logoColor=white" />
-  <img src="https://img.shields.io/badge/MongoDB-8.0-47A248?style=for-the-badge&logo=mongodb&logoColor=white" />
-  <img src="https://img.shields.io/badge/Firebase-Auth-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" />
-  <img src="https://img.shields.io/badge/ML-TensorFlow-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white" />
+  <img src="https://img.shields.io/badge/Vue.js-3.4-4FC08D?style=for-the-badge&logo=vue.js&logoColor=white&labelColor=1a1a1a" />
+  <img src="https://img.shields.io/badge/Node.js-ES_Modules-339933?style=for-the-badge&logo=node.js&logoColor=white&labelColor=1a1a1a" />
+  <img src="https://img.shields.io/badge/MongoDB-8.0-47A248?style=for-the-badge&logo=mongodb&logoColor=white&labelColor=1a1a1a" />
+  <img src="https://img.shields.io/badge/Firebase-Auth-FFCA28?style=for-the-badge&logo=firebase&logoColor=black&labelColor=1a1a1a" />
+  <img src="https://img.shields.io/badge/ML-TensorFlow-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white&labelColor=1a1a1a" />
 </p>
 
-<!-- Quick Stats -->
+<!-- Animated Stats -->
 <p>
-  <img src="https://komarev.com/ghpvc/?username=crickarena&label=Views&color=brightgreen&style=flat-square" />
-  <img src="https://img.shields.io/github/stars/yourusername/crickarena?style=flat-square&color=yellow" />
-  <img src="https://img.shields.io/github/forks/yourusername/crickarena?style=flat-square&color=blue" />
-  <img src="https://img.shields.io/github/issues/yourusername/crickarena?style=flat-square&color=red" />
+  <img src="https://komarev.com/ghpvc/?username=crickarena&label=Repository+Views&color=brightgreen&style=for-the-badge" />
+  <img src="https://img.shields.io/github/stars/yourusername/crickarena?style=for-the-badge&color=yellow" />
+  <img src="https://img.shields.io/github/forks/yourusername/crickarena?style=for-the-badge&color=blue" />
+  <img src="https://img.shields.io/github/issues/yourusername/crickarena?style=for-the-badge&color=red" />
 </p>
+
+<!-- Animated Divider -->
+<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="900">
 
 <br/>
 
-<!-- Quick Navigation -->
-<p>
-  <a href="#-about"><kbd>📖 About</kbd></a>
-  <a href="#-features"><kbd>✨ Features</kbd></a>
-  <a href="#-tech-stack"><kbd>🚀 Tech Stack</kbd></a>
-  <a href="#-quick-start"><kbd>⚡ Quick Start</kbd></a>
-  <a href="#-api-docs"><kbd>📡 API Docs</kbd></a>
-  <a href="#-contributing"><kbd>🤝 Contributing</kbd></a>
-</p>
+<!-- Quick Navigation with Icons -->
+<table>
+<tr>
+<td align="center" width="16.66%">
+<a href="#-about">
+<img src="https://img.icons8.com/fluency/48/info.png"/><br/>
+<sub><b>About</b></sub>
+</a>
+</td>
+<td align="center" width="16.66%">
+<a href="#-features">
+<img src="https://img.icons8.com/fluency/48/star.png"/><br/>
+<sub><b>Features</b></sub>
+</a>
+</td>
+<td align="center" width="16.66%">
+<a href="#-tech-stack">
+<img src="https://img.icons8.com/fluency/48/code.png"/><br/>
+<sub><b>Tech Stack</b></sub>
+</a>
+</td>
+<td align="center" width="16.66%">
+<a href="#-quick-start">
+<img src="https://img.icons8.com/fluency/48/rocket.png"/><br/>
+<sub><b>Quick Start</b></sub>
+</a>
+</td>
+<td align="center" width="16.66%">
+<a href="#-api-docs">
+<img src="https://img.icons8.com/fluency/48/api.png"/><br/>
+<sub><b>API Docs</b></sub>
+</a>
+</td>
+<td align="center" width="16.66%">
+<a href="#-contributing">
+<img src="https://img.icons8.com/fluency/48/handshake.png"/><br/>
+<sub><b>Contributing</b></sub>
+</a>
+</td>
+</tr>
+</table>
 
 </div>
 
 ---
 
+<div align="center">
+
+<img src="https://user-images.githubusercontent.com/74038190/212284115-f47cd8ff-2ffb-4b04-b5bf-4d1c14c0247f.gif" width="900">
+
+</div>
+
 ## 📖 About
+
+<img align="right" src="https://user-images.githubusercontent.com/74038190/212257467-871d32b7-e401-42e8-a166-fcfd7baa4c6b.gif" width="150">
 
 **CrickArena** is a comprehensive full-stack cricket management platform built to modernize Kerala's grassroots cricket ecosystem. It replaces paper-based processes with an intelligent, cloud-powered digital solution.
 
@@ -54,6 +97,8 @@ const crickarena = {
   performance: "< 50ms WebSocket latency"
 }
 ```
+
+<br/>
 
 ### 🎯 The Problem We Solve
 
@@ -84,9 +129,21 @@ const crickarena = {
 </tr>
 </table>
 
+<div align="center">
+
+<img src="https://user-images.githubusercontent.com/74038190/212284115-f47cd8ff-2ffb-4b04-b5bf-4d1c14c0247f.gif" width="900">
+
+</div>
+
 ---
 
 ## ✨ Features
+
+<div align="center">
+
+<img src="https://user-images.githubusercontent.com/74038190/212257472-08e52665-c503-4bd9-aa20-f5a4dae769b5.gif" width="100">
+
+</div>
 
 <table>
 <tr>
@@ -208,6 +265,12 @@ graph TB
 
 ## ⚡ Quick Start
 
+<div align="center">
+
+<img src="https://user-images.githubusercontent.com/74038190/212257472-08e52665-c503-4bd9-aa20-f5a4dae769b5.gif" width="100">
+
+</div>
+
 ### Prerequisites
 - Node.js 18+
 - MongoDB 8+
@@ -273,9 +336,21 @@ python lineup_ml_model.py
 
 ✅ **Success!** Open http://localhost:5173
 
+<div align="center">
+
+<img src="https://user-images.githubusercontent.com/74038190/212284115-f47cd8ff-2ffb-4b04-b5bf-4d1c14c0247f.gif" width="900">
+
+</div>
+
 ---
 
 ## 📡 API Docs
+
+<div align="center">
+
+<img src="https://user-images.githubusercontent.com/74038190/212257465-7ce8d493-cac5-494e-982a-5a9deb852c4b.gif" width="100">
+
+</div>
 
 **Base URL:** `http://localhost:4000/api`
 
@@ -342,9 +417,21 @@ GET    /api/live-analytics/:matchId/prediction     # Score prediction
 
 [📚 View Full API Documentation →](https://github.com/yourusername/crickarena/wiki/API-Documentation)
 
+<div align="center">
+
+<img src="https://user-images.githubusercontent.com/74038190/212284115-f47cd8ff-2ffb-4b04-b5bf-4d1c14c0247f.gif" width="900">
+
+</div>
+
 ---
 
 ## 🗄️ Database Models
+
+<div align="center">
+
+<img src="https://user-images.githubusercontent.com/74038190/212257460-738ff738-247f-4445-a718-cdd0ca76e2db.gif" width="100">
+
+</div>
 
 21 MongoDB models power the platform:
 
@@ -364,9 +451,21 @@ GET    /api/live-analytics/:matchId/prediction     # Score prediction
 | GalleryItem | Club photo gallery |
 | ... | [View all 21 models →](https://github.com/yourusername/crickarena/wiki/Database-Schema) |
 
+<div align="center">
+
+<img src="https://user-images.githubusercontent.com/74038190/212284115-f47cd8ff-2ffb-4b04-b5bf-4d1c14c0247f.gif" width="900">
+
+</div>
+
 ---
 
 ## 🔒 Security
+
+<div align="center">
+
+<img src="https://user-images.githubusercontent.com/74038190/212257468-1e9a91f1-b626-4baa-b15d-5c385dfa7ed2.gif" width="100">
+
+</div>
 
 7-layer security architecture:
 
@@ -378,9 +477,21 @@ GET    /api/live-analytics/:matchId/prediction     # Score prediction
 6. **Helmet Security** - Security headers + CSP
 7. **CORS Configuration** - Whitelist origins
 
+<div align="center">
+
+<img src="https://user-images.githubusercontent.com/74038190/212284115-f47cd8ff-2ffb-4b04-b5bf-4d1c14c0247f.gif" width="900">
+
+</div>
+
 ---
 
 ## 📈 Performance
+
+<div align="center">
+
+<img src="https://user-images.githubusercontent.com/74038190/212257463-4d082cb4-7483-4eaf-bc25-6dde2628aabd.gif" width="100">
+
+</div>
 
 | Metric | Value |
 |--------|-------|
@@ -390,21 +501,21 @@ GET    /api/live-analytics/:matchId/prediction     # Score prediction
 | Database Query | < 50ms (indexed) |
 | Frontend Load | < 2s |
 
----
+<div align="center">
 
-## 🗺️ Roadmap
+<img src="https://user-images.githubusercontent.com/74038190/212284115-f47cd8ff-2ffb-4b04-b5bf-4d1c14c0247f.gif" width="900">
 
-- [x] Core platform (Q1 2024)
-- [x] ML lineup optimizer (Q2 2024)
-- [x] Smart ticketing (Q2 2024)
-- [ ] Mobile app (React Native) - Q3 2024
-- [ ] Live streaming integration - Q4 2024
-- [ ] Blockchain ticketing - 2025
-- [ ] AR/VR stadium experience - 2025
+</div>
 
 ---
 
 ## 🤝 Contributing
+
+<div align="center">
+
+<img src="https://user-images.githubusercontent.com/74038190/212257467-871d32b7-e401-42e8-a166-fcfd7baa4c6b.gif" width="100">
+
+</div>
 
 We welcome contributions! Here's how:
 
@@ -451,7 +562,7 @@ MIT License - see [LICENSE](LICENSE) file for details
 
 ---
 
-<sub>© 2024 CrickArena. All rights reserved.</sub>
+<sub>© 2025 CrickArena. All rights reserved.</sub>
 
 </div>
 
