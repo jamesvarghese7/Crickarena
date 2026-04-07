@@ -2082,9 +2082,14 @@ async function saveEdit(){
     rules: editForm.value.rules,
     venues: editForm.value.venuesText.split(',').map(s=>s.trim()).filter(Boolean)
   };
-  await api.put(`/admin/tournaments/${id}`, payload);
-  editOpen.value = false;
-  await loadAll(id);
+  try {
+    await api.put(`/admin/tournaments/${id}`, payload);
+    editOpen.value = false;
+    await loadAll(id);
+    notify.success('Tournament updated successfully');
+  } catch (e) {
+    notify.error(e?.response?.data?.message || 'Failed to update tournament');
+  }
 }
 
 // Live matches

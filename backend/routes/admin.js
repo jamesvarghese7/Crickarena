@@ -217,8 +217,18 @@ router.put('/tournaments/:id', verifyFirebaseToken, requireRole('admin'), async 
       const t = await Tournament.findById(req.params.id);
       if (!t) return res.status(404).json({ message: 'Tournament not found' });
 
-      const newStart = updates.startDate ? new Date(updates.startDate) : new Date(t.startDate);
-      const newEnd = updates.endDate ? new Date(updates.endDate) : new Date(t.endDate);
+      // Helper: parse date-only strings ("YYYY-MM-DD") at noon UTC to avoid
+      // timezone edge-cases where midnight UTC falls on the previous local day.
+      const parseDate = (v) => {
+        if (!v) return null;
+        const s = typeof v === 'string' ? v : (v instanceof Date ? v.toISOString() : String(v));
+        const m = s.match(/^(\d{4}-\d{2}-\d{2})/);
+        if (m) return new Date(`${m[1]}T12:00:00Z`);
+        return new Date(v);
+      };
+
+      const newStart = updates.startDate ? parseDate(updates.startDate) : parseDate(t.startDate);
+      const newEnd = updates.endDate ? parseDate(updates.endDate) : parseDate(t.endDate);
 
       // Validate date formats
       if (isNaN(newStart.getTime())) return res.status(400).json({ message: 'Invalid start date' });
@@ -229,25 +239,33 @@ router.put('/tournaments/:id', verifyFirebaseToken, requireRole('admin'), async 
         return res.status(400).json({ message: 'End date cannot be before start date' });
       }
 
-      // Validate dates are not in the past (only for upcoming tournaments)
+      // Validate dates are not in the past (only for upcoming tournaments
+      // AND only when the date is actually being changed to a new value)
       if (t.status === 'open' || t.status === 'upcoming') {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        if (newStart < today) {
+        const currentStartStr = t.startDate ? new Date(t.startDate).toISOString().slice(0, 10) : '';
+        const currentEndStr = t.endDate ? new Date(t.endDate).toISOString().slice(0, 10) : '';
+        const newStartStr = newStart.toISOString().slice(0, 10);
+        const newEndStr = newEnd.toISOString().slice(0, 10);
+
+        // Only reject if the start date is actually changing to a past date
+        if (newStartStr !== currentStartStr && newStart < today) {
           return res.status(400).json({
             message: 'Start date cannot be in the past for upcoming tournaments',
-            currentStartDate: t.startDate.toISOString().slice(0, 10),
-            requestedStartDate: newStart.toISOString().slice(0, 10),
+            currentStartDate: currentStartStr,
+            requestedStartDate: newStartStr,
             today: today.toISOString().slice(0, 10)
           });
         }
 
-        if (newEnd < today) {
+        // Only reject if the end date is actually changing to a past date
+        if (newEndStr !== currentEndStr && newEnd < today) {
           return res.status(400).json({
             message: 'End date cannot be in the past for upcoming tournaments',
-            currentEndDate: t.endDate.toISOString().slice(0, 10),
-            requestedEndDate: newEnd.toISOString().slice(0, 10),
+            currentEndDate: currentEndStr,
+            requestedEndDate: newEndStr,
             today: today.toISOString().slice(0, 10)
           });
         }

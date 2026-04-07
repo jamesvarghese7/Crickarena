@@ -152,22 +152,18 @@
                         <p class="text-xs text-slate-600">{{ getStrategyDescription(suggestion.strategy) }}</p>
                       </div>
                     </div>
-                    <div class="flex items-center gap-3">
-                      <div class="text-right">
-                        <div class="text-xs text-slate-500">Team Strength</div>
-                        <div :class="[
-                          'text-lg font-bold',
-                          suggestion.teamScore >= 75 ? 'text-green-600' :
-                          suggestion.teamScore >= 60 ? 'text-blue-600' : 'text-orange-600'
-                        ]">
-                          {{ Math.round(suggestion.teamScore) }}%
-                        </div>
-                      </div>
-                      <div class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold">
-                        {{ suggestion.confidence }}% Confidence
+                    <div class="text-right">
+                      <div class="text-xs text-slate-500">Team Strength</div>
+                      <div :class="[
+                        'text-lg font-bold',
+                        suggestion.teamScore >= 75 ? 'text-green-600' :
+                        suggestion.teamScore >= 60 ? 'text-blue-600' : 'text-orange-600'
+                      ]">
+                        {{ Math.round(suggestion.teamScore) }}%
                       </div>
                     </div>
                   </div>
+
 
                   <!-- Team Balance -->
                   <div class="flex items-center gap-2 text-xs mb-3">
