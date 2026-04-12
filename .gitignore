@@ -38,17 +38,8 @@ Thumbs.db
 *.swo
 *~
 
-# IDE & Editors
-.vscode/
-.idea/
-*.sublime-*
-*.sublime-workspace
-.kiro/
 
-# Test coverage
-coverage/
-.nyc_output/
-*.lcov
+
 
 # Temporary files
 *.tmp
@@ -63,10 +54,9 @@ coverage/
 .vite/
 frontend/.vite/
 
-# Documentation (excluded as per user request)
-docs/
 
-# Umpire gesture tools (excluded as per user request)
+
+# Umpire gesture tools 
 selenium-tests/
 gesture-scoring-tool/
 Umpire-Gesture-Recognition-main/
@@ -96,8 +86,7 @@ ENV/
 *.model
 
 # Misc folders
-.zencoder/
-.zenflow/
+
 crickarena/
 tests/
 
