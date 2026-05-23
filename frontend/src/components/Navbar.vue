@@ -231,8 +231,8 @@
 
     <!-- Mobile panel -->
     <transition name="fade">
-      <div v-if="openMobile" class="md:hidden border-t border-gray-200 dark:border-neutral-800">
-        <div class="px-4 py-3">
+      <div v-if="openMobile" class="md:hidden border-t border-gray-200 dark:border-neutral-800 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md shadow-2xl rounded-b-2xl">
+        <div class="px-4 py-4">
           <form class="mb-3" @submit.prevent="onSubmitSearch" role="search" aria-label="Site search (mobile)">
             <div class="flex gap-2">
               <input
@@ -611,11 +611,22 @@ watch(() => auth.userProfile?.role, () => {
 
 .mobileLink {
   display: block;
-  padding: 0.625rem 0.5rem;
-  border-radius: 0.5rem;
-  color: rgb(55 65 81);
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  color: #4b5563; /* text-gray-600 */
+  font-weight: 600;
+  transition: all 0.2s ease-in-out;
+}
+:global(.dark) .mobileLink {
+  color: #d1d5db; /* text-gray-300 */
 }
 .mobileLink:hover {
-  background: rgb(243 244 246);
+  background: rgba(16, 185, 129, 0.08); /* emerald tint */
+  color: #059669; /* emerald-600 */
+  transform: translateX(4px);
+}
+:global(.dark) .mobileLink:hover {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399; /* emerald-400 */
 }
 </style>

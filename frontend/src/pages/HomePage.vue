@@ -8,7 +8,7 @@
 
     <!-- Hero Section -->
     <section class="relative overflow-hidden">
-      <div class="max-w-7xl mx-auto px-4 py-20 glass-panel-hero rounded-3xl my-8">
+      <div class="max-w-7xl mx-auto px-4 py-10 sm:py-20 glass-panel-hero rounded-2xl sm:rounded-3xl my-4 sm:my-8">
         <div class="grid lg:grid-cols-2 gap-12 items-center">
           <!-- Left Content -->
           <div class="space-y-8">
@@ -28,51 +28,51 @@
             <!-- Action Buttons -->
             <div class="flex flex-wrap gap-4">
               <template v-if="auth.user">
-                <RouterLink to="/crickhub" class="group relative bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300">
+                <RouterLink to="/crickhub" class="group relative bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg shadow-xl hover:shadow-2xl transition-all duration-300">
                   <span class="relative z-10">Go to Dashboard</span>
                   <div class="absolute inset-0 bg-gradient-to-r from-green-700 to-emerald-700 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </RouterLink>
-                <RouterLink to="/tournaments" class="px-8 py-4 border-2 border-emerald-600 text-emerald-700 bg-white rounded-2xl font-bold text-lg hover:bg-emerald-600 hover:text-white transition-all duration-300">
+                <RouterLink to="/tournaments" class="px-6 py-3 sm:px-8 sm:py-4 border-2 border-emerald-600 text-emerald-700 bg-white rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg hover:bg-emerald-600 hover:text-white transition-all duration-300">
                   Browse Tournaments
                 </RouterLink>
-                <button @click="onLogout" class="px-8 py-4 border-2 border-green-600 text-green-600 rounded-2xl font-bold text-lg hover:bg-green-600 hover:text-white transition-all duration-300">
+                <button @click="onLogout" class="px-6 py-3 sm:px-8 sm:py-4 border-2 border-green-600 text-green-600 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg hover:bg-green-600 hover:text-white transition-all duration-300">
                   Logout
                 </button>
               </template>
               <template v-else>
-                <RouterLink to="/register" class="group relative bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300">
+                <RouterLink to="/register" class="group relative bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg shadow-xl hover:shadow-2xl transition-all duration-300">
                   <span class="relative z-10">Get Started Free</span>
                   <div class="absolute inset-0 bg-gradient-to-r from-green-700 to-emerald-700 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </RouterLink>
-                <RouterLink to="/login" class="px-8 py-4 border-2 border-green-600 text-green-600 rounded-2xl font-bold text-lg hover:bg-green-600 hover:text-white transition-all duration-300">
+                <RouterLink to="/login" class="px-6 py-3 sm:px-8 sm:py-4 border-2 border-green-600 text-green-600 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg hover:bg-green-600 hover:text-white transition-all duration-300">
                   Sign In
                 </RouterLink>
-                <RouterLink to="/tournaments" class="px-8 py-4 border-2 border-emerald-600 text-emerald-700 bg-white rounded-2xl font-bold text-lg hover:bg-emerald-600 hover:text-white transition-all duration-300">
+                <RouterLink to="/tournaments" class="px-6 py-3 sm:px-8 sm:py-4 border-2 border-emerald-600 text-emerald-700 bg-white rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg hover:bg-emerald-600 hover:text-white transition-all duration-300">
                   Browse Tournaments
                 </RouterLink>
               </template>
             </div>
 
             <!-- Stats -->
-            <div class="grid grid-cols-3 gap-6 pt-8">
-              <div class="text-center stat-card rounded-2xl p-4 cursor-pointer">
-                <div class="text-3xl font-black text-white">{{ clubs.length }}</div>
-                <div class="text-sm text-gray-300 font-medium mt-1">Kerala Clubs</div>
+            <div class="grid grid-cols-3 gap-2 sm:gap-6 pt-8">
+              <div class="text-center stat-card rounded-xl sm:rounded-2xl p-2 sm:p-4 cursor-pointer">
+                <div class="text-xl sm:text-3xl font-black text-white">{{ clubs.length }}</div>
+                <div class="text-[10px] sm:text-sm text-gray-300 font-medium mt-1 leading-tight">Kerala Clubs</div>
               </div>
-              <div class="text-center stat-card rounded-2xl p-4 cursor-pointer">
-                <div class="text-3xl font-black text-white">{{ upcoming.length }}</div>
-                <div class="text-sm text-gray-300 font-medium mt-1">Active Tournaments</div>
+              <div class="text-center stat-card rounded-xl sm:rounded-2xl p-2 sm:p-4 cursor-pointer">
+                <div class="text-xl sm:text-3xl font-black text-white">{{ upcoming.length }}</div>
+                <div class="text-[10px] sm:text-sm text-gray-300 font-medium mt-1 leading-tight">Active Tournaments</div>
               </div>
-              <div class="text-center stat-card rounded-2xl p-4 cursor-pointer">
-                <div class="text-3xl font-black text-white">{{ history.length }}</div>
-                <div class="text-sm text-gray-300 font-medium mt-1">Completed Matches</div>
+              <div class="text-center stat-card rounded-xl sm:rounded-2xl p-2 sm:p-4 cursor-pointer">
+                <div class="text-xl sm:text-3xl font-black text-white">{{ history.length }}</div>
+                <div class="text-[10px] sm:text-sm text-gray-300 font-medium mt-1 leading-tight">Completed Matches</div>
               </div>
             </div>
           </div>
 
           <!-- Right Content - Interactive Cricket Scene -->
           <div class="relative">
-            <div class="relative w-full h-96 lg:h-[500px] rounded-3xl overflow-hidden bg-gradient-to-br from-green-400 via-emerald-500 to-green-600 shadow-2xl">
+            <div class="relative w-full h-64 sm:h-96 lg:h-[500px] rounded-3xl overflow-hidden bg-gradient-to-br from-green-400 via-emerald-500 to-green-600 shadow-2xl">
               <!-- Cricket Field Background -->
               <div class="absolute inset-0 opacity-20">
                 <svg viewBox="0 0 400 300" class="w-full h-full">
@@ -151,7 +151,7 @@
     </section>
 
     <!-- Upcoming Fixtures -->
-    <section class="py-20 glass-panel rounded-3xl mx-4 my-8">
+    <section class="py-10 sm:py-20 glass-panel rounded-2xl sm:rounded-3xl mx-2 sm:mx-4 my-4 sm:my-8">
       <div class="max-w-7xl mx-auto px-4">
         <!-- Section Header -->
         <div class="text-center mb-12">
@@ -319,7 +319,7 @@
     </section>
 
     <!-- Ongoing Tournaments -->
-    <section class="py-16 glass-panel rounded-3xl mx-4 my-8">
+    <section class="py-10 sm:py-16 glass-panel rounded-2xl sm:rounded-3xl mx-2 sm:mx-4 my-4 sm:my-8">
       <div class="max-w-7xl mx-auto px-4">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-2xl font-bold">Ongoing Tournaments</h2>
@@ -368,7 +368,7 @@
     </section>
 
     <!-- Features Section -->
-    <section class="py-20 glass-panel rounded-3xl mx-4 my-8">
+    <section class="py-10 sm:py-20 glass-panel rounded-2xl sm:rounded-3xl mx-2 sm:mx-4 my-4 sm:my-8">
       <div class="max-w-7xl mx-auto px-4">
         <div class="text-center mb-16">
           <h2 class="text-4xl font-black mb-4">Kerala's Grassroots Cricket Hub</h2>
@@ -458,7 +458,7 @@
     </section>
 
     <!-- For Players Section -->
-    <section class="py-20 glass-panel rounded-3xl mx-4 my-8">
+    <section class="py-10 sm:py-20 glass-panel rounded-2xl sm:rounded-3xl mx-2 sm:mx-4 my-4 sm:my-8">
       <div class="max-w-7xl mx-auto px-4">
         <div class="text-center mb-12">
           <h2 class="text-4xl font-black text-gray-900 mb-4">For Cricket Players</h2>
@@ -527,18 +527,18 @@
     </section>
 
     <!-- Kerala Districts Section -->
-    <section class="py-20 glass-panel rounded-3xl mx-4 my-8">
+    <section class="py-10 sm:py-20 glass-panel rounded-2xl sm:rounded-3xl mx-2 sm:mx-4 my-4 sm:my-8">
       <div class="max-w-7xl mx-auto px-4">
-        <div class="text-center mb-16">
+        <div class="text-center mb-10 sm:mb-16">
           <div class="inline-flex items-center gap-2 bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-sm border border-green-400/30 text-white px-4 py-2 rounded-full text-sm font-semibold mb-4">
             <span class="w-2 h-2 bg-green-400 rounded-full"></span>
             God's Own Country
           </div>
-          <h2 class="text-4xl font-black mb-4">Cricket Across Kerala</h2>
-          <p class="text-xl max-w-3xl mx-auto">Discover the vibrant cricket culture spanning all 14 districts of Kerala, from Thiruvananthapuram to Kasaragod</p>
+          <h2 class="text-2xl sm:text-4xl font-black mb-4">Cricket Across Kerala</h2>
+          <p class="text-sm sm:text-xl max-w-3xl mx-auto">Discover the vibrant cricket culture spanning all 14 districts of Kerala, from Thiruvananthapuram to Kasaragod</p>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-3 sm:gap-4">
           <div 
             v-for="(district, index) in keralaDistricts" 
             :key="district" 
@@ -583,7 +583,7 @@
     </section>
 
     <!-- Accepted Clubs Section -->
-    <section class="py-20 glass-panel rounded-3xl mx-4 my-8">
+    <section class="py-10 sm:py-20 glass-panel rounded-2xl sm:rounded-3xl mx-2 sm:mx-4 my-4 sm:my-8">
       <div class="max-w-7xl mx-auto px-4">
         <div class="flex items-center justify-between mb-8">
           <h2 class="text-4xl font-black">Clubs</h2>
@@ -712,32 +712,32 @@
     />
 
     <!-- CTA Section -->
-    <section class="py-20 glass-panel-strong rounded-3xl mx-4 my-8">
+    <section class="py-10 sm:py-20 glass-panel-strong rounded-2xl sm:rounded-3xl mx-2 sm:mx-4 my-4 sm:my-8">
       <div class="max-w-4xl mx-auto px-4 text-center">
-        <h2 class="text-4xl font-black mb-6 text-gray-900">Ready to Join Kerala's Cricket Community?</h2>
-        <p class="text-xl mb-8 text-gray-700">Whether you're a player, club manager, or cricket enthusiast, CrickArena is your gateway to Kerala's vibrant cricket ecosystem.</p>
+        <h2 class="text-2xl sm:text-4xl font-black mb-6 text-gray-900">Ready to Join Kerala's Cricket Community?</h2>
+        <p class="text-sm sm:text-xl mb-8 text-gray-700">Whether you're a player, club manager, or cricket enthusiast, CrickArena is your gateway to Kerala's vibrant cricket ecosystem.</p>
         
-        <div class="flex flex-wrap justify-center gap-4">
+        <div class="flex flex-wrap justify-center gap-3 sm:gap-4">
           <template v-if="!auth.user">
-            <RouterLink to="/register" class="bg-white text-green-600 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-gray-100 transition-all duration-300 transform hover:scale-105">
+            <RouterLink to="/register" class="bg-white text-green-600 px-6 py-3 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg hover:bg-gray-100 transition-all duration-300 transform hover:scale-105">
               Join Free Today
             </RouterLink>
-            <RouterLink to="/login" class="border-2 border-white text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white hover:text-green-600 transition-all duration-300">
+            <RouterLink to="/login" class="border-2 border-white text-white px-6 py-3 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg hover:bg-white hover:text-green-600 transition-all duration-300">
               Sign In
             </RouterLink>
           </template>
           <template v-else>
-            <RouterLink to="/crickhub" class="bg-white text-green-600 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-gray-100 transition-all duration-300 transform hover:scale-105">
+            <RouterLink to="/crickhub" class="bg-white text-green-600 px-6 py-3 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg hover:bg-gray-100 transition-all duration-300 transform hover:scale-105">
               Go to Dashboard
             </RouterLink>
-            <RouterLink to="/club-registration" class="border-2 border-white text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white hover:text-green-600 transition-all duration-300">
+            <RouterLink to="/club-registration" class="border-2 border-white text-white px-6 py-3 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg hover:bg-white hover:text-green-600 transition-all duration-300">
               Register Your Club
             </RouterLink>
           </template>
         </div>
 
         <!-- Contact Info -->
-        <div class="mt-16 pt-8 border-t border-white border-opacity-30">
+        <div class="mt-8 sm:mt-16 pt-8 border-t border-white border-opacity-30">
           <div class="grid md:grid-cols-3 gap-8 text-center">
             <div>
               <div class="text-2xl mb-2">📧</div>
