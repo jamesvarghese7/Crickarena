@@ -44,3 +44,73 @@
     @apply block px-3 py-2 rounded-md hover:bg-gray-100/70 dark:hover:bg-neutral-800 text-emerald-800 hover:text-emerald-900;
   }
 }
+
+/* --- Premium Mobile Viewport & Responsiveness Upgrades --- */
+@media (max-width: 768px) {
+  /* Global Glassmorphic Card/Panel legibility upgrades */
+  .glass-panel, 
+  .glass-card, 
+  .premium-card, 
+  .glass-panel-hero,
+  .glass-panel-strong,
+  .glass-panel-dark {
+    background: rgba(15, 23, 42, 0.88) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  /* Force deep children classes in glass panels to have strong high-contrast text color */
+  .glass-panel *, 
+  .glass-card *, 
+  .premium-card * {
+    text-shadow: none !important;
+  }
+
+  /* Scale down large typography classes on mobile to prevent layout fragmentation */
+  .text-7xl, [class*="text-7xl"] { font-size: 2.5rem !important; line-height: 1.15 !important; }
+  .text-6xl, [class*="text-6xl"] { font-size: 2.25rem !important; line-height: 1.15 !important; }
+  .text-5xl, [class*="text-5xl"] { font-size: 2rem !important; line-height: 1.2 !important; }
+  .text-4xl, [class*="text-4xl"] { font-size: 1.625rem !important; line-height: 1.25 !important; }
+  .text-3xl, [class*="text-3xl"] { font-size: 1.375rem !important; line-height: 1.3 !important; }
+  .text-2xl, [class*="text-2xl"] { font-size: 1.25rem !important; line-height: 1.35 !important; }
+  .text-xl, [class*="text-xl"] { font-size: 1.125rem !important; line-height: 1.4 !important; }
+
+  /* Adjust page containers and spacing on mobile */
+  .py-20 { padding-top: 2.5rem !important; padding-bottom: 2.5rem !important; }
+  .py-16 { padding-top: 2rem !important; padding-bottom: 2rem !important; }
+  .py-10 { padding-top: 1.5rem !important; padding-bottom: 1.5rem !important; }
+  .my-8 { margin-top: 1rem !important; margin-bottom: 1rem !important; }
+  .gap-12 { gap: 1.5rem !important; }
+  .gap-8 { gap: 1rem !important; }
+
+  /* Scale down bulky form containers and grids padding globally on mobile */
+  .p-8, :deep(.p-8), [class*="p-8"] { padding: 1.25rem !important; }
+  .p-6, :deep(.p-6), [class*="p-6"] { padding: 1rem !important; }
+  .px-8, :deep(.px-8), [class*="px-8"] { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
+  .py-8, :deep(.py-8), [class*="py-8"] { padding-top: 1.25rem !important; padding-bottom: 1.25rem !important; }
+  .py-6, :deep(.py-6), [class*="py-6"] { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+
+  /* Table & grid spacing safeguards */
+  .form-row, :deep(.form-row) {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Table adjustments */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Extra Small Viewport Safeguard (< 375px) */
+@media (max-width: 375px) {
+  .px-4 {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+  .gap-4 {
+    gap: 0.5rem !important;
+  }
+}

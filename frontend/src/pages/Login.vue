@@ -72,6 +72,17 @@
     <!-- Right Panel - Login Form -->
     <div class="right-panel">
       <div class="form-content">
+        <!-- Mobile Logo Indicator -->
+        <div class="md:hidden flex flex-col items-center mb-6">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-600 to-green-500 flex items-center justify-center shadow-md mb-2">
+            <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 2v5m0 10v5M22 12h-5M7 12H2" stroke-linecap="round" />
+            </svg>
+          </div>
+          <span class="text-xl font-black text-emerald-600 dark:text-emerald-300">CrickArena</span>
+        </div>
+
         <div class="form-header">
           <h2 class="form-title">Welcome back</h2>
           <p class="form-subtitle">Sign in to your account</p>
@@ -630,46 +641,19 @@ async function onGoogle() {
 @media (max-width: 768px) {
   .split-screen-container {
     flex-direction: column;
+    height: auto;
+    min-height: calc(100vh - 64px);
   }
 
   .left-panel {
-    flex: 0 0 auto;
-    padding: 1.5rem 1rem;
-  }
-
-  .branding-content {
-    max-width: 100%;
-  }
-
-  .logo-section {
-    margin-bottom: 0.75rem;
-  }
-
-  .logo-icon {
-    width: 48px;
-    height: 48px;
-  }
-
-  .logo-icon svg {
-    width: 24px;
-    height: 24px;
-  }
-
-  .brand-name {
-    font-size: 1.5rem;
-  }
-
-  .tagline {
-    font-size: 1rem;
-  }
-
-  .subtitle {
-    font-size: 0.8125rem;
+    display: none !important;
   }
 
   .right-panel {
-    flex: 1;
-    padding: 1.5rem 1rem;
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    padding: 3rem 1.25rem !important;
+    align-items: flex-start;
   }
 
   .form-content {
